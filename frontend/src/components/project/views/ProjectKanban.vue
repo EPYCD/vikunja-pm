@@ -920,7 +920,7 @@ function unCollapseBucket(bucket: IBucket) {
     inset-inline-end: 50%;
     transform: translate(-50%, 0);
 
-	--loader-border-color: var(--grey-500);
+	--loader-border-color: var(--wm-text-tertiary);
   }
 }
 </style>
@@ -929,13 +929,17 @@ function unCollapseBucket(bucket: IBucket) {
 <style lang="scss">
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
-$bucket-header-height: 60px;
+$bucket-header-height: 52px;
 $bucket-right-margin: 1rem;
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
 
+// The board floor: a faint blueprint graticule so the columns read as
+// instruments placed on a grid rather than cards floating in space.
 .kanban {
+	@include graticule;
+
 	overflow-x: auto;
 	overflow-y: hidden;
 	block-size: calc(#{$crazy-height-calculation});
@@ -972,14 +976,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			inset-inline-end: 0.5rem;
 			inset-block-end: 0.25rem;
 			inset-inline-start: 0.5rem;
-			border: 3px dashed var(--grey-300);
-			border-radius: $radius;
+			border: 1px dashed var(--wm-line-strong);
+			background: var(--wm-accent-wash);
 		}
 	}
 
 	.bucket {
-		border-radius: $radius;
 		position: relative;
+		background: var(--wm-surface-sunken);
+		border: 1px solid var(--wm-line);
 
 		margin: 0 $bucket-right-margin 0 0;
 		max-block-size: calc(100% - 1rem); // 1rem spacing to the bottom
@@ -987,7 +992,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		inline-size: $bucket-width;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden; // Make sure the edges are always rounded
+		overflow: hidden;
 
 		@media screen and (max-width: $tablet) {
 			scroll-snap-align: center;
@@ -1000,7 +1005,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.task-item {
-			background-color: var(--grey-100);
 			padding: .25rem .5rem;
 			position: relative;
 
@@ -1028,9 +1032,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		h2 {
-			font-size: 1rem;
 			margin: 0;
-			font-weight: 600 !important;
 		}
 
 		&.new-bucket {
@@ -1040,9 +1042,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			// to hide the fact we just made the button smaller.
 			min-inline-size: calc(#{$bucket-width} + 1rem);
 			background: transparent;
+			border: 1px dashed var(--wm-line-strong);
 
 			.button {
-				background: var(--grey-100);
+				background: transparent;
 				inline-size: 100%;
 			}
 		}
@@ -1061,8 +1064,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 	}
 
+	// Column header: a mono micro-label with its count, sitting on a hairline.
 	.bucket-header {
-		background-color: var(--grey-100);
+		background-color: var(--wm-surface-sunken);
+		border-block-end: 1px solid var(--wm-line);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -1074,8 +1079,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.limit {
+			@include mono-label;
+
 			padding: 0 .5rem;
-			font-weight: bold;
+			color: var(--wm-text-tertiary);
 
 			&.is-max {
 				color: var(--danger-text);
@@ -1083,10 +1090,21 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.title.input {
+			@include mono-label($size: var(--wm-text-xs));
+
+			font-weight: 500 !important;
+			color: var(--wm-text);
+			background: transparent;
+			border: 0;
+			box-shadow: none;
 			block-size: auto;
-			padding: .4rem .5rem;
+			padding: .35rem .4rem;
 			display: inline-block;
 			cursor: pointer;
+
+			&:hover {
+				background: var(--wm-surface-hover);
+			}
 		}
 	}
 
@@ -1100,16 +1118,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
-		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
+		background-color: var(--wm-surface-sunken);
+		border-block-start: 1px solid var(--wm-line-faint);
 		transform: none;
 
 		.button {
 			background-color: transparent;
 
 			&:hover {
-				background-color: var(--white);
+				background-color: var(--wm-surface-hover);
 			}
 		}
 	}

@@ -1248,7 +1248,7 @@ function setRelatedTasksActive() {
 }
 
 .task-view * {
-	transition: opacity 50ms ease;
+	transition: opacity var(--wm-duration-fast) var(--wm-ease);
 }
 
 .is-loading .task-view * {
@@ -1434,14 +1434,23 @@ h2 .button {
 			background-color: transparent;
 			box-shadow: none;
 
-			// bright brand green with fixed dark text passes contrast in both themes
+			// The affirmative action, but still an outlined control: a solid
+			// green fill here was the loudest thing on the page and outranked
+			// the crimson that is supposed to own the hierarchy. Green stays as
+			// the semantic signal, carried by the border and the label.
 			&.is-pending {
-				background-color: var(--success);
-				color: hsl(215, 27.9%, 16.9%);
+				border-color: var(--success);
+				color: var(--success);
 
 				&:hover,
-				&:focus {
-					filter: brightness(1.05);
+				&:focus-visible {
+					background-color: hsla(var(--wm-success-h), var(--wm-success-s), var(--wm-success-l), .16);
+					border-color: var(--success);
+					color: var(--success);
+				}
+
+				&:focus-visible {
+					outline-color: var(--success);
 				}
 			}
 		}
