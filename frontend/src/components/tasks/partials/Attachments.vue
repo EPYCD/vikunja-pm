@@ -591,7 +591,7 @@ defineExpose({
 }
 
 .files {
-	margin-block-end: 1rem;
+	margin-block-end: var(--wm-space-4);
 }
 
 .attachment {
@@ -599,17 +599,18 @@ defineExpose({
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
 	inline-size: 100%;
-	
-	padding: .5rem;
-	
-	transition: background-color $transition;
+
+	padding: var(--wm-space-2);
+
+	transition: background-color var(--wm-duration) var(--wm-ease);
 	background-color: transparent;
-	
-	border: transparent;
-	border-radius: $radius;
+
+	border: 0;
+	border-block-end: 1px solid var(--wm-line-faint);
+	border-radius: 0;
 
 	&:hover {
-		background-color: var(--grey-200);
+		background-color: var(--wm-surface-hover);
 	}
 }
 
@@ -631,29 +632,36 @@ defineExpose({
 .filename {
 	display: flex;
 	align-items: center;
-	font-weight: bold;
+	font-weight: 600;
 	min-block-size: 2rem;
-	color: var(--text);
+	color: var(--wm-text);
 	text-align: start;
 	word-break: break-all;
 	min-inline-size: 0;
 }
 
+// File size, author and actions are readout, not prose.
 .attachment-info-meta,
 .attachment-actions {
-	color: var(--grey-500);
-	font-size: .9rem;
+	@include mono-data;
+
+	color: var(--wm-text-tertiary);
+	font-size: var(--wm-text-2xs);
 }
 
 .attachment-actions {
 	display: flex;
-	margin-block-start: .25rem;
+	margin-block-start: var(--wm-space-1);
 	margin-block-end: 0;
 }
 
+// The drop target is a void, so it gets the blueprint graticule.
 .dropzone {
 	position: fixed;
-	background: hsla(var(--grey-100-hsl), 0.8);
+	background: var(--white-translucent);
+
+	@include graticule;
+
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inset-block-end: 0;
@@ -676,7 +684,7 @@ defineExpose({
 		inline-size: 100%;
 		font-size: 5rem;
 		block-size: auto;
-		text-shadow: var(--shadow-md);
+		color: var(--wm-text-secondary);
 		animation: bounce 2s infinite;
 
 		@media (prefers-reduced-motion: reduce) {
@@ -685,12 +693,14 @@ defineExpose({
 	}
 
 	.hint {
-		margin: .5rem auto 2rem;
-		border-radius: $radius;
+		@include mono-label(var(--wm-text-xs));
+
+		margin: var(--wm-space-2) auto var(--wm-space-6);
+		border-radius: 0;
 		box-shadow: var(--shadow-md);
-		background: var(--primary);
-		padding: 1rem;
-		color: $white; // Should always be white because of the background, regardless of the theme
+		background: var(--wm-accent);
+		padding: var(--wm-space-4);
+		color: var(--wm-on-accent);
 		inline-size: 100%;
 		max-inline-size: 300px;
 	}
@@ -709,7 +719,7 @@ defineExpose({
 	margin-block: 0;
 
 	> span {
-		padding: 0 .25rem;
+		padding: 0 var(--wm-space-1);
 	}
 
 	:deep(.avatar-wrapper) {
@@ -718,8 +728,13 @@ defineExpose({
 }
 
 .attachment-info-meta-button {
-	color: var(--link);
-	padding: 0 .25rem;
+	color: var(--wm-text-tertiary);
+	padding: 0 var(--wm-space-1);
+	transition: color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-accent-text);
+	}
 }
 
 @keyframes bounce {
@@ -789,23 +804,26 @@ defineExpose({
 .video-preview-error {
 	max-inline-size: 25rem;
 	margin: 0 auto;
-	padding: 2rem;
-	border-radius: $radius;
-	background: var(--white);
-	color: var(--text);
+	padding: var(--wm-space-6);
+	border: 1px solid var(--wm-line);
+	background: var(--wm-surface);
+	color: var(--wm-text);
 	text-align: center;
 
 	p {
-		margin-block-end: 1rem;
+		margin-block-end: var(--wm-space-4);
 	}
 }
 
+// Marks the attachment currently used as the card cover.
 .is-task-cover {
-	background: var(--primary);
-	color: var(--white);
-	margin-inline-start: .25rem;
-	padding: .25rem .35rem;
-	border-radius: 4px;
-	font-size: .75rem;
+	@include mono-label;
+
+	background: var(--wm-accent-wash);
+	color: var(--wm-accent-text);
+	border: 1px solid var(--wm-accent-line);
+	margin-inline-start: var(--wm-space-1);
+	padding: 2px var(--wm-space-1);
+	border-radius: var(--wm-radius-xs);
 }
 </style>

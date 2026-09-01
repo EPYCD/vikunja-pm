@@ -1226,29 +1226,25 @@ function setRelatedTasksActive() {
 	padding-block-end: 0;
 
 	@media screen and (min-width: $desktop) {
-		padding-block-end: 1rem;
+		padding-block-end: var(--wm-space-4);
 	}
 }
 
 .task-view {
-	padding-block-start: 1rem;
-	padding-inline: .5rem;
-	background-color: var(--site-background);
+	padding-block-start: var(--wm-space-4);
+	padding-inline: var(--wm-space-2);
+	background-color: var(--wm-canvas);
 
 	@media screen and (min-width: $desktop) {
-		padding: 1rem;
+		padding: var(--wm-space-4);
 	}
 }
 
 .is-modal .task-view {
-	border-radius: $radius;
-	padding: 1rem;
-	color: var(--text);
-	background-color: var(--site-background) !important;
-
-	@media screen and (width <= calc(#{$desktop} + 1px)) {
-		border-radius: 0;
-	}
+	border-radius: 0;
+	padding: var(--wm-space-4);
+	color: var(--wm-text);
+	background-color: var(--wm-canvas) !important;
 }
 
 .task-view * {
@@ -1260,12 +1256,21 @@ function setRelatedTasksActive() {
 }
 
 
+// The breadcrumb is positional data, so it reads as data: mono, quiet, tight.
 .subtitle {
-	color: var(--grey-500);
-	margin-block-end: 1rem;
+	@include mono-data;
+
+	font-size: var(--wm-text-xs);
+	color: var(--wm-text-tertiary);
+	margin-block-end: var(--wm-space-4);
 
 	a {
-		color: var(--grey-800);
+		color: var(--wm-text-secondary);
+		transition: color var(--wm-duration) var(--wm-ease);
+
+		&:hover {
+			color: var(--wm-accent-text);
+		}
 	}
 }
 
@@ -1274,7 +1279,7 @@ h2 .button {
 }
 
 .icon.is-grey {
-	color: var(--grey-400);
+	color: var(--wm-text-tertiary);
 }
 
 .date-input {
@@ -1285,7 +1290,7 @@ h2 .button {
 .remove {
 	color: var(--danger);
 	vertical-align: middle;
-	padding-inline-start: .5rem;
+	padding-inline-start: var(--wm-space-2);
 	line-height: 1;
 }
 
@@ -1293,17 +1298,17 @@ h2 .button {
 	inline-size: 100%;
 
 	.show {
-		color: var(--text);
-		padding: .25rem .5rem;
-		transition: background-color $transition;
-		border-radius: $radius;
+		color: var(--wm-text);
+		padding: var(--wm-space-1) var(--wm-space-2);
+		transition: background-color var(--wm-duration) var(--wm-ease);
+		border-radius: 0;
 		display: block;
 		margin: .1rem 0;
 		inline-size: 100%;
 		text-align: start;
 
 		&:hover {
-			background: var(--white);
+			background: var(--wm-surface-hover);
 		}
 	}
 
@@ -1313,13 +1318,21 @@ h2 .button {
 }
 
 .details {
-	padding-block-end: 0.75rem;
+	padding-block-end: var(--wm-space-3);
 	flex-flow: row wrap;
 	margin-block-end: 0;
 
+	// Every attribute is captioned like an instrument dial.
 	.detail-title {
+		@include mono-label;
+
 		display: block;
-		color: var(--grey-400);
+		color: var(--wm-text-tertiary);
+		margin-block-end: var(--wm-space-1);
+
+		.icon {
+			font-size: var(--wm-text-xs);
+		}
 	}
 
 	.none {
@@ -1332,6 +1345,13 @@ h2 .button {
 		break-after: always; // New syntax
 	}
 
+}
+
+// The attribute grid has no eyebrow of its own, so a hairline closes it off
+// against the description below.
+.columns.details {
+	border-block-end: 1px solid var(--wm-line-faint);
+	margin-block-end: var(--wm-space-4);
 }
 
 .details.labels-list,
@@ -1352,10 +1372,10 @@ h2 .button {
 	.textarea,
 	.select:not(.has-defaults) select {
 		cursor: pointer;
-		transition: all $transition-duration;
+		transition: all var(--wm-duration) var(--wm-ease);
 
 		&::placeholder {
-			color: var(--text-light);
+			color: var(--wm-text-tertiary);
 			opacity: 1;
 			font-style: italic;
 		}
@@ -1364,15 +1384,15 @@ h2 .button {
 			&:hover,
 			&:active,
 			&:focus {
-				background: var(--scheme-main);
-				border-color: var(--border);
+				background: var(--wm-surface);
+				border-color: var(--wm-line);
 				cursor: text;
 			}
 
 			&:hover,
 			&:active {
 				cursor: text;
-				border-color: var(--link)
+				border-color: var(--wm-accent);
 			}
 		}
 	}
@@ -1403,7 +1423,7 @@ h2 .button {
 
 	.button {
 		inline-size: 100%;
-		margin-block-end: .5rem;
+		margin-block-end: var(--wm-space-2);
 		justify-content: left;
 
 		&.has-light-text {
@@ -1441,7 +1461,7 @@ h2 .button {
 }
 
 .checklist-summary {
-	padding-inline-start: .25rem;
+	padding-inline-start: var(--wm-space-1);
 }
 
 .detail-content {
@@ -1450,12 +1470,12 @@ h2 .button {
 	}
 }
 
+// Groups the action rail into labelled banks, the way a panel is silkscreened.
 .action-heading {
-	text-transform: uppercase;
-	color: var(--grey-700);
-	font-size: .75rem;
-	font-weight: 700;
-	margin: .5rem 0;
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
+	margin: var(--wm-space-4) 0 var(--wm-space-2);
 	display: inline-block;
 }
 
@@ -1463,24 +1483,28 @@ h2 .button {
 	position: fixed;
 	// Position above the keyboard shortcuts button (which is at bottom: calc(1rem - 4px))
 	inset-block-end: 2.5rem;
-	inset-inline-end: .75rem;
+	inset-inline-end: var(--wm-space-3);
 	z-index: 10;
 	inline-size: 2rem;
 	block-size: 2rem;
-	border-radius: 100%;
+	border-radius: var(--wm-radius-full);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: 0;
-	background-color: var(--site-background);
-	border: 1px solid var(--grey-300);
-	color: var(--grey-500);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	transition: all $transition;
+	background-color: var(--wm-surface-raised);
+	border: 1px solid var(--wm-line);
+	color: var(--wm-text-secondary);
+	box-shadow: var(--shadow-md);
+	transition:
+		background-color var(--wm-duration) var(--wm-ease),
+		color var(--wm-duration) var(--wm-ease),
+		border-color var(--wm-duration) var(--wm-ease);
 
 	&:hover {
-		background-color: var(--grey-100);
-		color: var(--grey-700);
+		background-color: var(--wm-surface-hover);
+		border-color: var(--wm-line-strong);
+		color: var(--wm-text);
 	}
 
 	@media screen and (max-width: $tablet) {

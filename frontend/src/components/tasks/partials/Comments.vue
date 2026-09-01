@@ -573,10 +573,11 @@ function getCommentUrl(commentId: string) {
 	align-items: flex-start;
 	display: flex;
 	text-align: inherit;
-	padding-block-start: .5rem;
+	padding-block-start: var(--wm-space-2);
 
 	& + .media {
-		margin-block-start: .5rem;
+		margin-block-start: var(--wm-space-2);
+		border-block-start: 1px solid var(--wm-line-faint);
 	}
 }
 
@@ -584,13 +585,13 @@ function getCommentUrl(commentId: string) {
 	flex-basis: auto;
 	flex-grow: 0;
 	flex-shrink: 0;
-	margin: 0 .5rem !important;
+	margin: 0 var(--wm-space-2) !important;
 }
 
 .comment-info {
 	display: flex;
 	align-items: center;
-	gap: .5rem;
+	gap: var(--wm-space-2);
 
 	img {
 		@media screen and (max-width: $tablet) {
@@ -598,7 +599,7 @@ function getCommentUrl(commentId: string) {
 			inline-size: 20px;
 			block-size: 20px;
 			padding-inline-end: 0;
-			margin-inline-end: .5rem;
+			margin-inline-end: var(--wm-space-2);
 		}
 
 		@media screen and (min-width: $tablet) {
@@ -606,28 +607,39 @@ function getCommentUrl(commentId: string) {
 		}
 	}
 
+	strong {
+		font-size: var(--wm-text-sm);
+		color: var(--wm-text);
+	}
 
 	span,
 	.comment-permalink {
-		font-size: .75rem;
+		@include mono-data;
+
+		font-size: var(--wm-text-2xs);
 		line-height: 1;
+		color: var(--wm-text-tertiary);
 	}
 
 	.comment-permalink {
-		font-size: 1rem;
+		font-size: var(--wm-text-xs);
 		border: 1px solid transparent;
-		padding: 0.25rem;
-		border-radius: 1rem;
-		color: var(--grey, hsl(0, 0%, 48%));
+		padding: var(--wm-space-1);
+		border-radius: var(--wm-radius-xs);
+		color: var(--wm-text-tertiary);
+		transition:
+			color var(--wm-duration) var(--wm-ease),
+			border-color var(--wm-duration) var(--wm-ease);
 	}
+
 	.comment-permalink:hover {
-		color: var(--grey-dark, hsl(0, 0%, 29%));
-		border-color: var(--grey-dark, hsl(0, 0%, 29%));
+		color: var(--wm-text);
+		border-color: var(--wm-line-strong);
 	}
 }
 
 .image.is-avatar {
-	border-radius: 100%;
+	border-radius: var(--wm-radius-full);
 }
 
 .media-content {
@@ -638,22 +650,20 @@ function getCommentUrl(commentId: string) {
 	inline-size: calc(100% - 48px - 2rem);
 }
 
-.comments-heading {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
+// The sort control sits after the hairline the section header draws.
 .comment-sort-button {
-	font-size: .75rem;
-	font-weight: normal;
-	color: var(--grey-500);
+	@include mono-label;
+
+	order: 1;
+	color: var(--wm-text-tertiary);
 	display: inline-flex;
 	align-items: center;
-	gap: .25rem;
+	gap: var(--wm-space-1);
+	white-space: nowrap;
+	transition: color var(--wm-duration) var(--wm-ease);
 
 	&:hover {
-		color: var(--grey-700);
+		color: var(--wm-text);
 	}
 }
 
@@ -672,12 +682,12 @@ function getCommentUrl(commentId: string) {
 
 .media.comment {
 	scroll-margin-block-start: 4rem;
-	transition: background-color .3s ease-out;
-	border-radius: $radius;
+	transition: background-color var(--wm-duration-slow) var(--wm-ease);
+	border-radius: 0;
 }
 
 .media.comment.comment-highlight {
-	background-color: hsla(var(--primary-hsl), 0.18);
-	transition: background-color .15s ease-in;
+	background-color: var(--wm-accent-wash-strong);
+	transition: background-color var(--wm-duration-fast) var(--wm-ease);
 }
 </style>

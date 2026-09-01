@@ -33,6 +33,6 @@ withDefaults(defineProps<{
 
 <style lang="scss" scoped>
 .sort__icon {
-	color: var(--grey-400);
+	color: var(--wm-text-tertiary);
 }
 </style>

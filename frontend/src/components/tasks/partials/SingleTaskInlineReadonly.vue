@@ -58,7 +58,6 @@
 		>
 			<time
 				:datetime="formatISO(task.dueDate)"
-				class="is-italic"
 			>
 				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
 			</time>
@@ -133,26 +132,24 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 .task {
 	display: flex;
 	flex-wrap: wrap;
-	transition: background-color $transition;
 	align-items: center;
+	transition: background-color var(--wm-duration) var(--wm-ease);
 	cursor: pointer;
-	border-radius: $radius;
-	border: 2px solid transparent;
+	border-radius: 0;
 
 	text-overflow: ellipsis;
 	word-wrap: break-word;
 	word-break: break-word;
-	//display: -webkit-box;
 	hyphens: auto;
 	-webkit-line-clamp: 4;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 
-	//flex: 1 0 50%;
-
 	.dueDate {
 		display: inline-block;
-		margin-inline-start: 5px;
+		margin-inline-start: var(--wm-space-2);
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 	}
 
 	&[data-is-overdue] .dueDate {
@@ -161,21 +158,23 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 
 	.task-project {
 		inline-size: auto;
-		color: var(--grey-400);
-		font-size: .9rem;
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 		white-space: nowrap;
 	}
 
 	.avatar {
-		border-radius: 50%;
+		border-radius: var(--wm-radius-full);
 		vertical-align: bottom;
-		margin-inline-start: .5rem;
+		margin-inline-start: var(--wm-space-2);
 		block-size: 21px;
 		inline-size: 21px;
 	}
 
 	.project-task-icon {
 		margin-inline-start: 6px;
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 
 		&:not(:first-of-type) {
 			margin-inline-start: 8px;
@@ -184,23 +183,23 @@ const project = computed(() => projectStore.projects[props.task.projectId])
 	}
 
 	a {
-		color: var(--text);
-		transition: color ease $transition-duration;
+		color: var(--wm-text);
+		transition: color var(--wm-duration) var(--wm-ease);
 
 		&:hover {
-			color: var(--grey-900);
+			color: var(--wm-accent-text);
 		}
 	}
 
 	.tasktext.done {
 		text-decoration: line-through;
-		color: var(--grey-500);
+		color: var(--wm-text-tertiary);
 	}
 
 	span.parent-tasks {
-		color: var(--grey-500);
+		color: var(--wm-text-tertiary);
 		inline-size: auto;
-		margin-inline-start: .25rem;
+		margin-inline-start: var(--wm-space-1);
 	}
 }
 </style>

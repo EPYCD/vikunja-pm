@@ -289,23 +289,23 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	}
 
 	.option-button {
-		font-size: .85rem;
+		font-size: var(--wm-text-sm);
 		border-radius: 0;
-		padding: .5rem;
+		padding: var(--wm-space-2);
 		margin: 0;
 
 		&:hover {
-			background: var(--grey-100);
+			background: var(--wm-surface-hover);
 		}
 	}
 }
 
 .reminder__close-button {
-	margin: .5rem;
+	margin: var(--wm-space-2);
 	inline-size: calc(100% - 1rem);
 }
 
 .currently-active {
-	color: var(--primary);
+	color: var(--wm-accent-text);
 }
 </style>

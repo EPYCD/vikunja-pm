@@ -285,4 +285,11 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 .menu + .menu {
 	padding-block-start: var(--wm-space-2);
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.menu-container,
+	.menu-container.is-active {
+		transition: none;
+	}
+}
 </style>

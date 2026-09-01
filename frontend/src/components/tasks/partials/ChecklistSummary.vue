@@ -64,24 +64,30 @@ const label = computed(() => {
 
 <style scoped lang="scss">
 .checklist-summary {
-	color: var(--text-muted);
+	@include mono-data;
+
+	color: var(--wm-text-tertiary);
 	display: inline-flex;
 	align-items: center;
-	padding-inline-start: .5rem;
-	font-size: .9rem;
+	padding-inline-start: var(--wm-space-2);
+	font-size: var(--wm-text-2xs);
 }
 
 svg {
 	transform: rotate(-90deg);
-	transition: stroke-dashoffset 0.35s;
-	margin-inline-end: .25rem;
+	transition: stroke-dashoffset var(--wm-duration-slow) var(--wm-ease);
+	margin-inline-end: var(--wm-space-1);
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 
 circle {
-	stroke: var(--grey-400);
+	stroke: var(--wm-line-strong);
 
 	&:last-child {
-		stroke: var(--primary);
+		stroke: var(--wm-accent);
 	}
 }
 

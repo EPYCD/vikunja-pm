@@ -201,7 +201,7 @@ const canToggleFavorite = computed(() => {
 
 <style lang="scss" scoped>
 .list-menu {
-	transition: background-color $transition;
+	transition: background-color var(--wm-duration) var(--wm-ease);
 }
 
 .project-is-collapsed {
@@ -209,7 +209,16 @@ const canToggleFavorite = computed(() => {
 }
 
 .favorite {
-	transition: opacity $transition, color $transition;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: var(--wm-control-height-sm);
+	block-size: var(--wm-control-height-sm);
+	flex-shrink: 0;
+	color: var(--wm-text-tertiary);
+	transition:
+		opacity var(--wm-duration) var(--wm-ease),
+		color var(--wm-duration) var(--wm-ease);
 	opacity: 0;
 
 	&:hover,
@@ -231,18 +240,20 @@ const canToggleFavorite = computed(() => {
 	opacity: 0;
 }
 
+// Sized to the width of an icon box so project bubbles line up with the
+// glyphs of the top-level navigation above them.
 .color-bubble-wrapper {
 	position: relative;
-	inline-size: 1rem;
-	block-size: 1rem;
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
 	display: flex;
 	align-items: center;
-	justify-content: flex-start;
-	margin-inline-end: .25rem;
+	justify-content: center;
+	margin-inline-end: var(--wm-space-2);
 	flex-shrink: 0;
 
 	.color-bubble, .icon {
-		transition: all $transition;
+		transition: opacity var(--wm-duration) var(--wm-ease);
 		position: absolute;
 		inline-size: 12px;
 		margin: 0 !important;
@@ -253,12 +264,13 @@ const canToggleFavorite = computed(() => {
 .drag-handle {
 	opacity: 0;
 	cursor: grab;
-	transition: opacity $transition;
+	transition: opacity var(--wm-duration) var(--wm-ease);
 	position: absolute;
 	inset: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	color: var(--wm-text-tertiary);
 
 	&:active {
 		cursor: grabbing;
@@ -271,8 +283,8 @@ const canToggleFavorite = computed(() => {
 }
 
 .saved-filter-icon {
-	color: var(--grey-300) !important;
-	font-size: .75rem;
+	color: var(--wm-text-tertiary) !important;
+	font-size: var(--wm-text-xs);
 }
 
 @media (pointer: coarse) {
@@ -287,12 +299,15 @@ const canToggleFavorite = computed(() => {
 
 .navigation-item {
 	position: relative;
-	transition: background-color $transition, box-shadow $transition;
+	padding-inline-end: var(--wm-space-2);
+	transition: background-color var(--wm-duration) var(--wm-ease);
 }
 
+// An inset ring: the sidebar scroll container would clip an outer one.
 .navigation-item:has(*:focus-visible) {
-	box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
-	background-color: var(--white);
+	outline: 2px solid var(--wm-accent);
+	outline-offset: -2px;
+	background-color: var(--wm-surface-hover);
 
 	.favorite, .menu-list-dropdown {
 		opacity: 1;
@@ -301,17 +316,16 @@ const canToggleFavorite = computed(() => {
 
 .navigation-item a:focus-visible {
 	// The focus ring is already added to the navigation-item, so we don't need to add it again.
+	outline: none;
 	box-shadow: none;
 }
 
 .is-drop-target {
-	background-color: hsla(var(--primary-hsl), 0.15);
-	border-radius: $radius;
+	background-color: var(--wm-accent-wash);
 
 	.navigation-item {
-		background-color: hsla(var(--primary-hsl), 0.1);
-		box-shadow: inset 0 0 0 2px var(--primary);
-		border-radius: $radius;
+		background-color: var(--wm-accent-wash-strong);
+		box-shadow: inset 0 0 0 1px var(--wm-accent);
 	}
 }
 </style>

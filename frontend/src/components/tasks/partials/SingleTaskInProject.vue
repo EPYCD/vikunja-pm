@@ -95,7 +95,6 @@
 						>	
 							<time
 								:datetime="formatISO(task.dueDate)"
-								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
 								– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
@@ -408,22 +407,33 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+// A console row: hairline separator, ~40px tall, and an accent rail on the
+// leading edge when it is the active one.
 .task {
 	display: flex;
 	flex-wrap: wrap;
-	padding: .4rem;
-	transition: background-color $transition;
 	align-items: center;
+	min-block-size: 40px;
+	padding: var(--wm-space-2) var(--wm-space-3);
+	border-radius: 0;
+	border-block-end: 1px solid var(--wm-line-faint);
+	border-inline-start: 2px solid transparent;
 	cursor: pointer;
-	border-radius: $radius;
-	border: 2px solid transparent;
+	transition:
+		background-color var(--wm-duration) var(--wm-ease),
+		border-color var(--wm-duration) var(--wm-ease);
 
 	&:hover {
-		background-color: var(--grey-100);
+		background-color: var(--wm-surface-hover);
+	}
+
+	&:has(*:focus-visible), &:focus, &:focus-within {
+		background-color: var(--wm-accent-wash);
+		border-inline-start-color: var(--wm-accent);
 	}
 
 	&:has(*:focus-visible), &:focus {
-		box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+		box-shadow: 0 0 0 2px hsla(var(--wm-accent-hsl), 0.55);
 
 		a.task-link {
 			box-shadow: none;
@@ -432,7 +442,7 @@ defineExpose({
 
 	@supports not selector(:focus-within) {
 		:focus {
-			box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+			box-shadow: 0 0 0 2px hsla(var(--wm-accent-hsl), 0.55);
 
 			a.task-link {
 				box-shadow: none;
@@ -457,14 +467,16 @@ defineExpose({
 
 	.dueDate {
 		display: inline-block;
-		margin-inline-start: 5px;
+		margin-inline-start: var(--wm-space-2);
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 
 		&:focus-visible {
 			box-shadow: none;
 
 			time {
-				box-shadow: 0 0 0 1px hsla(var(--primary-hsl), 0.5);
-				border-radius: 3px;
+				box-shadow: 0 0 0 1px hsla(var(--wm-accent-hsl), 0.6);
+				border-radius: var(--wm-radius-xs);
 			}
 		}
 	}
@@ -475,8 +487,8 @@ defineExpose({
 
 	.task-project {
 		inline-size: auto;
-		color: var(--grey-400);
-		font-size: .9rem;
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 		white-space: nowrap;
 	}
 
@@ -488,15 +500,17 @@ defineExpose({
 	}
 
 	.avatar {
-		border-radius: 50%;
+		border-radius: var(--wm-radius-full);
 		vertical-align: bottom;
-		margin-inline-start: 5px;
+		margin-inline-start: var(--wm-space-1);
 		block-size: 27px;
 		inline-size: 27px;
 	}
 
 	.project-task-icon {
 		margin-inline-start: 6px;
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-xs);
 
 		&:not(:first-of-type) {
 			margin-inline-start: 8px;
@@ -505,11 +519,11 @@ defineExpose({
 	}
 
 	a {
-		color: var(--text);
-		transition: color ease $transition-duration;
+		color: var(--wm-text);
+		transition: color var(--wm-duration) var(--wm-ease);
 
 		&:hover {
-			color: var(--grey-900);
+			color: var(--wm-accent-text);
 		}
 	}
 
@@ -517,8 +531,11 @@ defineExpose({
 		opacity: 1;
 		text-align: center;
 		inline-size: 27px;
-		transition: opacity $transition, color $transition;
-		border-radius: $radius;
+		color: var(--wm-text-tertiary);
+		transition:
+			opacity var(--wm-duration) var(--wm-ease),
+			color var(--wm-duration) var(--wm-ease);
+		border-radius: var(--wm-radius-xs);
 
 		&:hover {
 			color: var(--warning);
@@ -547,7 +564,7 @@ defineExpose({
 	:deep(.fancy-checkbox) {
 		block-size: 18px;
 		padding-block-start: 0;
-		padding-inline-end: .5rem;
+		padding-inline-end: var(--wm-space-2);
 
 		span {
 			display: none;
@@ -573,16 +590,16 @@ defineExpose({
 
 	.tasktext.done {
 		text-decoration: line-through;
-		color: var(--grey-500);
+		color: var(--wm-text-tertiary);
 	}
 
 	span.parent-tasks {
-		color: var(--grey-500);
+		color: var(--wm-text-tertiary);
 		inline-size: auto;
 	}
 
 	.show-project .parent-tasks {
-		padding-inline-start: .25rem;
+		padding-inline-start: var(--wm-space-1);
 	}
 
 	.remove {
@@ -604,8 +621,8 @@ defineExpose({
 		inset-inline-start: calc(50% - 1rem);
 		inline-size: 2rem;
 		block-size: 2rem;
-		border-inline-start-color: var(--grey-300);
-		border-block-end-color: var(--grey-300);
+		border-inline-start-color: var(--wm-line-strong);
+		border-block-end-color: var(--wm-line-strong);
 	}
 }
 
@@ -613,16 +630,17 @@ defineExpose({
 	margin-inline-start: 1.75rem;
 }
 
+// Floats above the row, so it is one of the few places a shadow is earned.
 :deep(.popup) {
-	border-radius: $radius;
-	background-color: var(--white);
+	border-radius: 0;
+	background-color: var(--wm-surface-raised);
 	box-shadow: var(--shadow-lg);
-	color: var(--text);
+	color: var(--wm-text);
 	inset-block-start: unset;
-	
+
 	&.is-open {
-		padding: 1rem;
-		border: 1px solid var(--grey-200);
+		padding: var(--wm-space-4);
+		border: 1px solid var(--wm-line);
 	}
 }
 </style>

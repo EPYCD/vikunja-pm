@@ -43,11 +43,9 @@
     // wash — never a rounded filled pill.
     &.other-menu-items li:has(> .router-link-exact-active),
     li > div:has(> .router-link-exact-active) {
+      // Keeps its wash on hover: the plain --wm-surface-hover fill above would
+      // wipe out the active marking.
       background: var(--wm-accent-wash);
-
-      &:hover {
-        background: var(--wm-accent-wash-strong);
-      }
 
       &::before {
         content: '';

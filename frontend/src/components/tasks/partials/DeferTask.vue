@@ -146,8 +146,8 @@ $defer-task-max-width: 350px + 100px;
 	max-inline-size: $defer-task-max-width;
 
 	@media screen and (max-width: ($defer-task-max-width)) {
-		inset-inline-start: .5rem;
-		inset-inline-end: .5rem;
+		inset-inline-start: var(--wm-space-2);
+		inset-inline-end: var(--wm-space-2);
 		max-inline-size: 100%;
 		inline-size: calc(100vw - 1rem - 2rem);
 	}
@@ -156,7 +156,8 @@ $defer-task-max-width: 350px + 100px;
 .defer-days {
 	justify-content: space-between;
 	display: flex;
-	margin: .5rem 0;
+	gap: var(--wm-space-2);
+	margin: var(--wm-space-2) 0;
 }
 
 :deep() {

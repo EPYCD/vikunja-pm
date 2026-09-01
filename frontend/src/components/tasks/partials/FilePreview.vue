@@ -77,11 +77,11 @@ watchEffect(async () => {
 <style scoped lang="scss">
 img {
 	inline-size: 100%;
-	border-radius: $radius;
+	border-radius: var(--wm-radius-xs);
 	object-fit: cover;
 }
 
 .icon-wrapper {
-	color: var(--grey-500);
+	color: var(--wm-text-tertiary);
 }
 </style>

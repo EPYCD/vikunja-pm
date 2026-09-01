@@ -294,7 +294,7 @@ const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEA
 .project-eyebrow {
 	@include mono-label;
 
-	color: var(--wm-text-tertiary);
+	color: var(--wm-text-secondary);
 	line-height: 1;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -370,7 +370,9 @@ const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEA
 	gap: var(--wm-space-2);
 	block-size: var(--wm-control-height);
 	padding-inline: var(--wm-space-1) var(--wm-space-2);
-	border: 1px solid var(--wm-line);
+	// The outline is the only affordance on this control, so it uses the
+	// contrast-safe control hairline rather than the decorative one.
+	border: 1px solid var(--wm-line-control);
 	background: var(--wm-surface);
 	color: var(--wm-text-secondary);
 	font-size: var(--wm-text-sm);
@@ -382,7 +384,7 @@ const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEA
 
 	&:hover {
 		color: var(--wm-text);
-		border-color: var(--wm-line-strong);
+		border-color: var(--wm-text-tertiary);
 		background: var(--wm-surface-hover);
 	}
 

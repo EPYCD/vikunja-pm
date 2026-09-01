@@ -203,13 +203,14 @@ function getViewRoute(view: IProjectView) {
 	}
 }
 
+// Segmented control: one hairline-outlined strip, mono labels, the active
+// segment filled with the accent. Square corners on purpose.
 .switch-view {
-	background: var(--white);
 	display: inline-flex;
-	border-radius: $radius;
-	font-size: .75rem;
-	box-shadow: var(--shadow-sm);
-	padding: .5rem;
+	align-items: stretch;
+	background: var(--wm-surface);
+	border: 1px solid var(--wm-line-strong);
+	block-size: var(--wm-control-height);
 }
 
 .switch-view--hidden {
@@ -223,40 +224,55 @@ function getViewRoute(view: IProjectView) {
 }
 
 .switch-view-dropdown-trigger {
+	@include mono-label;
+
 	cursor: pointer;
 	display: inline-flex;
 	align-items: center;
-	gap: .25rem;
-	font-weight: bold;
-	color: var(--switch-view-color);
-	background: var(--switch-view-active-background);
+	gap: var(--wm-space-2);
+	block-size: var(--wm-control-height);
+	padding-inline: var(--wm-space-3);
+	border: 1px solid var(--wm-accent);
+	color: var(--wm-on-accent);
+	background: var(--wm-accent);
 }
 
 .dropdown-icon {
-	font-size: .6rem;
+	font-size: var(--wm-text-2xs);
 }
 
 .switch-view-button {
-	padding: .25rem .5rem;
-	display: block;
-	white-space: nowrap;
-	border-radius: $radius;
-	transition: all 100ms;
+	@include mono-label;
 
-	&:not(:last-child) {
-		margin-inline-end: .5rem;
+	display: inline-flex;
+	align-items: center;
+	white-space: nowrap;
+	padding-inline: var(--wm-space-3);
+	color: var(--wm-text-secondary);
+	background: transparent;
+	transition:
+		background-color var(--wm-duration) var(--wm-ease),
+		color var(--wm-duration) var(--wm-ease);
+
+	&:not(:first-child) {
+		border-inline-start: 1px solid var(--wm-line);
 	}
 
 	&:hover {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
+		background: var(--wm-surface-hover);
+		color: var(--wm-text);
+	}
+
+	// The ring is drawn by the global :focus-visible rule; lifting the segment
+	// keeps it from being painted over by the neighbouring segments.
+	&:focus-visible {
+		position: relative;
+		z-index: 1;
 	}
 
 	&.is-active {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-		font-weight: bold;
-		box-shadow: var(--shadow-xs);
+		color: var(--wm-on-accent);
+		background: var(--wm-accent);
 	}
 }
 
@@ -267,9 +283,10 @@ function getViewRoute(view: IProjectView) {
 
 .project-title-print {
 	display: none;
-	font-size: 1.75rem;
+	font-family: $workman-display-font;
+	font-size: var(--wm-text-xl);
 	text-align: center;
-	margin-block-end: .5rem;
+	margin-block-end: var(--wm-space-2);
 
 	@media print {
 		display: block;

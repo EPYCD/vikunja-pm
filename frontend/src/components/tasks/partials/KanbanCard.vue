@@ -245,19 +245,23 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-$task-background: var(--white);
-
+// The card is a flat panel: surface, hairline, one cut corner. clip-path slices
+// a border open along the diagonal, so the hairline is traced off the clipped
+// silhouette instead.
 .task {
 	-webkit-touch-callout: none; // iOS Safari
 	user-select: none;
 	cursor: pointer;
-	box-shadow: var(--shadow-xs);
 	display: block;
 
-	font-size: .9rem;
-	border-radius: $radius;
-	background: $task-background;
+	font-size: var(--wm-text-sm);
+	border-radius: 0;
+	background: var(--wm-surface);
+	color: var(--wm-text);
 	overflow: hidden;
+
+	@include chamfer(var(--wm-chamfer-sm), bottom-right);
+	@include chamfer-outline(var(--wm-line));
 
 	&.loader-container.is-loading::after {
 		inline-size: 1.5rem;
@@ -269,7 +273,11 @@ $task-background: var(--white);
 
 	h3 {
 		font-family: $family-sans-serif;
-		font-size: .85rem;
+		font-size: var(--wm-text-sm);
+		font-weight: 500;
+		letter-spacing: 0;
+		line-height: 1.35;
+		color: inherit;
 		word-break: break-word;
 	}
 
@@ -282,11 +290,14 @@ $task-background: var(--white);
 		float: inline-end;
 		display: flex;
 		align-items: center;
-		padding: 0 .25rem;
-		font-size: .85rem;
+		color: var(--wm-text-tertiary);
+
+		@include mono-data;
+
+		font-size: var(--wm-text-2xs);
 
 		.icon {
-			margin-inline-end: .25rem;
+			margin-inline-end: var(--wm-space-1);
 		}
 
 	}
@@ -296,17 +307,20 @@ $task-background: var(--white);
 	}
 
 	.label-wrapper .tag {
-		margin: .5rem .5rem 0 0;
+		margin: var(--wm-space-2) var(--wm-space-2) 0 0;
 	}
 
+	// The metadata row: mono, quiet, and evenly spaced — a readout, not chips.
 	.footer {
 		background: transparent;
 		padding: 0;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: .25rem;
-		margin-block-start: .25rem;
+		gap: var(--wm-space-2);
+		margin-block-start: var(--wm-space-2);
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-2xs);
 
 		:deep(.checklist-summary) {
 			padding-inline-start: 0;
@@ -324,31 +338,26 @@ $task-background: var(--white);
 				}
 			}
 		}
-
-		.priority-label {
-			font-size: .75rem;
-			padding: 0 .5rem 0 .25rem;
-
-			.icon {
-				block-size: 1rem;
-				padding: 0 .25rem;
-				margin-block-start: 0;
-			}
-		}
 	}
 
-	.footer .icon,
-	.due-date,
-	.priority-label {
-		background: var(--grey-100);
-		border-radius: $radius;
-		padding: 0 .5rem;
+	.footer .icon {
+		color: var(--wm-text-tertiary);
 	}
 
-	.task-id, .project-title {
-		color: var(--grey-500);
-		font-size: .8rem;
-		margin-block-end: .25rem;
+	// The identifier is the card's call sign: mono, tracked, quiet.
+	.task-id {
+		@include mono-label;
+
+		color: var(--wm-text-tertiary);
+		margin-block-end: var(--wm-space-1);
+		display: flex;
+		align-items: center;
+	}
+
+	.project-title {
+		color: var(--wm-text-tertiary);
+		font-size: var(--wm-text-2xs);
+		margin-block-end: var(--wm-space-1);
 		display: flex;
 	}
 
@@ -363,14 +372,12 @@ $task-background: var(--white);
 	&.has-custom-background-color {
 		color: #000000; // pure black, not grey-800: guarantees 4.5:1 at the luminance flip point
 
-		.footer .icon,
+		// beat component-level color: var(--wm-text-tertiary) so secondary text tracks the guaranteed main text color
+		.task-id,
+		.project-title,
 		.due-date,
-		.priority-label {
-			background: hsl(220, 13%, 91%);
-		}
-
-		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
+		.footer,
+		.footer .icon {
 			color: inherit;
 		}
 
@@ -383,20 +390,18 @@ $task-background: var(--white);
 		--white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a)) !important;
 		color: var(--white);
 
-		.footer .icon,
-		.due-date,
-		.priority-label {
-			background: hsl(215, 27.9%, 16.9%); // grey-800
-		}
-
 		.footer {
 			.icon svg {
 				fill: var(--white);
 			}
 		}
 
-		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
+		// beat component-level color: var(--wm-text-tertiary) so secondary text tracks the guaranteed main text color
+		.task-id,
+		.project-title,
+		.due-date,
+		.footer,
+		.footer .icon {
 			color: inherit;
 		}
 
@@ -404,27 +409,37 @@ $task-background: var(--white);
 			color: inherit;
 		}
 
-		// var(--danger-text)/PriorityLabel's --danger-text fail on the dark grey-800 chip bg; brightened red keeps hue/sat, hits >= 4.5:1
+		// var(--danger-text) fails on a dark custom card colour; brightened red keeps hue/sat, hits >= 4.5:1
 		&[data-is-overdue] .due-date,
-		.priority-label.high-priority {
+		:deep(.priority-label.high-priority) {
 			color: hsl(var(--danger-h), var(--danger-s), 68%);
 		}
 	}
 }
 
+// The dragged card is one of the few things that genuinely floats. A clipped
+// element cannot cast a box-shadow, so the elevation is traced off the same
+// alpha mask the hairline uses.
+.task-dragging .task {
+	filter:
+		drop-shadow(1px 0 0 var(--wm-line-strong))
+		drop-shadow(-1px 0 0 var(--wm-line-strong))
+		drop-shadow(0 1px 0 var(--wm-line-strong))
+		drop-shadow(0 -1px 0 var(--wm-line-strong))
+		drop-shadow(0 10px 20px hsla(var(--dark-h), var(--dark-s), var(--dark-l), 0.35));
+}
+
 .kanban-card__done {
-	margin-inline-end: .25rem;
+	margin-inline-end: var(--wm-space-1);
 }
 
 .task-progress {
-	margin: 8px 0 0;
+	margin: var(--wm-space-2) 0 0;
 	inline-size: 100%;
-	block-size: 0.5rem;
+	block-size: 0.375rem;
 }
 
 :deep(.comment-count) {
-	background: var(--grey-100);
-	border-radius: $radius;
-	padding: 0.25rem;
+	font-size: var(--wm-text-2xs);
 }
 </style>

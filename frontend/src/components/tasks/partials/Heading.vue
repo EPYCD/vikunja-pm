@@ -211,13 +211,21 @@ async function cancel(element: HTMLInputElement) {
 	margin-inline-end: 0;
 
 	@media screen and (max-width: $tablet) {
-		margin: 0 -.3rem .5rem; // the title has 0.3rem padding - this make the text inside of it align with the rest
+		margin: 0 -.3rem var(--wm-space-2); // the title has 0.3rem padding - this make the text inside of it align with the rest
 	}
 }
 
+// The call sign for the whole view: mono, tracked, quiet.
 .title.task-id {
-	color: var(--grey-400);
+	@include mono-label(var(--wm-text-xs));
+
+	color: var(--wm-text-tertiary);
 	white-space: nowrap;
+	transition: color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-text-secondary);
+	}
 }
 
 .color-bubble {
@@ -227,7 +235,7 @@ async function cancel(element: HTMLInputElement) {
 
 .close {
 	font-size: 2rem;
-	margin-inline-start: 0.5rem;
+	margin-inline-start: var(--wm-space-2);
 	line-height: 1;
 
 	@media screen and (max-width: $tablet) {
