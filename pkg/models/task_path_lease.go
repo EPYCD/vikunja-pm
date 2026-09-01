@@ -19,6 +19,7 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/user"
@@ -43,6 +44,10 @@ type TaskPathLease struct {
 	User *user.User `xorm:"-" json:"user,omitempty" readOnly:"true" doc:"The holding user, embedded when listing a project's leases."`
 
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When the lease was taken."`
+	// LastActive moves whenever the holder touches the task (claim, update,
+	// comment, heartbeat); it is what tells a live agent from a dead one.
+	LastActive time.Time `xorm:"datetime null" json:"last_active" readOnly:"true" doc:"When the holding task last showed activity: a claim, an update, a comment or an explicit heartbeat."`
+	Stale      bool      `xorm:"-" json:"stale" readOnly:"true" doc:"True when last_active is older than service.leasestaleafter. Stale leases still block; they are a hint to release."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -106,7 +111,47 @@ func embedLeaseHolders(s *xorm.Session, leases []*TaskPathLease) error {
 		l.Task = taskMap[l.TaskID]
 		l.User = users[l.UserID]
 	}
+	markStaleLeases(leases)
 	return nil
+}
+
+// leaseIsStale is the one definition of "stale" every surface shares.
+func leaseIsStale(lastActive time.Time) bool {
+	after := config.ServiceLeaseStaleAfter.GetDuration()
+	if after <= 0 || lastActive.IsZero() {
+		return false
+	}
+	return time.Since(lastActive) > after
+}
+
+func markStaleLeases(leases []*TaskPathLease) {
+	for _, l := range leases {
+		l.Stale = leaseIsStale(l.LastActive)
+	}
+}
+
+// touchLeasesHeldBy refreshes last_active on the task's leases when the
+// acting user is their holder, so ordinary work counts as a heartbeat.
+func touchLeasesHeldBy(s *xorm.Session, taskID, userID int64) error {
+	_, err := s.Where("task_id = ? AND user_id = ?", taskID, userID).
+		Cols("last_active").
+		Update(&TaskPathLease{LastActive: time.Now()})
+	return err
+}
+
+// HeartbeatTaskPathLeases is the explicit "still working" signal for agents
+// that go long between board updates. Refreshes every lease on the task and
+// returns them. The caller has checked write access on the task.
+func HeartbeatTaskPathLeases(s *xorm.Session, taskID int64) ([]*TaskPathLease, error) {
+	if _, err := s.Where("task_id = ?", taskID).Cols("last_active").Update(&TaskPathLease{LastActive: time.Now()}); err != nil {
+		return nil, err
+	}
+	leases, err := getLeasesForTask(s, taskID)
+	if err != nil {
+		return nil, err
+	}
+	markStaleLeases(leases)
+	return leases, nil
 }
 
 func getLeasesForTask(s *xorm.Session, taskID int64) ([]*TaskPathLease, error) {
@@ -124,6 +169,7 @@ func getLeasesForTasks(s *xorm.Session, taskIDs []int64) (map[int64][]*TaskPathL
 	if err := s.In("task_id", taskIDs).OrderBy("id ASC").Find(&leases); err != nil {
 		return nil, err
 	}
+	markStaleLeases(leases)
 	for _, l := range leases {
 		out[l.TaskID] = append(out[l.TaskID], l)
 	}
@@ -150,6 +196,8 @@ func findConflictingLeases(s *xorm.Session, projectID, excludeTaskID int64, patt
 					HeldByTaskID: l.TaskID,
 					HeldByUserID: l.UserID,
 					HeldPattern:  l.Pattern,
+					LastActive:   l.LastActive,
+					Stale:        leaseIsStale(l.LastActive),
 				})
 				break
 			}
@@ -175,10 +223,11 @@ func acquirePathLeasesForTask(s *xorm.Session, task *Task, userID int64, pattern
 	}
 	for _, p := range patterns {
 		if _, err := s.Insert(&TaskPathLease{
-			TaskID:    task.ID,
-			ProjectID: task.ProjectID,
-			UserID:    userID,
-			Pattern:   p,
+			TaskID:     task.ID,
+			ProjectID:  task.ProjectID,
+			UserID:     userID,
+			Pattern:    p,
+			LastActive: time.Now(),
 		}); err != nil {
 			return err
 		}

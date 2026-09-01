@@ -87,6 +87,11 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 	}
 	tc.AuthorID = tc.Author.ID
 
+	// A progress comment from the holder is proof of life for its leases.
+	if err := touchLeasesHeldBy(s, tc.TaskID, tc.AuthorID); err != nil {
+		return err
+	}
+
 	if !tc.Created.IsZero() && !tc.Updated.IsZero() {
 		_, err = s.NoAutoTime().Insert(tc)
 		if err != nil {

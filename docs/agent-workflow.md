@@ -24,7 +24,17 @@ permissions.
 ## 3. The owner's agent decomposes the PRD
 
 Tasks carry a **scope**: the files they own, the files they touch and the
-endpoints they change.
+endpoints they change. Write the whole breakdown as one plan and let the
+server lint it before anything exists:
+
+```
+veans plan --dry-run plan.json   # duplicate/unknown keys, cycles, overlapping paths with no order
+veans plan plan.json             # tasks + relations + scopes in one transaction
+```
+
+`plan.json` is a `tasks` array with plan-local keys, `parent_key`,
+`blocked_by`, `follows` and a `scope` per task (`veans prime` shows the
+shape). Single tasks still work one at a time:
 
 ```
 veans create "atomic task claim" \
@@ -63,11 +73,28 @@ cards, a lock count on in-progress ones, a **Leases** panel and a
 
 ## 5. Finish through a pull request
 
-Agents move a task to `In Review`, post a summary comment and put
-`Refs: PROJ-12` in their commits. Never mark tasks done by hand: the
-`workman-merge-hook` GitHub Action (see `veans/examples/merge-hook.yml`)
-reads the trailers when the PR merges, marks those tasks done — which
-releases their leases — and comments the PR link on each.
+Before opening the PR an agent runs `veans check`: every changed file must
+be inside its tasks' `paths_owned` and outside every other task's lease, or
+the command exits `CONFLICT` with the offending files. Agents then move the
+task to `In Review`, post a summary comment and put `Refs: PROJ-12` in their
+commits.
+
+The `workman-merge-hook` GitHub Action does the rest (examples in
+`veans/examples/`):
+
+* `opened` links the PR on its tasks and parks them In Review.
+* `check` runs the same scope check on the PR and fails it on strays or
+  collisions, posting the verdict as a PR comment.
+* `ci-failed` comments failed runs on the tasks.
+* `close` marks the tasks done when the PR merges — which releases their
+  leases — and comments the PR link. Never mark tasks done by hand.
+
+## 5b. Crashed agents
+
+Leases remember the holder's last activity. After `service.leasestaleafter`
+(default 4h) without a claim, update, comment or `veans heartbeat`, the
+board and `veans ready` flag the lease `stale`. It still blocks; a human
+releases it from the Leases panel when nobody is working on the task.
 
 ## 6. Watch it
 

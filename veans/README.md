@@ -84,6 +84,9 @@ veans ready                    ready queue with reasons (assigned / blocked / le
 veans scope <id> [flags]       show or set the task's scope (paths owned/affected, endpoints, notes)
 veans leases                   list the paths in-progress tasks are editing right now
 veans release <id>             drop a task's leases without changing its status
+veans heartbeat <id>           mark a task's leases active (long silent work)
+veans check [--staged]         changed files vs the referenced tasks' scopes and others' leases
+veans plan [--dry-run] <file>  lint a decomposition and create all of it in one transaction
 veans api METHOD PATH          raw REST passthrough — escape hatch for endpoints not wrapped here
 veans login                    re-mint the bot's token (rotation)
 veans version
@@ -214,6 +217,37 @@ for you.
 Bots set up before scopes existed hold tokens without the new
 permissions; `veans login` mints a fresh token with everything the server
 offers.
+
+## Staying inside the lines
+
+`veans check` lists the files changed since the main branch (or staged with
+`--staged`), reads the `Refs:` trailers from the commits and asks
+`POST /projects/{id}/scope-check` for a verdict per file: `owned`,
+`affected` (declared read-only, yet changed), `unscoped`, or
+`leased_by_other`. It exits `CONFLICT` on strays (when the referenced tasks
+declare `paths_owned`) and on collisions. The `check` mode of the
+`workman-merge-hook` action runs the same query on every pull request and
+posts the verdict as a PR comment (see `examples/pr-hooks.yml`); the
+`opened` mode links the PR on its tasks and parks them In Review, and
+`ci-failed` (`examples/ci-failed-hook.yml`) comments failed runs.
+
+## Planning a decomposition
+
+`veans plan plan.json` sends a whole breakdown — tasks with plan-local keys,
+`parent_key`, `blocked_by`, `follows` and scopes — to
+`POST /projects/{id}/plan`, which lints it as a set and creates everything
+in one transaction. Errors (duplicate or unknown keys, cycles, invalid
+paths) stop creation; warnings (missing `paths_owned`, overlapping paths
+without an ordering, overlap with an open task on the board) are reported
+alongside the created tasks. `--dry-run` only lints. See `veans prime` for
+the plan shape.
+
+## Stale leases
+
+Leases record the holder's last activity — a claim, task update, comment or
+`veans heartbeat`. After `service.leasestaleafter` (default 4h) without any,
+`veans leases`, `veans ready` and the board flag them `stale`. They still
+block; the flag tells a human they can release safely.
 
 `veans ready` is the server's ready queue (`GET
 /projects/{id}/views/{view}/readiness`): every Todo task with `ready` and

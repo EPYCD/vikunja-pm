@@ -119,7 +119,15 @@
 							user: holderName(lease),
 							date: formatDateSince(lease.created ? new Date(lease.created) : null),
 						}) }}
+						<template v-if="lease.last_active">
+							· {{ $t('task.leasesPanel.lastActive', {date: formatDateSince(new Date(lease.last_active))}) }}
+						</template>
 					</span>
+					<span
+						v-if="lease.stale"
+						v-tooltip="$t('task.leasesPanel.staleTooltip')"
+						class="scope-lease-row__stale"
+					>{{ $t('task.leasesPanel.stale') }}</span>
 				</li>
 			</ul>
 			<XButton
@@ -409,5 +417,13 @@ async function release() {
 
 .scope-lease-row__meta {
 	color: var(--wm-text-tertiary);
+}
+
+.scope-lease-row__stale {
+	@include mono-label;
+
+	padding: 1px var(--wm-space-1);
+	color: var(--wm-text);
+	border: 1px solid var(--warning);
 }
 </style>

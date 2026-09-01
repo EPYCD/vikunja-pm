@@ -1,36 +1,63 @@
-name: Workman merge hook
+name: Workman PR hooks
 description: |
-  Closes the Workman tasks a merged pull request references.
+  Keeps a Workman board in step with a pull request. One action, four modes:
+
+  - `close` (default): a merged PR marks the tasks it references done and
+    comments the PR link on each. Wire to `pull_request: [closed]` and guard
+    on `merged == true`.
+  - `opened`: a PR that was opened, reopened or pushed to links itself on the
+    referenced tasks and parks them In Review. Idempotent.
+  - `check`: the PR's changed files are checked against the referenced tasks'
+    scopes (paths_owned) and every other in-progress task's leases; strays and
+    collisions fail the step and, with a GitHub token, land in a PR comment.
+  - `ci-failed`: from a `workflow_run` job, comments the failed run on the
+    referenced tasks.
 
   Every commit on the PR is scanned for a `Refs:` trailer (the one the veans
   agent prompt tells coding agents to write, e.g. `Refs: PROJ-12` or
-  `Refs: #12, #13`). Each referenced task is marked done on the board and gets
-  a comment linking back to the PR. Tasks that are already done are skipped, so
-  re-running is safe.
+  `Refs: #12, #13`). The PR merge is the human gate: agents park finished
+  work In Review and never close tasks themselves — `close` is what closes
+  them. See the example workflows in veans/examples/.
 
-  The PR merge is the human gate: agents park finished work In Review and never
-  close tasks themselves — this hook is what closes them. Wire it to
-  `pull_request: [closed]` and guard on `merged == true` (see the example
-  workflow in veans/examples/merge-hook.yml).
-
-  Reads `server` and `project_id` from the repo's committed `.veans.yml`; only
-  the token is a secret. Talks to /api/v2 with curl, so it needs no veans
-  binary and works against a self-hosted Workman that GitHub cannot reach
-  inbound — the runner reaches out.
+  Reads `server`, `project_id`, `view_id`, `buckets.in_review` and
+  `repository` from the repo's committed `.veans.yml`; only the token is a
+  secret. Talks to /api/v2 with curl, so it needs no veans binary and works
+  against a self-hosted Workman that GitHub cannot reach inbound — the runner
+  reaches out.
 
 inputs:
   token:
     description: |
-      A Workman API token allowed to read tasks, update tasks and create
-      comments on the project — the bot token minted by `veans init` is
-      sufficient. Store it as a repository secret.
+      A Workman API token allowed to read tasks, update tasks, move them
+      between buckets and create comments on the project — the bot token
+      minted by `veans init` is sufficient. Store it as a repository secret.
     required: true
+  mode:
+    description: What to do — close, opened, check or ci-failed.
+    required: false
+    default: close
   config:
     description: Path to the .veans.yml to read server and project_id from.
     required: false
     default: .veans.yml
   server:
     description: Overrides the server URL from .veans.yml, e.g. for an internal hostname the runner can reach.
+    required: false
+    default: ""
+  repository:
+    description: Overrides the `repository` prefix from .veans.yml used to namespace changed files in multi-repo projects (check mode).
+    required: false
+    default: ""
+  fail-on-violation:
+    description: In check mode, fail the step when a file is outside the referenced tasks' scope or leased by another task. Set to "false" to only report.
+    required: false
+    default: "true"
+  github-token:
+    description: A GitHub token (usually `secrets.GITHUB_TOKEN` with `pull-requests: write`) so check mode can post its verdict as a PR comment. Optional.
+    required: false
+    default: ""
+  run-url:
+    description: In ci-failed mode, the URL of the failed run. Defaults to the triggering workflow run.
     required: false
     default: ""
   dry-run:
@@ -40,25 +67,47 @@ inputs:
 
 outputs:
   closed:
-    description: Space-separated task identifiers this run closed.
-    value: ${{ steps.close.outputs.closed }}
+    description: Space-separated task identifiers a close run closed.
+    value: ${{ steps.run.outputs.closed }}
+  ok:
+    description: In check mode, "true" when the change stayed inside its tasks' scopes.
+    value: ${{ steps.run.outputs.ok }}
+  strays:
+    description: In check mode, the number of files outside the referenced tasks' paths_owned.
+    value: ${{ steps.run.outputs.strays }}
+  collisions:
+    description: In check mode, the number of files leased by a task the PR does not reference.
+    value: ${{ steps.run.outputs.collisions }}
 
 runs:
   using: composite
   steps:
-    - name: Close referenced tasks
-      id: close
+    - name: Run the Workman hook
+      id: run
       shell: bash
       env:
+        MODE: ${{ inputs.mode }}
         WORKMAN_TOKEN: ${{ inputs.token }}
         WORKMAN_CONFIG: ${{ inputs.config }}
         WORKMAN_SERVER: ${{ inputs.server }}
+        WORKMAN_REPOSITORY: ${{ inputs.repository }}
+        FAIL_ON_VIOLATION: ${{ inputs.fail-on-violation }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
         DRY_RUN: ${{ inputs.dry-run }}
-        BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # pull_request events carry the PR directly; workflow_run events carry
+        # it under workflow_run.pull_requests (empty for forks).
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.workflow_run.pull_requests[0].base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
         MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-        PR_NUMBER: ${{ github.event.pull_request.number }}
-        PR_URL: ${{ github.event.pull_request.html_url }}
-        PR_TITLE: ${{ github.event.pull_request.title }}
-        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-      run: bash "${{ github.action_path }}/close-merged.sh"
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
+        PR_URL: ${{ github.event.pull_request.html_url || format('{0}/{1}/pull/{2}', github.server_url, github.repository, github.event.workflow_run.pull_requests[0].number) }}
+        PR_TITLE: ${{ github.event.pull_request.title || github.event.workflow_run.display_title }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login || github.event.workflow_run.actor.login }}
+        RUN_URL: ${{ inputs.run-url || github.event.workflow_run.html_url }}
+      run: |
+        case "$MODE" in
+          close)     bash "${{ github.action_path }}/close-merged.sh" ;;
+          check)     bash "${{ github.action_path }}/check-scope.sh" ;;
+          opened|ci-failed) bash "${{ github.action_path }}/pr-opened.sh" ;;
+          *) echo "::error::unknown mode '$MODE' (close|opened|check|ci-failed)"; exit 1 ;;
+        esac

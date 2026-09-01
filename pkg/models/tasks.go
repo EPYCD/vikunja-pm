@@ -1483,6 +1483,8 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if err = completeParentsIfSubtasksDone(s, a, t); err != nil {
 			return err
 		}
+	} else if err = touchLeasesHeldBy(s, t.ID, a.GetID()); err != nil {
+		return err
 	}
 
 	// When a task changed its done status, make sure it is in the correct bucket

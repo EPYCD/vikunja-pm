@@ -1,0 +1,46 @@
+# Keeps the board in step with pull requests while they are open:
+#
+#   opened  — links the PR on the tasks it references (Refs: trailers) and
+#             parks them In Review
+#   check   — fails the PR when it touches files outside those tasks' declared
+#             paths_owned, or files another in-progress task has leased, and
+#             posts the verdict as a PR comment
+#
+# Copy next to workman-merge-hook.yml (which closes the tasks on merge) and
+# add the bot's API token as the WORKMAN_TOKEN repository secret.
+
+name: Workman PR hooks
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  link-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: EPYCD/workman/.github/actions/workman-merge-hook@main
+        with:
+          mode: opened
+          token: ${{ secrets.WORKMAN_TOKEN }}
+
+  scope-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: EPYCD/workman/.github/actions/workman-merge-hook@main
+        with:
+          mode: check
+          token: ${{ secrets.WORKMAN_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # fail-on-violation: "false"   # report only, never block the PR
+          # repository: api              # multi-repo projects: the prefix this repo's scope paths use

@@ -543,9 +543,17 @@ export type ErrPathLeaseConflict = {
      */
     held_pattern?: string;
     /**
+     * When the holding task last showed activity.
+     */
+    last_active?: string;
+    /**
      * The owned path pattern that overlaps an active lease.
      */
     pattern?: string;
+    /**
+     * True when the holder has been inactive longer than service.leasestaleafter; a human may release it.
+     */
+    stale?: boolean;
     /**
      * The task whose owned path conflicts.
      */
@@ -1365,6 +1373,110 @@ export type PasswordTokenRequest = {
     email?: string;
 };
 
+export type PlanFinding = {
+    /**
+     * Stable machine-readable code: duplicate_key, unknown_reference, self_reference, dependency_cycle, parent_cycle, invalid_path, missing_scope, overlap_without_order, overlap_with_existing.
+     */
+    code?: string;
+    /**
+     * The plan keys involved.
+     */
+    keys?: Array<string> | null;
+    /**
+     * What is wrong, for a human or an agent to act on.
+     */
+    message?: string;
+    /**
+     * error or warning.
+     */
+    severity?: string;
+    /**
+     * Existing task ids involved, for overlap_with_existing.
+     */
+    task_ids?: Array<number> | null;
+};
+
+export type PlanResult = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * True when the tasks were created in this request.
+     */
+    created?: boolean;
+    findings?: Array<PlanFinding> | null;
+    /**
+     * True when the plan has no errors. Warnings do not clear it.
+     */
+    ok?: boolean;
+    /**
+     * Key to id mapping of the created tasks; empty on a dry run or when the plan had errors.
+     */
+    tasks?: Array<PlannedTaskResult> | null;
+};
+
+export type PlannedScope = {
+    /**
+     * API surface the task adds or changes.
+     */
+    endpoints?: Array<string> | null;
+    /**
+     * Free-form scope notes, typically what is out of scope.
+     */
+    notes?: string;
+    /**
+     * Globs the task reads or depends on but does not edit.
+     */
+    paths_affected?: Array<string> | null;
+    /**
+     * Repository-relative globs the task will edit. Leased on claim.
+     */
+    paths_owned?: Array<string> | null;
+};
+
+export type PlannedTask = {
+    /**
+     * Keys of tasks that must be done before this one can be claimed.
+     */
+    blocked_by?: Array<string> | null;
+    /**
+     * The task description, HTML like any task description.
+     */
+    description?: string;
+    /**
+     * Keys of tasks this one comes after; treated like blocked_by for readiness.
+     */
+    follows?: Array<string> | null;
+    /**
+     * A name unique within the plan, used by parent_key, blocked_by and follows. Never stored.
+     */
+    key: string;
+    /**
+     * Key of the task this one is a subtask of.
+     */
+    parent_key?: string;
+    /**
+     * 0 unset up to 5 do-now.
+     */
+    priority?: number;
+    /**
+     * The task's scope. Omit for tasks that do not touch the repository.
+     */
+    scope?: PlannedScope;
+    /**
+     * The task title.
+     */
+    title: string;
+};
+
+export type PlannedTaskResult = {
+    id?: number;
+    identifier?: string;
+    index?: number;
+    key?: string;
+};
+
 export type PreviewResult = {
     /**
      * A URL to the JSON Schema for this object.
@@ -1853,6 +1965,75 @@ export type SavedFilterReadBody = {
     readonly updated?: string;
 };
 
+export type ScopeCheckFile = {
+    /**
+     * For leased_by_other: the task holding the lease.
+     */
+    held_by_task_id?: number;
+    /**
+     * The file as checked, with the repository prefix applied if one was given.
+     */
+    path?: string;
+    /**
+     * The referenced tasks whose scope covers the file (owned or affected).
+     */
+    task_ids?: Array<number> | null;
+    /**
+     * owned: covered by paths_owned of a referenced task. affected: only covered by paths_affected. unscoped: no referenced task declares it. leased_by_other: an in-progress task that is not referenced holds a lease covering it.
+     */
+    verdict?: string;
+};
+
+export type ScopeCheckRequest = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Repository-relative paths the change modifies, added or deleted, as git diff --name-only prints them.
+     */
+    files: Array<string> | null;
+    /**
+     * Repository name to prefix the files with when the project's scope paths use repo: prefixes. Leave empty for single-repository projects.
+     */
+    repository?: string;
+    /**
+     * The tasks the change implements — typically the Refs: trailers of the commits. Files are judged against the union of their scopes.
+     */
+    task_ids?: Array<number> | null;
+};
+
+export type ScopeCheckResult = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Files covered only by paths_affected — declared as read-only, yet changed.
+     */
+    affected?: number;
+    /**
+     * Files covered by a lease held by a task that is not referenced.
+     */
+    collisions?: number;
+    /**
+     * True when at least one referenced task declares paths_owned; without a declared scope there is nothing to enforce and unscoped files are informational.
+     */
+    enforced?: boolean;
+    /**
+     * The verdict for every file, in the order given.
+     */
+    files?: Array<ScopeCheckFile> | null;
+    /**
+     * True when no file is leased by an unreferenced task and, if enforced, no file is unscoped.
+     */
+    ok?: boolean;
+    /**
+     * Files outside every referenced task's paths_owned (only counted when enforced).
+     */
+    strays?: number;
+};
+
 export type Session = {
     /**
      * When this session was created (login time).
@@ -2300,6 +2481,10 @@ export type TaskPathLease = {
      */
     readonly id?: number;
     /**
+     * When the holding task last showed activity: a claim, an update, a comment or an explicit heartbeat.
+     */
+    readonly last_active?: string;
+    /**
      * The normalised, repository-relative glob this lease covers.
      */
     readonly pattern?: string;
@@ -2307,6 +2492,10 @@ export type TaskPathLease = {
      * The project the lease is scoped to. Leases never conflict across projects.
      */
     readonly project_id?: number;
+    /**
+     * True when last_active is older than service.leasestaleafter. Stale leases still block; they are a hint to release.
+     */
+    readonly stale?: boolean;
     /**
      * The holding task, embedded when listing a project's leases.
      */
@@ -2323,6 +2512,21 @@ export type TaskPathLease = {
      * The user (usually a bot) that claimed the task and therefore holds the lease.
      */
     readonly user_id?: number;
+};
+
+export type TaskPlan = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Only lint; create nothing even when the plan is clean.
+     */
+    dry_run?: boolean;
+    /**
+     * The tasks to create, in any order.
+     */
+    tasks: Array<PlannedTask> | null;
 };
 
 export type TaskPosition = {
@@ -2515,7 +2719,7 @@ export type TaskReadiness = {
      */
     ready?: boolean;
     /**
-     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict.
+     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict. blocked covers an unfinished blocker, an unfinished predecessor (follows) and open subtasks.
      */
     reasons?: Array<string> | null;
     /**
@@ -4072,6 +4276,22 @@ export type PasswordTokenRequestWritable = {
     email?: string;
 };
 
+export type PlanResultWritable = {
+    /**
+     * True when the tasks were created in this request.
+     */
+    created?: boolean;
+    findings?: Array<PlanFinding> | null;
+    /**
+     * True when the plan has no errors. Warnings do not clear it.
+     */
+    ok?: boolean;
+    /**
+     * Key to id mapping of the created tasks; empty on a dry run or when the plan had errors.
+     */
+    tasks?: Array<PlannedTaskResult> | null;
+};
+
 export type PreviewResultWritable = {
     /**
      * The first few tasks that would be imported with the given config.
@@ -4290,6 +4510,48 @@ export type SavedFilterReadBodyWritable = {
     title?: string;
 };
 
+export type ScopeCheckRequestWritable = {
+    /**
+     * Repository-relative paths the change modifies, added or deleted, as git diff --name-only prints them.
+     */
+    files: Array<string> | null;
+    /**
+     * Repository name to prefix the files with when the project's scope paths use repo: prefixes. Leave empty for single-repository projects.
+     */
+    repository?: string;
+    /**
+     * The tasks the change implements — typically the Refs: trailers of the commits. Files are judged against the union of their scopes.
+     */
+    task_ids?: Array<number> | null;
+};
+
+export type ScopeCheckResultWritable = {
+    /**
+     * Files covered only by paths_affected — declared as read-only, yet changed.
+     */
+    affected?: number;
+    /**
+     * Files covered by a lease held by a task that is not referenced.
+     */
+    collisions?: number;
+    /**
+     * True when at least one referenced task declares paths_owned; without a declared scope there is nothing to enforce and unscoped files are informational.
+     */
+    enforced?: boolean;
+    /**
+     * The verdict for every file, in the order given.
+     */
+    files?: Array<ScopeCheckFile> | null;
+    /**
+     * True when no file is leased by an unreferenced task and, if enforced, no file is unscoped.
+     */
+    ok?: boolean;
+    /**
+     * Files outside every referenced task's paths_owned (only counted when enforced).
+     */
+    strays?: number;
+};
+
 export type TaskWritable = {
     /**
      * The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one.
@@ -4399,6 +4661,17 @@ export type TaskPathLeaseWritable = {
     [key: string]: never;
 };
 
+export type TaskPlanWritable = {
+    /**
+     * Only lint; create nothing even when the plan is clean.
+     */
+    dry_run?: boolean;
+    /**
+     * The tasks to create, in any order.
+     */
+    tasks: Array<PlannedTask> | null;
+};
+
 export type TaskPositionWritable = {
     /**
      * The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent.
@@ -4470,7 +4743,7 @@ export type TaskReadinessWritable = {
      */
     ready?: boolean;
     /**
-     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict.
+     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict. blocked covers an unfinished blocker, an unfinished predecessor (follows) and open subtasks.
      */
     reasons?: Array<string> | null;
     /**
@@ -7069,6 +7342,66 @@ export type ProjectsLeasesListResponses = {
 
 export type ProjectsLeasesListResponse = ProjectsLeasesListResponses[keyof ProjectsLeasesListResponses];
 
+export type ProjectsPlanData = {
+    body: TaskPlanWritable;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/plan';
+};
+
+export type ProjectsPlanErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsPlanError = ProjectsPlanErrors[keyof ProjectsPlanErrors];
+
+export type ProjectsPlanResponses = {
+    /**
+     * OK
+     */
+    200: PlanResult;
+};
+
+export type ProjectsPlanResponse = ProjectsPlanResponses[keyof ProjectsPlanResponses];
+
+export type ProjectsScopeCheckData = {
+    body: ScopeCheckRequestWritable;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/scope-check';
+};
+
+export type ProjectsScopeCheckErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsScopeCheckError = ProjectsScopeCheckErrors[keyof ProjectsScopeCheckErrors];
+
+export type ProjectsScopeCheckResponses = {
+    /**
+     * OK
+     */
+    200: ScopeCheckResult;
+};
+
+export type ProjectsScopeCheckResponse = ProjectsScopeCheckResponses[keyof ProjectsScopeCheckResponses];
+
 export type SharesListData = {
     body?: never;
     path: {
@@ -9082,6 +9415,36 @@ export type TasksLeasesReleaseResponses = {
 };
 
 export type TasksLeasesReleaseResponse = TasksLeasesReleaseResponses[keyof TasksLeasesReleaseResponses];
+
+export type TasksLeasesHeartbeatData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/leases/heartbeat';
+};
+
+export type TasksLeasesHeartbeatErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksLeasesHeartbeatError = TasksLeasesHeartbeatErrors[keyof TasksLeasesHeartbeatErrors];
+
+export type TasksLeasesHeartbeatResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTaskPathLease;
+};
+
+export type TasksLeasesHeartbeatResponse = TasksLeasesHeartbeatResponses[keyof TasksLeasesHeartbeatResponses];
 
 export type TasksMarkReadData = {
     body?: never;

@@ -48,6 +48,16 @@ func RegisterTaskPathLeaseRoutes(api huma.API) {
 	}, projectLeasesList)
 
 	Register(api, huma.Operation{
+		OperationID:   "tasks-leases-heartbeat",
+		Summary:       "Refresh a task's path leases",
+		Description:   "Marks the task's leases as active now and returns them. Claims, task updates and comments by the holder do this implicitly; an agent that works for a long time without touching the board calls this so its leases are not flagged stale (see service.leasestaleafter). Requires write access to the task.",
+		Method:        http.MethodPost,
+		Path:          "/tasks/{projecttask}/leases/heartbeat",
+		Tags:          []string{"tasks"},
+		DefaultStatus: http.StatusOK,
+	}, taskLeasesHeartbeat)
+
+	Register(api, huma.Operation{
 		OperationID: "tasks-leases-release",
 		Summary:     "Release a task's path leases",
 		Description: "Drops every lease the task holds without changing its status or assignees — for an agent abandoning work, or a human unblocking a stale lease left by a crashed session. " +
@@ -110,4 +120,39 @@ func taskLeasesRelease(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil
+}
+
+func taskLeasesHeartbeat(ctx context.Context, in *struct {
+	TaskID int64 `path:"projecttask" doc:"The numeric id of the task."`
+}) (*taskPathLeaseListBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s := db.NewSession()
+	defer s.Close()
+	if err := s.Begin(); err != nil {
+		return nil, err
+	}
+
+	// Non-CRUD action, so the permission check is the handler's job.
+	task := &models.Task{ID: in.TaskID}
+	can, err := task.CanWrite(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if !can {
+		_ = s.Rollback()
+		return nil, huma.Error403Forbidden("forbidden")
+	}
+	leases, err := models.HeartbeatTaskPathLeases(s, in.TaskID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &taskPathLeaseListBody{Body: NewPaginated(leases, int64(len(leases)), 1, len(leases))}, nil
 }
