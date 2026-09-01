@@ -1,41 +1,69 @@
-<img src="https://vikunja.io/images/vikunja-logo.svg" alt="" style="display: block;width: 50%;margin: 0 auto;" width="50%"/>
+<h1 align="center">Workman</h1>
+
+<p align="center"><strong>The work console you actually own.</strong></p>
 
 [![Build Status](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml/badge.svg)](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Install](https://img.shields.io/badge/download-v2.6.0-brightgreen.svg)](https://vikunja.io/docs/installing)
-[![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
 [![OpenAPI Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v2/docs)
 
-# Vikunja
-
-> The task manager you actually own. 
-
-If Vikunja is useful to you, please consider [supporting the project](https://vikunja.io/support/). You can [buy a coffee](https://www.buymeacoffee.com/kolaente), [sponsor on GitHub](https://github.com/sponsors/kolaente) or buy [a sticker pack](https://vikunja.io/stickers).
-We're also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you want a hassle-free solution for yourself or your team.
-If you or your company needs admin panel, audit logs or time tracking, check out [Vikunja Pro](https://vikunja.io/pro/).
+Workman is a self-hosted work management console: projects, tasks, time and
+teams, in a dense, keyboard-first interface built for people who live in it all
+day. It runs as a single Go binary with a Vue 3 web client, a desktop app,
+CalDAV sync and a full REST API.
 
 > [!NOTE]
-> For the development of Vikunja, we're using LLM-Assisted coding tools in various parts of the codebase.
-> Most contributions made @tink-bot are built that way.
+> Workman is built on [Vikunja](https://vikunja.io), which is free software
+> licensed under AGPL-3.0-or-later. The upstream project does the heavy lifting;
+> Workman is a rebranded, redesigned distribution of it. Please consider
+> [supporting Vikunja](https://vikunja.io/support/) if you find this useful.
+
+> [!NOTE]
+> For the development of this project, we're using LLM-assisted coding tools in
+> various parts of the codebase.
 
 ## Table of contents
 
 - [Security Reports](#security-reports)
 - [Features](#features)
+- [Design](#design)
 - [Docs](#docs)
-	- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 	- [Unsplash Images](#unsplash-images)
 
 ## Security Reports
 
-If you find any security-related issues you don't want to disclose publicly, please use [the contact information on our website](https://vikunja.io/contact/#security).
+If you find any security-related issues you don't want to disclose publicly,
+please use [the contact information on the upstream website](https://vikunja.io/contact/#security).
 
 ## Features
 
-See [the features page](https://vikunja.io/features/) on our website for a more exhaustive list or 
-try it on [try.vikunja.io](https://try.vikunja.io)!
+- **Projects** — nestable, shareable, archivable, with per-project task
+  identifiers (`PROJ-12`) and custom backgrounds.
+- **Four views per project** — List, Table, Kanban and Gantt, each with its own
+  saved positions, filters and buckets.
+- **Tasks** — rich-text descriptions, due/start/end dates, reminders, repeating
+  schedules, priorities, assignees, labels, attachments, relations, comments and
+  reactions.
+- **Saved filters** — a query language over every task field, usable as
+  pseudo-projects and as filter-driven Kanban buckets.
+- **Teams and sharing** — user, team and password-protected link shares at
+  read / write / admin.
+- **Auth** — local accounts, TOTP 2FA, LDAP, OpenID Connect, scoped API tokens,
+  bot users, and a built-in OAuth 2.0 + PKCE authorization server.
+- **Sync and integrations** — CalDAV, webhooks, Atom feeds, and importers for
+  Todoist, Trello, Microsoft To Do, TickTick, Wekan, Planka and CSV.
+- **Ops** — Prometheus metrics, S3 or local file storage, rate limiting, autoTLS,
+  structured logging, and a plugin system.
+- **Licensed extras** — admin panel, time tracking and audit logs.
+
+## Design
+
+The interface is a tech-first operations console: a near-black ground, hairline
+structure, monospace data, 45° chamfered corners and a single crimson accent.
+The design system is documented in
+[`frontend/src/styles/WORKMAN-DESIGN.md`](frontend/src/styles/WORKMAN-DESIGN.md)
+— read it before touching any styling.
 
 ## Docs
 
@@ -45,15 +73,10 @@ try it on [try.vikunja.io](https://try.vikunja.io)!
 * [Magefile](https://vikunja.io/docs/magefile/)
 * [Testing](https://vikunja.io/docs/testing/)
 
-All docs can be found on [the Vikunja home page](https://vikunja.io/docs/).
-
-### Roadmap
-
-See [the roadmap](https://my.vikunja.cloud/share/QFyzYEmEYfSyQfTOmIRSwLUpkFjboaBqQCnaPmWd/auth) (hosted on Vikunja!) for more!
-
 ## Contributing
 
-Please check out the contribution guidelines on [the website](https://vikunja.io/docs/development/).
+See [AGENTS.md](AGENTS.md) for the conventions this repository follows —
+API versioning, permissions, migrations and code style.
 
 ## License
 

@@ -23,6 +23,8 @@ const Logo = computed(() => configStore.allowIconChanges
 	? LogoFullPride
 	: LogoFull)
 
+const isPride = computed(() => Logo.value === LogoFullPride)
+
 const CustomLogo = computed(() => {
 	const lightLogo = window.CUSTOM_LOGO_URL
 	const darkLogo = window.CUSTOM_LOGO_URL_DARK
@@ -39,13 +41,14 @@ const CustomLogo = computed(() => {
 	<div>
 		<Logo
 			v-if="!CustomLogo"
-			alt="Vikunja"
+			alt="Workman"
 			class="logo"
+			:class="{ 'logo--pride': isPride }"
 		/>
 		<img
 			v-show="CustomLogo"
 			:src="CustomLogo"
-			alt="Vikunja"
+			alt="Workman"
 			class="logo"
 		>
 	</div>
@@ -54,7 +57,21 @@ const CustomLogo = computed(() => {
 <style lang="scss" scoped>
 .logo {
 	color: var(--logo-text-color);
-	max-inline-size: 168px;
-	max-block-size: 48px;
+	// The lockup is 205x64; pin the height and let the width follow so the
+	// wordmark never squashes. Without an explicit size an inlined SVG with
+	// only a viewBox collapses to 0x0.
+	block-size: 34px;
+	inline-size: auto;
+	max-inline-size: 100%;
+}
+
+// The wordmark inherits `currentColor`; the tile is repainted from the accent
+// token so it tracks the theme. The pride variant keeps its own gradient.
+.logo:not(.logo--pride) :deep(.wm-logo__tile) {
+	fill: var(--wm-accent);
+}
+
+.logo :deep(.wm-logo__glyph) {
+	stroke: var(--wm-on-accent);
 }
 </style>

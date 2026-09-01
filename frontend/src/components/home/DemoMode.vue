@@ -32,21 +32,28 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 	position: fixed;
 	inset-block-end: 0;
 	inset-inline: 0;
-	background: var(--danger);
 	z-index: 100;
-	padding: .5rem;
+	padding: var(--wm-space-2);
 	text-align: center;
-	
+	font-size: var(--wm-text-sm);
+	background: var(--danger);
+	// --danger-invert flips with the theme so the text keeps its contrast on
+	// the (brighter) dark-mode danger red.
 	&, strong {
-		color: hsl(220, 13%, 91%) !important; // --grey-200 in light mode, hardcoded because the color should not change
+		color: var(--danger-invert) !important;
+	}
+
+	strong {
+		@include mono-label(var(--wm-text-2xs));
 	}
 }
 
 .hide-button {
-	padding: .25rem .5rem;
+	padding-block: var(--wm-space-1);
+	padding-inline: var(--wm-space-2);
 	cursor: pointer;
 	position: absolute;
-	inset-inline-end: .5rem;
-	inset-block-start: .25rem;
+	inset-inline-end: var(--wm-space-2);
+	inset-block-start: var(--wm-space-1);
 }
 </style>

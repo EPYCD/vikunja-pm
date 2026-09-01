@@ -70,7 +70,7 @@ const GroupPrefix = "/api/v2"
 // NewAPI mounts Huma on the /api/v2 group. Per-resource Register* calls
 // live in sibling files.
 func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
-	cfg := huma.DefaultConfig("Vikunja API", version.Version)
+	cfg := huma.DefaultConfig("Workman API", version.Version)
 	cfg.OpenAPIPath = "/openapi"
 	// Huma's built-in docs would load from unpkg.com — we serve Scalar locally instead.
 	cfg.DocsPath = ""
@@ -105,7 +105,7 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	oapi.Components.SecuritySchemes["APITokenAuth"] = &huma.SecurityScheme{
 		Type:        "http",
 		Scheme:      "bearer",
-		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
+		Description: "Workman API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
 	}
 	// HTTP Basic, used only by the notifications Atom feed: feed readers can't
 	// carry a bearer header, so the feed accepts the API token as the Basic
@@ -113,7 +113,7 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	oapi.Components.SecuritySchemes["BasicAuth"] = &huma.SecurityScheme{
 		Type:        "http",
 		Scheme:      "basic",
-		Description: "HTTP Basic auth used by the notifications Atom feed: the username is the token owner and the password is a feeds-scoped Vikunja API token (tk_ prefix).",
+		Description: "HTTP Basic auth used by the notifications Atom feed: the username is the token owner and the password is a feeds-scoped Workman API token (tk_ prefix).",
 	}
 	// Applied globally; public endpoints (spec, docs) opt out with an empty Security list.
 	oapi.Security = []map[string][]string{
