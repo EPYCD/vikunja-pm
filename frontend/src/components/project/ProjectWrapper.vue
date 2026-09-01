@@ -190,12 +190,12 @@ function getViewRoute(view: IProjectView) {
 .switch-view-container {
 	position: relative;
 	min-block-size: $switch-view-height;
-	margin-block-end: 1rem;
-	
+	margin-block-end: var(--wm-space-4);
+
 	display: flex;
 	justify-content: space-between;
-	align-items: center;	
-	gap: 1rem;
+	align-items: center;
+	gap: var(--wm-space-4);
 	
 	@media screen and (max-width: $tablet) {
 		justify-content: center;
@@ -278,7 +278,7 @@ function getViewRoute(view: IProjectView) {
 
 // FIXME: this should be in notification and set via a prop
 .is-archived .notification.is-warning {
-	margin-block-end: 1rem;
+	margin-block-end: var(--wm-space-4);
 }
 
 .project-title-print {

@@ -59,7 +59,7 @@
 				:y="4"
 				:width="getBarWidth(bar)"
 				:height="32"
-				:rx="4"
+				:rx="0"
 				:fill="getBarFillAttr(bar)"
 				:opacity="bar.meta?.isDone ? 0.5 : 1"
 				:stroke="getBarStroke(bar)"
@@ -86,7 +86,7 @@
 					:y="4"
 					:width="getBarWidth(bar)"
 					:height="32"
-					:rx="4"
+					:rx="0"
 					:fill="getBarFillAttr(bar)"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
 					:stroke="getBarStroke(bar)"
@@ -119,8 +119,8 @@
 				:width="6"
 				:height="32"
 				:rx="3"
-				fill="var(--white)"
-				stroke="var(--primary)"
+				fill="var(--wm-surface)"
+				stroke="var(--wm-accent)"
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-left"
 				role="button"
@@ -136,8 +136,8 @@
 				:width="6"
 				:height="32"
 				:rx="3"
-				fill="var(--white)"
-				stroke="var(--primary)"
+				fill="var(--wm-surface)"
+				stroke="var(--wm-accent)"
 				stroke-width="1"
 				class="gantt-resize-handle gantt-resize-right"
 				role="button"
@@ -153,7 +153,7 @@
 						:y="4"
 						:width="getBarWidth(bar) - 4"
 						:height="32"
-						:rx="4"
+						:rx="0"
 					/>
 				</clipPath>
 			</defs>
@@ -194,12 +194,12 @@
 			<polygon
 				v-if="isCollapsed"
 				points="2,0 10,5 2,10"
-				fill="var(--grey-500)"
+				fill="var(--wm-text-tertiary)"
 			/>
 			<polygon
 				v-else
 				points="0,2 10,2 5,10"
-				fill="var(--grey-500)"
+				fill="var(--wm-text-tertiary)"
 			/>
 		</g>
 	</svg>
@@ -341,9 +341,9 @@ function getRightDiamondPoints(bar: GanttBarModel): string {
 function getParentDiamondFill(bar: GanttBarModel): string {
 	// Use a darker shade for contrast on the full-height bar
 	if (bar.meta?.color) {
-		return 'var(--white)'
+		return 'var(--wm-surface)'
 	}
-	return 'var(--white)'
+	return 'var(--wm-surface)'
 }
 
 function isPartialDate(bar: GanttBarModel) {
@@ -360,17 +360,17 @@ function getBarFill(bar: GanttBarModel) {
 		if (bar.meta?.color) {
 			return bar.meta.color
 		}
-		return 'var(--primary)'
+		return 'var(--wm-accent)'
 	}
 
 	if (bar.meta?.hasActualDates) {
 		if (bar.meta?.color) {
 			return bar.meta.color
 		}
-		return 'var(--primary)'
+		return 'var(--wm-accent)'
 	}
 
-	return 'var(--grey-100)'
+	return 'var(--wm-surface-sunken)'
 }
 
 function getBarFillAttr(bar: GanttBarModel): string {
@@ -382,7 +382,7 @@ function getBarFillAttr(bar: GanttBarModel): string {
 
 function getBarStroke(bar: GanttBarModel) {
 	if (isDateless(bar)) {
-		return 'var(--grey-300)' // Gray for dashed border
+		return 'var(--wm-line-strong)' // Gray for dashed border
 	}
 	return 'none'
 }
@@ -396,7 +396,7 @@ function getBarStrokeWidth(bar: GanttBarModel) {
 
 function getBarTextColor(bar: GanttBarModel) {
 	if (isDateless(bar)) {
-		return 'var(--grey-800)'
+		return 'var(--wm-text)'
 	}
 
 	if (bar.meta?.color) {
@@ -466,20 +466,20 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	cursor: pointer;
 
 	&:hover polygon {
-		fill: var(--grey-700);
+		fill: var(--wm-text);
 	}
 
 	&:focus {
 		outline: none;
 
 		polygon {
-			fill: var(--primary);
+			fill: var(--wm-accent);
 		}
 	}
 }
 
 .gantt-bar-text {
-	font-size: .85rem;
+	font-size: var(--wm-text-xs);
 	pointer-events: none;
 	user-select: none;
 }
@@ -492,7 +492,7 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 :deep(.gantt-resize-handle) {
 	cursor: col-resize !important;
 	opacity: 0;
-	transition: opacity 0.2s ease;
+	transition: opacity var(--wm-duration) var(--wm-ease);
 	pointer-events: all; // Ensure they receive pointer events
 }
 
@@ -509,9 +509,9 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 // Focus styles for task bars
 :deep(g[role="slider"]:focus) {
 	outline: none; // Remove default browser outline
-	
+
 	.gantt-bar {
-		stroke: var(--primary) !important;
+		stroke: var(--wm-accent) !important;
 		stroke-width: 3 !important;
 	}
 }

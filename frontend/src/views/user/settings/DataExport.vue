@@ -118,7 +118,7 @@ async function requestDataExport() {
 	justify-content: space-between;
 	align-items: center;
 	inline-size: 100%;
-	gap: .5rem;
+	gap: var(--wm-space-2);
 	
 	> p {
 		margin-block-end: 0;
@@ -129,7 +129,7 @@ async function requestDataExport() {
 		align-items: flex-start;
 		
 		> p {
-			margin-block-end: 1rem;
+			margin-block-end: var(--wm-space-4);
 		}
 		
 		> :deep(.button) {

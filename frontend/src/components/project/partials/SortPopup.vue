@@ -119,17 +119,18 @@ function applySort(close: () => void) {
 	}
 
 	.sort-description {
-		margin-block-end: 1rem;
+		margin-block-end: var(--wm-space-4);
+		color: var(--wm-text-tertiary);
 	}
 
 	.field {
-		margin-block-end: 1rem;
+		margin-block-end: var(--wm-space-4);
 	}
 
 	.actions {
 		display: flex;
 		justify-content: flex-end;
-		gap: .5rem;
+		gap: var(--wm-space-2);
 	}
 }
 </style>

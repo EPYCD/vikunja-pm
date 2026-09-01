@@ -105,9 +105,11 @@ const monthGroups = computed(() => {
 </script>
 
 <style scoped lang="scss">
+// The date axis is an instrument scale: mono figures, hairline ticks, and the
+// accent reserved for today.
 .gantt-timeline {
-	background: var(--white);
-	border-block-end: 1px solid var(--grey-200);
+	background: var(--wm-surface);
+	border-block-end: 1px solid var(--wm-line);
 	position: sticky;
 	inset-block-start: 0;
 	z-index: 10;
@@ -117,14 +119,14 @@ const monthGroups = computed(() => {
 	display: flex;
 
 	.timeunit-month {
-		background: var(--white);
-		font-family: $vikunja-font;
-		font-weight: bold;
-		border-inline-end: 1px solid var(--grey-200);
-		padding: 0.5rem 0;
+		@include mono-label;
+
+		background: var(--wm-surface-sunken);
+		color: var(--wm-text-tertiary);
+		border-inline-end: 1px solid var(--wm-line);
+		border-block-end: 1px solid var(--wm-line);
+		padding: var(--wm-space-2) 0;
 		text-align: center;
-		font-size: 1rem;
-		color: var(--grey-800);
 	}
 }
 
@@ -133,23 +135,29 @@ const monthGroups = computed(() => {
 
 	.timeunit {
 		.timeunit-wrapper {
-			padding: 0.5rem 0;
-			font-size: 1rem;
+			@include mono-data;
+
+			padding: var(--wm-space-2) 0;
+			font-size: var(--wm-text-xs);
+			color: var(--wm-text-secondary);
+			border-inline-end: 1px solid var(--wm-line-faint);
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			inline-size: 100%;
-			font-family: $vikunja-font;
 
 			&.today {
-				background: var(--primary);
-				color: var(--white);
-				border-radius: 5px 5px 0 0;
-				font-weight: bold;
+				background: var(--wm-accent);
+				color: var(--wm-on-accent);
+				border-inline-end-color: var(--wm-accent);
+				font-weight: 600;
 			}
 
 			.weekday {
-				font-size: 0.8rem;
+				@include mono-label;
+
+				color: inherit;
+				opacity: .8;
 			}
 		}
 	}

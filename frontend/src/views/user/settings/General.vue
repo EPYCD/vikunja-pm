@@ -614,7 +614,7 @@ async function updateSettings() {
 }
 
 .section-block + .section-block {
-	margin-block-start: 1.5rem;
+	margin-block-start: var(--wm-space-5);
 }
 
 .field-group {
@@ -622,9 +622,14 @@ async function updateSettings() {
 	grid-template-columns: 1fr;
 }
 
+// Floats over the form as it scrolls, so it needs an opaque ground and a
+// hairline to sit on rather than letting fields run underneath it.
 .sticky-save {
 	position: sticky;
 	inset-block-end: 0;
-	padding: .25rem 1rem 1rem;
+	padding-block: var(--wm-space-3) var(--wm-space-4);
+	padding-inline: var(--wm-space-4);
+	background-color: var(--wm-canvas);
+	border-block-start: 1px solid var(--wm-line-faint);
 }
 </style>

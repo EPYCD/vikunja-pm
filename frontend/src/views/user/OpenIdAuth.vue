@@ -39,7 +39,7 @@
 			<XButton
 				:loading="loading"
 				:disabled="!totpPasscode"
-				class="mbs-2"
+				class="is-fullwidth mbs-4"
 				@click="submitTotpAndRestart"
 			>
 				{{ $t('user.auth.openIdTotpSubmit') }}

@@ -4,10 +4,8 @@
   }
 }
 
+// `float: inline-end` already flips with the writing direction, so this needs
+// no `[dir="rtl"]` counterpart.
 .is-pulled-end {
-  float: right !important;
-}
-
-[dir="rtl"] .is-pulled-end {
-  float: left !important;
+  float: inline-end !important;
 }

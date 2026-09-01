@@ -78,12 +78,16 @@ const textOnlyDescription = computed(() => {
 
 <style lang="scss" scoped>
 .project-card {
-	--project-card-padding: 1rem;
-	background: var(--white);
+	--project-card-padding: var(--wm-space-4);
+
+	// A chamfered panel carries its edge as an outline: clip-path would slice a
+	// real border open along the 45° cut.
+	@include chamfer(var(--wm-chamfer));
+	@include chamfer-outline(var(--wm-line));
+
+	background: var(--wm-surface);
 	padding: var(--project-card-padding);
-	border-radius: $radius;
-	box-shadow: var(--shadow-sm);
-	transition: box-shadow $transition;
+	transition: filter var(--wm-duration) var(--wm-ease);
 	position: relative;
 	overflow: hidden; // hide background
 
@@ -92,12 +96,7 @@ const textOnlyDescription = computed(() => {
 	flex-wrap: wrap;
 
 	&:hover {
-		box-shadow: var(--shadow-md);
-	}
-
-	&:active,
-	&:focus {
-		box-shadow: var(--shadow-xs) !important;
+		@include chamfer-outline(var(--wm-accent-line));
 	}
 
 	> * {
@@ -122,18 +121,32 @@ const textOnlyDescription = computed(() => {
 	inset-inline-start: 0;
 }
 
+// The hit area fills the whole card, so an outset ring would be clipped away
+// by the chamfer. Draw it inside instead.
+.project-card .project-button:focus-visible {
+	box-shadow: none;
+	outline: 2px solid var(--wm-accent);
+	outline-offset: -3px;
+}
+
+// The card's metadata line: mono, tracked, quiet.
 .is-archived {
-	font-size: .75rem;
-	float: inline-start;
+	@include mono-label;
+
+	align-self: flex-start;
+	color: var(--wm-text-tertiary);
+	padding: 0 var(--wm-space-1);
+	border: 1px solid var(--wm-line);
 }
 
 .project-title {
 	align-self: flex-end;
-	font-family: $vikunja-font;
-	font-weight: 400;
-	font-size: 1.5rem;
+	font-family: $workman-display-font;
+	font-weight: 500;
+	font-size: var(--wm-text-lg);
+	letter-spacing: var(--wm-tracking-tight);
 	line-height: var(--title-line-height);
-	color: var(--text);
+	color: var(--wm-text);
 	inline-size: 100%;
 	margin-block-end: 0;
 	max-block-size: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
@@ -146,23 +159,22 @@ const textOnlyDescription = computed(() => {
 	-webkit-box-orient: vertical;
 }
 
-.has-light-text .project-title {
-	color: var(--grey-100);
+// Over a background photo the title needs a fixed light on dark, not the
+// theme ramp — both themes show the same image.
+.has-light-text .project-title,
+.has-background .project-title {
+	color: var(--wm-on-accent);
 }
 
 .has-background .project-title {
-	text-shadow:
-		0 0 10px var(--black),
-		1px 1px 5px var(--grey-700),
-		-1px -1px 5px var(--grey-700);
-	color: var(--white);
+	text-shadow: 0 1px 6px hsla(var(--black-h), var(--black-s), var(--black-l), 0.9);
 }
 
 .favorite {
 	position: absolute;
 	inset-block-start: var(--project-card-padding);
 	inset-inline-end: var(--project-card-padding);
-	transition: opacity $transition, color $transition;
+	transition: opacity var(--wm-duration) var(--wm-ease), color var(--wm-duration) var(--wm-ease);
 	opacity: 1;
 
 	&:hover {
@@ -188,8 +200,8 @@ const textOnlyDescription = computed(() => {
 
 .background-fade-in {
   opacity: 0;
-  transition: opacity $transition;
-  transition-delay: $transition-duration * 2; // To fake an appearing background
+  transition: opacity var(--wm-duration) var(--wm-ease);
+  transition-delay: var(--wm-duration-slow); // To fake an appearing background
 
   &.is-visible {
     opacity: 1;
@@ -197,7 +209,7 @@ const textOnlyDescription = computed(() => {
 }
 
 .saved-filter-icon {
-	color: var(--grey-300);
+	color: var(--wm-text-tertiary);
 	font-size: .75em;
 }
 </style>

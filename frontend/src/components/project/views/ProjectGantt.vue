@@ -159,7 +159,7 @@ const flatPickerConfig = computed(() => ({
 
 <style lang="scss" scoped>
 .gantt-chart-container {
-	padding-block-end: 1rem;
+	padding-block-end: var(--wm-space-4);
 	position: relative;
 	z-index: 0;
 }
@@ -167,11 +167,19 @@ const flatPickerConfig = computed(() => ({
 .gantt-options {
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
-	margin-block-end: 1rem;
+	align-items: flex-end;
+	gap: var(--wm-space-4);
+	margin-block-end: var(--wm-space-4);
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+		align-items: stretch;
+	}
+
+	:deep(.label) {
+		@include mono-label;
+
+		color: var(--wm-text-tertiary);
 	}
 }
 
@@ -180,7 +188,7 @@ const flatPickerConfig = computed(() => ({
 	box-shadow: none;
 
 	.card-content {
-		padding: .5rem;
+		padding: var(--wm-space-2);
 	}
 }
 
@@ -189,29 +197,31 @@ const flatPickerConfig = computed(() => ({
 	inline-size: 33%;
 
 	&:not(:last-child) {
-		padding-inline-end: .5rem;
+		padding-inline-end: var(--wm-space-2);
 	}
 
 	@media screen and (max-width: $tablet) {
 		inline-size: 100%;
 		max-inline-size: 100%;
-		margin-block-start: .5rem;
+		margin-block-start: var(--wm-space-2);
 		padding-inline-end: 0 !important;
 	}
 
 	&, .input {
-		font-size: .8rem;
+		font-size: var(--wm-text-sm);
 	}
 
 	.select,
 	.select select {
 		block-size: auto;
 		inline-size: 100%;
-		font-size: .8rem;
+		font-size: var(--wm-text-sm);
 	}
 
 	.label {
-		font-size: .9rem;
+		@include mono-label;
+
+		color: var(--wm-text-tertiary);
 	}
 }
 </style>

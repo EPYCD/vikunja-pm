@@ -40,7 +40,7 @@ const filteredProjects = computed(() => {
 <style lang="scss" scoped>
 .project-grid {
 	--project-grid-item-height: 150px;
-	--project-grid-gap: 1rem;
+	--project-grid-gap: var(--wm-space-4);
 	margin: 0; // reset li
 	list-style-type: none;
 	display: grid;

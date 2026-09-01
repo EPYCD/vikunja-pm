@@ -1,45 +1,38 @@
 <template>
 	<div class="no-auth-wrapper">
-		<Logo
-			class="logo"
-			width="200"
-			height="58"
-		/>
-		<div class="noauth-container">
-			<section
-				class="image"
-				:class="{ 'has-message': motd !== '' }"
-			>
-				<Message v-if="motd !== ''">
-					{{ motd }}
-				</Message>
-				<h2 class="image-title">
-					{{ $t("misc.welcomeBack") }}
-				</h2>
-			</section>
+		<div class="auth-stack">
+			<Logo
+				class="auth-logo"
+				width="200"
+				height="58"
+			/>
 			<main
 				id="main-content"
 				tabindex="-1"
-				class="content"
+				class="auth-panel"
 			>
-				<div>
+				<header class="auth-panel__head">
+					<p class="auth-panel__eyebrow">
+						{{ $t("misc.welcomeBack") }}
+					</p>
 					<h2
 						v-if="title"
-						class="title"
+						class="auth-panel__title"
 					>
 						{{ title }}
 					</h2>
-					<ApiConfig v-if="shouldShowApiConfig" />
-					<Message
-						v-if="motd !== ''"
-						class="is-hidden-tablet mbe-4"
-					>
-						{{ motd }}
-					</Message>
-					<slot />
-				</div>
-				<Legal />
+				</header>
+
+				<Message
+					v-if="motd !== ''"
+					class="mbe-4"
+				>
+					{{ motd }}
+				</Message>
+				<ApiConfig v-if="shouldShowApiConfig" />
+				<slot />
 			</main>
+			<Legal class="auth-legal" />
 		</div>
 	</div>
 </template>
@@ -83,99 +76,114 @@ useTitle(() => title.value)
 </script>
 
 <style lang="scss" scoped>
+// The way in: a full-bleed console ground with the blueprint graticule, one
+// cut panel floating on it, the lockup above. Nothing else.
 .no-auth-wrapper {
-	background: var(--site-background) url("@/assets/llama.svg?url") no-repeat
-		fixed bottom left;
+	position: relative;
 	min-block-size: 100vh;
 	display: flex;
 	flex-direction: column;
-	place-items: center;
+	align-items: center;
+	padding-block: var(--wm-space-6);
+	padding-inline: var(--wm-space-4);
+	background-color: var(--wm-canvas);
 
-	@media screen and (max-width: $fullhd) {
-		padding-block-end: 15rem;
-	}
+	@include graticule;
 }
 
-.noauth-container {
-	max-inline-size: $desktop;
+// The crimson wedge in the corner of the ground — the same 45° cut the panel
+// carries, at page scale.
+.no-auth-wrapper::before {
+	content: "";
+	position: fixed;
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	inline-size: 520px;
+	block-size: 520px;
+	max-inline-size: 55vw;
+	max-block-size: 55vh;
+	background: url("@/assets/llama.svg?url") no-repeat left bottom / contain;
+	pointer-events: none;
+}
+
+.auth-stack {
+	position: relative;
+	z-index: 1;
 	inline-size: 100%;
-	min-block-size: 60vh;
-	display: flex;
-	background-color: var(--white);
-	box-shadow: var(--shadow-md);
-	overflow: hidden;
-
-	@media screen and (min-width: $desktop) {
-		border-radius: $radius;
-	}
-}
-
-.image {
-	inline-size: 50%;
-	padding: 1rem;
+	max-inline-size: 27rem;
+	// `margin: auto` rather than `justify-content: center`: a form taller than
+	// the viewport must overflow downwards, not have its top cut off.
+	margin-block: auto;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
+	gap: var(--wm-space-4);
+}
+
+.auth-logo {
+	align-self: flex-start;
+
+	:deep(.logo) {
+		block-size: 40px;
+	}
+}
+
+.auth-panel {
+	background-color: var(--wm-surface);
+	color: var(--wm-text);
+	padding: var(--wm-space-6);
+
+	// Panel edge: the outline traces the cut, because a border would be sliced
+	// open along the diagonal.
+	@include chamfer(var(--wm-chamfer-lg));
+	@include chamfer-outline(var(--wm-line));
+
+	// The skip link focuses this panel, and clip-path would swallow the normal
+	// box-shadow ring — so the ring is drawn off the clipped mask instead.
+	&:focus-visible {
+		@include chamfer-focus-ring;
+	}
 
 	@media screen and (max-width: $tablet) {
-		display: none;
-	}
-
-	@media screen and (min-width: $tablet) {
-		background: url("@/assets/no-auth-image.jpg") no-repeat bottom/cover;
-		position: relative;
-
-		&.has-message {
-			justify-content: space-between;
-		}
-
-		// Darken mainly the lower part of the photo where the white heading sits so
-		// the text keeps a reliable contrast ratio across the whole image.
-		&::before {
-			content: "";
-			position: absolute;
-			inset-block-start: 0;
-			inset-inline-start: 0;
-			inset-inline-end: 0;
-			inset-block-end: 0;
-			background-image: linear-gradient(
-				to top,
-				rgba(0, 0, 0, 0.7) 0%,
-				rgba(0, 0, 0, 0.4) 35%,
-				rgba(0, 0, 0, 0.15) 100%
-			);
-		}
-
-		> * {
-			position: relative;
-		}
+		padding: var(--wm-space-5);
 	}
 }
 
-.content {
-	display: flex;
-	justify-content: space-between;
-	flex-direction: column;
-	padding: 2rem 2rem 1.5rem;
-
-	@media screen and (max-width: $desktop) {
-		inline-size: 100%;
-		max-inline-size: 450px;
-		margin-inline: auto;
-	}
-
-	@media screen and (min-width: $desktop) {
-		inline-size: 50%;
-	}
+.auth-panel__head {
+	margin-block-end: var(--wm-space-5);
+	padding-block-end: var(--wm-space-4);
+	border-block-end: 1px solid var(--wm-line-faint);
 }
 
-.logo {
-	max-inline-size: 100%;
-	margin: 1rem 0;
+.auth-panel__eyebrow {
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
+	margin-block: 0 var(--wm-space-2);
 }
 
-.image-title {
-	color: hsl(0deg, 0%, 100%);
-	font-size: 2.5rem;
+.auth-panel__title {
+	font-family: $workman-display-font;
+	font-size: var(--wm-text-xl);
+	letter-spacing: var(--wm-tracking-tight);
+	line-height: 1.15;
+	color: var(--wm-text);
+	margin-block: 0;
+}
+
+// Scoped inside .auth-stack to outrank Legal.vue's own scoped rule, which has
+// the same specificity and would otherwise win on source order.
+.auth-stack .auth-legal {
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
+	text-align: end;
+	margin-block-start: 0;
+
+	// The links inherit the container's colour, so they need the underline to
+	// read as links at all.
+	:deep(.base-button) {
+		color: var(--wm-text-secondary);
+		text-decoration: underline;
+	}
 }
 </style>

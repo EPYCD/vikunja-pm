@@ -184,6 +184,6 @@ function onTokenCreated(token: IApiToken) {
 
 <style lang="scss" scoped>
 .preset-buttons {
-	margin-block-start: 1rem;
+	margin-block-start: var(--wm-space-4);
 }
 </style>

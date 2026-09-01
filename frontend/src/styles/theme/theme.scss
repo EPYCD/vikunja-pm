@@ -1,6 +1,7 @@
-// Global base theme rules: resets focus outlines, wires up focus-visible styling
-// using the --primary token, sets body background, and defines a handful of
-// generic utility classes (.box, .is-fullwidth, .color-bubble, etc.).
+// Global base theme rules: resets focus outlines, wires up the accent focus
+// ring, sets the canvas ground, and defines the generic surface helpers
+// (.box, .card, .is-fullwidth, .color-bubble, …) in the Workman language —
+// flat surface, hairline rule, one cut corner, no elevation.
 
 *,
 *:hover,
@@ -36,11 +37,12 @@ a, button, input[type='checkbox'], input[type='radio'], select, [tabindex], [con
 }
 
 body {
-  background: var(--site-background);
-  min-height: 100vh;
- 
+  background: var(--wm-canvas);
+  min-block-size: 100vh;
+
   @media print {
-    background: #fff;
+    // The dark overrides are screen-only, so the tokens already resolve light here.
+    background: var(--wm-surface);
   }
 }
 
@@ -50,7 +52,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: $vikunja-font;
+  font-family: $workman-display-font;
   font-weight: 400 !important;
 }
 
@@ -60,7 +62,7 @@ h6 {
 }
 
 .has-rounded-corners {
-  border-radius: $radius;
+  border-radius: var(--wm-radius);
 }
 
 .has-overflow {
@@ -77,9 +79,9 @@ button.table {
 }
 
 .is-max-width-desktop {
-  width: 100%;
-  max-width: $desktop;
-  margin: 0 auto;
+  inline-size: 100%;
+  max-inline-size: $desktop;
+  margin-inline: auto;
 }
 
 .has-no-shadow {
@@ -96,12 +98,12 @@ button.table {
 }
 
 .is-fullwidth {
-  width: 100%;
+  inline-size: 100%;
 }
 
 .color-bubble {
   display: inline-block;
-  border-radius: 100%;
+  border-radius: var(--wm-radius-full);
 }
 
 .is-strikethrough {
@@ -120,7 +122,25 @@ button.table {
 	opacity: 0 !important;
 }
 
+// The generic panel. `.card` here is only a floor for the bare `.card` divs that
+// haven't been ported to <Card>; the component's own scoped rules outrank it.
+.box,
+.card {
+  background-color: var(--wm-surface);
+  color: var(--wm-text);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card {
+  border: 1px solid var(--wm-line);
+}
+
+// .box is free to be clipped — nothing inside it overflows — so it gets the
+// real cut corner rather than the drawn one <Card> has to use.
 .box {
-  border: 1px solid var(--grey-200);
-  box-shadow: var(--shadow-sm);
+  padding: var(--wm-space-5);
+
+  @include chamfer(var(--wm-chamfer));
+  @include chamfer-outline(var(--wm-line));
 }

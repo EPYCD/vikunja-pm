@@ -514,7 +514,6 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	background: transparent;
 	overflow-x: auto;
 	overflow-y: hidden;
-	border-block-start: 0;
 	border-collapse: collapse;
 
 	thead th {
@@ -547,33 +546,33 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		background: var(--wm-surface-hover);
 	}
 
+	// Identifiers, dates, counts and percentages are tabular so the digits stay
+	// in column as rows update.
+	tbody td.is-identifier,
+	tbody td.is-numeric {
+		@include mono-data;
+
+		font-size: var(--wm-text-xs);
+		white-space: nowrap;
+		color: var(--wm-text);
+	}
+
+	thead th.is-numeric,
+	tbody td.is-numeric {
+		text-align: end;
+	}
+
+	:deep(td a) {
+		color: var(--wm-text);
+		text-decoration: none;
+
+		&:hover {
+			color: var(--wm-accent-text);
+		}
+	}
+
 	.user {
 		margin: 0;
-	}
-}
-
-// Identifiers, dates, counts and percentages are tabular so digits stay in
-// column as rows update.
-td.is-identifier,
-td.is-numeric {
-	@include mono-data;
-
-	font-size: var(--wm-text-xs);
-	white-space: nowrap;
-	color: var(--wm-text);
-}
-
-th.is-numeric,
-td.is-numeric {
-	text-align: end;
-}
-
-:deep(td a) {
-	color: var(--wm-text);
-	text-decoration: none;
-
-	&:hover {
-		color: var(--wm-accent-text);
 	}
 }
 

@@ -13,9 +13,8 @@
 				:y1="0"
 				:x2="index * dayWidthPixels"
 				:y2="height"
-				stroke="var(--grey-400)"
-				stroke-width="0.5"
-				opacity="0.6"
+				stroke="var(--wm-line)"
+				stroke-width="1"
 			/>
 		</svg>
 	</div>

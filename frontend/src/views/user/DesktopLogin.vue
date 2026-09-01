@@ -33,6 +33,7 @@
 			/>
 			<div class="has-text-centered mbs-2">
 				<a
+					class="desktop-cancel"
 					role="button"
 					@click="showCustomServerInput = false"
 				>
@@ -118,3 +119,12 @@ async function loginWithServer(serverUrl: string) {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+.desktop-cancel {
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
+	cursor: pointer;
+}
+</style>

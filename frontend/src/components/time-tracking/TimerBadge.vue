@@ -92,22 +92,24 @@ onUnmounted(() => {
 }
 
 .timer-badge__elapsed {
-	padding-inline: .75rem .25rem;
-	color: var(--primary);
+	padding-inline: var(--wm-space-3) var(--wm-space-1);
+	color: var(--wm-accent-text);
+	font-family: $workman-mono-font;
+	font-size: var(--wm-text-xs);
 	font-variant-numeric: tabular-nums;
-	font-weight: 600;
+	font-weight: 500;
 }
 
 .timer-badge__stop {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding-inline: .5rem;
-	color: var(--grey-400);
-	transition: color $transition;
+	padding-inline: var(--wm-space-2);
+	color: var(--wm-text-tertiary);
+	transition: color var(--wm-duration) var(--wm-ease);
 
 	&:hover {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 }
 </style>

@@ -108,11 +108,14 @@ const filterFromView = computed(() => {
 	margin: 0;
 
 	&.is-open {
-		margin: 2rem 0 1rem;
+		margin: var(--wm-space-6) 0 var(--wm-space-4);
 	}
 }
 
-$filter-bubble-size: .75rem;
+$filter-bubble-size: .5rem;
+
+// The dot that marks an active filter — the one accent-coloured thing on the
+// control strip.
 .has-filters {
 	position: relative;
 
@@ -124,8 +127,8 @@ $filter-bubble-size: .75rem;
 
 		inline-size: $filter-bubble-size;
 		block-size: $filter-bubble-size;
-		border-radius: 100%;
-		background: var(--primary);
+		border-radius: var(--wm-radius-full);
+		background: var(--wm-accent);
 	}
 }
 </style>

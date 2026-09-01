@@ -151,7 +151,6 @@
 		</template>
 
 		<PoweredByLink
-			class="mbs-auto"
 			utm-medium="navigation"
 		/>
 

@@ -313,17 +313,18 @@ onMounted(loadBots)
 
 <style lang="scss" scoped>
 .bot-card {
-	padding: 1rem;
-	margin-block-start: 1rem;
-	border: 1px solid var(--grey-200);
-	border-radius: 4px;
+	padding: var(--wm-space-4);
+	margin-block-start: var(--wm-space-4);
+	background-color: var(--wm-surface);
+	border: 1px solid var(--wm-line);
+	border-radius: 0;
 }
 
 .bot-header {
 	display: flex;
-	gap: .5rem;
+	gap: var(--wm-space-2);
 	align-items: center;
-	margin-block-end: .5rem;
+	margin-block-end: var(--wm-space-2);
 }
 
 .bot-name-input {
@@ -332,31 +333,32 @@ onMounted(loadBots)
 
 .no-name {
 	font-style: italic;
-	color: var(--grey-500);
+	color: var(--wm-text-tertiary);
 }
 
 .status {
+	@include mono-label;
+
 	margin-inline-start: auto;
-	font-size: .85rem;
-	color: var(--grey-600);
+	color: var(--wm-text-secondary);
 }
 
 .bot-actions {
 	display: flex;
-	gap: .5rem;
-	margin-block-end: 1rem;
+	gap: var(--wm-space-2);
+	margin-block-end: var(--wm-space-4);
 }
 
 .tokens {
-	margin-block-start: 1rem;
-	padding-block-start: 1rem;
-	border-block-start: 1px solid var(--grey-200);
+	margin-block-start: var(--wm-space-4);
+	padding-block-start: var(--wm-space-4);
+	border-block-start: 1px solid var(--wm-line-faint);
 }
 
 .create-form {
 	display: flex;
 	flex-direction: column;
-	gap: .5rem;
-	margin-block-end: 1rem;
+	gap: var(--wm-space-2);
+	margin-block-end: var(--wm-space-4);
 }
 </style>

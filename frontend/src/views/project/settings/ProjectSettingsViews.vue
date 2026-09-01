@@ -155,7 +155,7 @@ async function saveViewPosition(e) {
 			v-if="views?.length > 0"
 			class="has-horizontal-overflow"
 		>
-			<table class="table has-actions is-striped is-hoverable is-fullwidth">
+			<table class="table has-actions is-hoverable is-fullwidth">
 				<thead>
 					<tr>
 						<th>{{ $t('project.views.title') }}</th>
@@ -234,15 +234,46 @@ async function saveViewPosition(e) {
 	</Modal>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .handle {
 	cursor: grab;
-	margin-inline-start: .25rem;
+	margin-inline-start: var(--wm-space-1);
 }
 
 .actions {
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
+	gap: var(--wm-space-2);
+}
+
+.table {
+	background: transparent;
+	border-collapse: collapse;
+
+	thead th {
+		@include mono-label;
+
+		white-space: nowrap;
+		padding: var(--wm-space-2) var(--wm-space-3);
+		color: var(--wm-text-tertiary);
+		background: var(--wm-surface-sunken);
+		border-block-start: 0;
+		border-block-end: 1px solid var(--wm-line);
+	}
+
+	:deep(tbody td) {
+		block-size: 36px;
+		padding: 0 var(--wm-space-3);
+		vertical-align: middle;
+		color: var(--wm-text-secondary);
+		background: transparent;
+		border-block-start: 0;
+		border-block-end: 1px solid var(--wm-line-faint);
+	}
+
+	:deep(tbody tr:hover td) {
+		background: var(--wm-surface-hover);
+	}
 }
 </style>
