@@ -11,6 +11,10 @@ Server: {{ .Server }}
 
 ## BEFORE you start work
 - If a task already exists, claim it: `veans claim {{ .TaskIDExample }}`
+  The claim is atomic and exclusive: if another agent already holds the
+  task, or it has left Todo since you listed it, the command fails with
+  `CONFLICT` — pick a different task, do NOT retry the same one. Claiming a
+  task you already hold is a harmless no-op.
 - Otherwise, create one and start it in one step:
   `veans create "<short title>" -s in-progress -d "<short description>"`
 - Use `veans list --ready` to find tasks ready to start (Todo + not blocked).
@@ -32,7 +36,8 @@ Server: {{ .Server }}
 
 ## AFTER you finish work
 - Move to `in-review` and post a summary comment. **Never close tasks
-  yourself** — the human (or the merge hook) closes them.
+  yourself** — merging the PR closes them: the Workman merge hook reads the
+  `Refs:` trailer on your commits and marks those tasks done.
   ```
   veans update {{ .TaskIDExample }} -s in-review \
     --comment '<h3>Summary of Changes</h3><ul><li>first thing</li><li>second thing</li></ul>'
@@ -157,7 +162,8 @@ veans update {{ .TaskIDExample }} --description-replace-old 'data-checked="false
 veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
 veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
 
-veans claim {{ .TaskIDExample }}                 # assign yourself + In Progress + branch label
+veans claim {{ .TaskIDExample }}                 # atomic: assign yourself + In Progress + branch label; CONFLICT if held
+veans claim --force {{ .TaskIDExample }}         # claim from a bucket other than Todo (never overrides another user)
 veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
 ```
 

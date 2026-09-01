@@ -1359,6 +1359,65 @@ func (err *ErrFilterTooComplex) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskAlreadyClaimed represents an error where a task claim is refused because
+// another user already holds the task.
+type ErrTaskAlreadyClaimed struct {
+	TaskID int64
+	UserID int64
+}
+
+// IsErrTaskAlreadyClaimed checks if an error is ErrTaskAlreadyClaimed.
+func IsErrTaskAlreadyClaimed(err error) bool {
+	_, ok := err.(ErrTaskAlreadyClaimed)
+	return ok
+}
+
+func (err ErrTaskAlreadyClaimed) Error() string {
+	return fmt.Sprintf("Task is already claimed by another user [TaskID: %d, UserID: %d]", err.TaskID, err.UserID)
+}
+
+// ErrCodeTaskAlreadyClaimed holds the unique world-error code of this error
+const ErrCodeTaskAlreadyClaimed = 4034
+
+// HTTPError holds the http error description
+func (err ErrTaskAlreadyClaimed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskAlreadyClaimed,
+		Message:  "This task is already claimed by another user.",
+	}
+}
+
+// ErrTaskNotInExpectedBucket represents an error where a task claim is refused
+// because the task is no longer in the bucket the caller expected it in.
+type ErrTaskNotInExpectedBucket struct {
+	TaskID           int64
+	BucketID         int64
+	ExpectedBucketID int64
+}
+
+// IsErrTaskNotInExpectedBucket checks if an error is ErrTaskNotInExpectedBucket.
+func IsErrTaskNotInExpectedBucket(err error) bool {
+	_, ok := err.(ErrTaskNotInExpectedBucket)
+	return ok
+}
+
+func (err ErrTaskNotInExpectedBucket) Error() string {
+	return fmt.Sprintf("Task is not in the expected bucket [TaskID: %d, BucketID: %d, ExpectedBucketID: %d]", err.TaskID, err.BucketID, err.ExpectedBucketID)
+}
+
+// ErrCodeTaskNotInExpectedBucket holds the unique world-error code of this error
+const ErrCodeTaskNotInExpectedBucket = 4035
+
+// HTTPError holds the http error description
+func (err ErrTaskNotInExpectedBucket) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskNotInExpectedBucket,
+		Message:  "This task is not in the bucket you expected it in.",
+	}
+}
+
 // ErrInvalidReactionEntityKind represents an error where the reaction kind is invalid
 type ErrInvalidReactionEntityKind struct {
 	Kind string

@@ -1,0 +1,36 @@
+# Closes the Workman tasks a merged PR references.
+#
+# Copy this file to .github/workflows/workman-merge-hook.yml in any repo that
+# has a committed .veans.yml, and add the bot's API token (the one `veans init`
+# minted, or any token with tasks read/update + comments create on the
+# project) as the WORKMAN_TOKEN repository secret.
+#
+# Agents put `Refs: PROJ-12` in their commit messages (the veans prompt tells
+# them to); merging the PR is what closes the task. Nobody has to touch the
+# board.
+
+name: Workman merge hook
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  close-tasks:
+    # Only merged PRs — a closed-without-merge PR leaves its tasks In Review
+    # for a human to scrap or reassign.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The hook walks base..head, so both commits must be present.
+          fetch-depth: 0
+
+      - uses: EPYCD/workman/.github/actions/workman-merge-hook@main
+        with:
+          token: ${{ secrets.WORKMAN_TOKEN }}
+          # server: https://workman.internal   # override if the runner reaches the API on another hostname

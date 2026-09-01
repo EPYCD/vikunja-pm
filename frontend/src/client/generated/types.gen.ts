@@ -2112,6 +2112,25 @@ export type TaskBucket = {
     task_id?: number;
 };
 
+export type TaskClaim = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The bucket to move the task into on success, typically In Progress. Must belong to project_view_id.
+     */
+    bucket_id: number;
+    /**
+     * Optional guard: refuse the claim unless the task is currently in this bucket. Pass the Todo bucket to claim only tasks nobody has started. Ignored when the task is already claimed by you and already in bucket_id.
+     */
+    expected_bucket_id?: number;
+    /**
+     * The kanban view whose buckets the claim operates on.
+     */
+    project_view_id: number;
+};
+
 export type TaskCollection = {
     /**
      * The filter query to match tasks by. See https://vikunja.io/docs/filters.
@@ -4165,6 +4184,21 @@ export type TaskBucketWritable = {
      * The id of the task to place in the bucket.
      */
     task_id?: number;
+};
+
+export type TaskClaimWritable = {
+    /**
+     * The bucket to move the task into on success, typically In Progress. Must belong to project_view_id.
+     */
+    bucket_id: number;
+    /**
+     * Optional guard: refuse the claim unless the task is currently in this bucket. Pass the Todo bucket to claim only tasks nobody has started. Ignored when the task is already claimed by you and already in bucket_id.
+     */
+    expected_bucket_id?: number;
+    /**
+     * The kanban view whose buckets the claim operates on.
+     */
+    project_view_id: number;
 };
 
 export type TaskCommentWritable = {
@@ -8542,6 +8576,36 @@ export type TaskAssigneesDeleteResponses = {
 };
 
 export type TaskAssigneesDeleteResponse = TaskAssigneesDeleteResponses[keyof TaskAssigneesDeleteResponses];
+
+export type TasksClaimData = {
+    body: TaskClaimWritable;
+    path: {
+        /**
+         * The numeric id of the task to claim.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/claim';
+};
+
+export type TasksClaimErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksClaimError = TasksClaimErrors[keyof TasksClaimErrors];
+
+export type TasksClaimResponses = {
+    /**
+     * OK
+     */
+    200: Task;
+};
+
+export type TasksClaimResponse = TasksClaimResponses[keyof TasksClaimResponses];
 
 export type TasksDuplicateData = {
     body?: never;

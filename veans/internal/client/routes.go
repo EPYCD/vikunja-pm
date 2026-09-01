@@ -50,9 +50,12 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 	wanted := map[string][]string{
 		// Read + write tasks across the project. The bot creates, updates,
 		// and reads tasks; it doesn't delete (humans/merge hook close).
+		// `claim` is the atomic POST /tasks/{id}/claim; older servers without
+		// it are dropped by the intersection below and `veans claim` fails
+		// with a clear error rather than falling back to a racy sequence.
 		"tasks": {
 			"read_one", "read_all", "create", "update", "position",
-			"read", "update_bulk",
+			"read", "update_bulk", "claim",
 		},
 		// Project access: read project metadata, manage buckets & move
 		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.

@@ -161,12 +161,37 @@ through to its file backend.
 | `todo`        | Todo           | false     | created here by default                  |
 | `in-progress` | In Progress    | false     | `veans claim` / `update -s in-progress`  |
 | `in-review`   | In Review      | false     | the agent, when work is finished         |
-| `completed`   | Done           | true      | humans / merge hook only                 |
+| `completed`   | Done           | true      | the merge hook when the PR lands, or a human |
 | `scrapped`    | Scrapped       | true      | the agent, with `--reason`               |
 
 The agent never moves tasks to `completed` itself — it parks them in
-`In Review` and a human (or the future merge hook) closes them once the
-PR lands.
+`In Review`, and merging the PR closes them (see *Merge hook* below).
+
+## Claiming is atomic
+
+`veans claim` calls `POST /api/v2/tasks/{id}/claim`, which checks, moves
+and assigns in one server-side transaction (the current bucket row is read
+under `SELECT … FOR UPDATE` on Postgres and MySQL). Two agents racing for
+the same task get exactly one winner; the loser exits non-zero with
+`CONFLICT` and must pick another task. The claim also refuses a task that
+has left the Todo bucket since it was listed, so acting on a stale
+`list --ready` is safe. `--force` lifts the Todo guard (for picking up a
+task a human parked In Review); nothing overrides another user's claim.
+Re-claiming a task you already hold is a no-op.
+
+## Merge hook
+
+`.github/actions/workman-merge-hook` in the parent repo closes the tasks a
+merged PR references. It scans every commit on the PR for a `Refs:`
+trailer (`Refs: PROJ-12`, `Refs: #12, #13`), marks each task done through
+`/api/v2` and leaves a comment linking back to the PR. Already-done tasks
+are skipped, so re-runs are safe. It is plain curl + jq — no veans binary
+on the runner, and it works against a self-hosted Workman that GitHub
+cannot reach inbound.
+
+Copy `examples/merge-hook.yml` to `.github/workflows/` in a repo with a
+committed `.veans.yml` and add the bot token as the `WORKMAN_TOKEN` secret.
+The PR merge is the human gate: nobody has to touch the board.
 
 ## Out of scope (for now)
 
@@ -176,5 +201,3 @@ PR lands.
 - Project-scoped API tokens — Vikunja doesn't ship them yet. The
   credential schema's `scope` field is forward-compatible for when it does.
 - Auto-installing hook snippets. We print them; you paste them.
-- Merge-hook GitHub Action that auto-closes tasks on PR merge — separate
-  repo, future work.
