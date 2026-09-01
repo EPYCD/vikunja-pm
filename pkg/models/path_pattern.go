@@ -42,6 +42,11 @@ func NormalizeScopePath(raw string) (string, error) {
 	if strings.ContainsAny(p, "\x00\n\r") {
 		return "", ErrInvalidScopePath{Pattern: raw, Reason: "contains control characters"}
 	}
+	repo, p := splitRepoPrefix(p)
+	if repo != "" && !validRepoName(repo) {
+		return "", ErrInvalidScopePath{Pattern: raw, Reason: "repository prefix may only contain letters, digits, '.', '_' and '-'"}
+	}
+	p = strings.TrimSpace(p)
 	p = strings.ReplaceAll(p, "\\", "/")
 	for strings.HasPrefix(p, "./") {
 		p = strings.TrimPrefix(p, "./")
@@ -62,7 +67,32 @@ func NormalizeScopePath(raw string) (string, error) {
 			return "", ErrInvalidScopePath{Pattern: raw, Reason: "must not contain '.' segments"}
 		}
 	}
+	if repo != "" {
+		return repo + ":" + p, nil
+	}
 	return p, nil
+}
+
+// splitRepoPrefix separates an optional `repo:` namespace from a pattern.
+// Projects spanning several repositories prefix their paths so `src/index.ts`
+// in one repo never collides with the same path in another; patterns without
+// a prefix all live in the project's default repository. Only a prefix that
+// looks like a name counts — a colon inside a path segment stays a path.
+func splitRepoPrefix(p string) (repo, rest string) {
+	i := strings.Index(p, ":")
+	if i <= 0 || strings.ContainsAny(p[:i], "/\\*?[") {
+		return "", p
+	}
+	return p[:i], p[i+1:]
+}
+
+func validRepoName(repo string) bool {
+	for _, r := range repo {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r < '0' || r > '9') && r != '.' && r != '_' && r != '-' {
+			return false
+		}
+	}
+	return true
 }
 
 func segmentHasWildcard(seg string) bool {
@@ -156,6 +186,11 @@ func coversSubtree(segs []string) bool {
 func PathPatternsOverlap(a, b string) bool {
 	if a == b {
 		return true
+	}
+	repoA, a := splitRepoPrefix(a)
+	repoB, b := splitRepoPrefix(b)
+	if repoA != repoB {
+		return false
 	}
 	as, bs := strings.Split(a, "/"), strings.Split(b, "/")
 	la, lb := literalPrefix(as), literalPrefix(bs)

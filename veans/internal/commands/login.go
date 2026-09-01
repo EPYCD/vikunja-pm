@@ -50,8 +50,10 @@ URL veans prints, sign in, and paste the callback URL back. Use
 --token to paste in a personal API token, or --use-password / --username
 to force POST /login instead.
 
-Use this after revoking the bot's token in Vikunja's UI, or any time
-you want to rotate.`,
+Use this after revoking the bot's token in Vikunja's UI, any time you
+want to rotate, or after upgrading the server: the new token is minted
+with every permission the server offers, so a bot set up before scopes,
+leases and the ready queue existed gains access to them.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			path, err := config.Find("")
 			if err != nil {

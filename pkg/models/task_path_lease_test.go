@@ -150,7 +150,7 @@ func TestTaskPathLease(t *testing.T) {
 		defer s.Close()
 		require.NoError(t, s.Begin())
 
-		require.NoError(t, ReleaseTaskPathLeases(s, 1))
+		require.NoError(t, ReleaseTaskPathLeases(s, user1, 1))
 		require.NoError(t, s.Commit())
 		assert.Empty(t, leasesOf(t, 1))
 

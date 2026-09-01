@@ -152,7 +152,7 @@ import {
 	type ScopeList,
 } from '@/client/queries/taskScope'
 import {formatDateSince} from '@/helpers/time/formatDate'
-import {success} from '@/message'
+import {error, success} from '@/message'
 
 const props = defineProps<{
 	taskId: number,
@@ -232,7 +232,12 @@ async function save(next: Partial<TaskScope>) {
 		notes: scope.value.notes ?? '',
 		...next,
 	}
-	await update.mutateAsync(body)
+	try {
+		await update.mutateAsync(body)
+	} catch (e) {
+		error(e)
+		return
+	}
 	success({message: t('task.scope.saved')})
 }
 
@@ -266,7 +271,12 @@ function holderName(lease: TaskPathLease): string {
 }
 
 async function release() {
-	await releaseMutation.mutateAsync()
+	try {
+		await releaseMutation.mutateAsync()
+	} catch (e) {
+		error(e)
+		return
+	}
 	success({message: t('task.scope.released')})
 }
 </script>

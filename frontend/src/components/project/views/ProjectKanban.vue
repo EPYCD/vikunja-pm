@@ -7,6 +7,23 @@
 	>
 		<template #header>
 			<div class="filter-container">
+				<XButton
+					v-if="!isSavedFilter(project)"
+					v-tooltip="$t('task.leasesPanel.readyOnlyHint')"
+					variant="secondary"
+					icon="check-double"
+					class="kanban-ready-toggle"
+					:class="{'is-active': readyOnly}"
+					:aria-pressed="readyOnly"
+					@click="readyOnly = !readyOnly"
+				>
+					{{ $t('task.leasesPanel.readyOnly') }}
+				</XButton>
+				<ProjectLeasesPanel
+					v-if="!isSavedFilter(project)"
+					:project-id="projectIdWithFallback"
+					:can-write="canWrite"
+				/>
 				<FilterPopup
 					v-if="!isSavedFilter(project)"
 					v-model="params"
@@ -216,6 +233,7 @@
 									<template #item="{element: task}">
 										<li
 											class="task-item"
+											:class="{'is-hidden': hiddenByReadiness(bucket, task)}"
 											:data-task-id="task.id"
 										>
 											<span
@@ -295,6 +313,7 @@
 import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
+import {useStorage} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useQuery} from '@tanstack/vue-query'
 import draggable from 'zhyswan-vuedraggable'
@@ -313,6 +332,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import ProjectLeasesPanel from '@/components/project/partials/ProjectLeasesPanel.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -496,6 +516,18 @@ const readinessQuery = useQuery(computed(() => ({
 	enabled: projectIdWithFallback.value > 0,
 })))
 const readinessByTaskId = computed(() => readinessByTask(readinessQuery.data.value ?? []))
+
+// "Ready only" trims the queue bucket to what an agent could claim now. The
+// cards stay in the draggable list and are only hidden, so positions and
+// drag targets are unaffected.
+const readyOnly = useStorage('kanbanReadyOnly', false)
+function hiddenByReadiness(bucket: IBucket, task: ITask): boolean {
+	if (!readyOnly.value || bucket.id !== view.value?.defaultBucketId) {
+		return false
+	}
+	const readiness = readinessByTaskId.value[task.id]
+	return readiness !== undefined && !readiness.ready
+}
 
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
@@ -948,6 +980,19 @@ $bucket-right-margin: 1rem;
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
+
+.filter-container {
+	display: flex;
+	align-items: center;
+	gap: var(--wm-space-2);
+}
+
+.kanban-ready-toggle.is-active {
+	background: var(--wm-accent-wash);
+	color: var(--wm-accent-text);
+
+	@include chamfer-outline(var(--wm-accent-line));
+}
 
 // The board floor: a faint blueprint graticule so the columns read as
 // instruments placed on a grid rather than cards floating in space.

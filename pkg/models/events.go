@@ -574,3 +574,28 @@ type AdminAccessDeniedEvent struct {
 func (e *AdminAccessDeniedEvent) Name() string {
 	return "admin.access.denied"
 }
+
+// TaskClaimedEvent fires when a task is atomically claimed: assigned, moved
+// into its in-progress bucket and, if scoped, its paths leased.
+type TaskClaimedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskClaimedEvent
+func (e *TaskClaimedEvent) Name() string {
+	return "task.claimed"
+}
+
+// TaskLeasesReleasedEvent fires when a task's path leases are dropped
+// explicitly, without the task finishing — the signal that files became
+// claimable again.
+type TaskLeasesReleasedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskLeasesReleasedEvent
+func (e *TaskLeasesReleasedEvent) Name() string {
+	return "task.leases.released"
+}

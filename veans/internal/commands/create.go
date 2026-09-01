@@ -51,6 +51,7 @@ func newCreateCmd() *cobra.Command {
 				return err
 			}
 			f.scope.read(cmd)
+			f.scope.repo = rt.cfg.Repository
 			task, err := runCreate(cmd.Context(), rt, args[0], f)
 			if err != nil {
 				return err

@@ -57,3 +57,14 @@ func TestScopeFlags_ApplyFromNothingSendsEmptyLists(t *testing.T) {
 		t.Fatalf("endpoints = %v", got.Endpoints)
 	}
 }
+
+func TestWithRepoPrefix(t *testing.T) {
+	got := withRepoPrefix("api", []string{"pkg/models/**", "web:src/App.vue", " docs/x.md ", ""})
+	want := []string{"api:pkg/models/**", "web:src/App.vue", "api:docs/x.md", ""}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("withRepoPrefix = %v, want %v", got, want)
+	}
+	if got := withRepoPrefix("", []string{"pkg/x"}); !reflect.DeepEqual(got, []string{"pkg/x"}) {
+		t.Fatalf("no repository configured must leave paths alone: %v", got)
+	}
+}

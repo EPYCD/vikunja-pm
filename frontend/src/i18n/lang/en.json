@@ -1100,6 +1100,18 @@
         "leases": "{n} leased path | {n} leased paths"
       }
     },
+    "leasesPanel": {
+      "button": "Leases",
+      "title": "Who holds what",
+      "subtitle": "Paths leased by in-progress tasks in this project. A lease blocks every other task that owns an overlapping path until the holder finishes or releases it.",
+      "empty": "No paths are leased right now.",
+      "holder": "held by {user}",
+      "since": "since {date}",
+      "release": "Release",
+      "released": "The task's path leases were released.",
+      "readyOnly": "Ready only",
+      "readyOnlyHint": "Hide tasks in the queue that cannot be claimed right now"
+    },
     "attributes": {
       "assignees": "Assignees",
       "color": "Color",
@@ -1549,6 +1561,11 @@
     "4021": "This user is already assigned to that task.",
     "4022": "Please provide what the reminder date is relative to.",
     "4023": "Cannot create a task relation cycle.",
+    "4034": "This task is already claimed by another user.",
+    "4035": "This task is no longer in the bucket it was expected in.",
+    "4036": "This task is blocked by tasks that are not done yet.",
+    "4037": "The path {pattern} is already leased by task #{heldByTaskId} ({heldPattern}).",
+    "4038": "This scope path is invalid.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",

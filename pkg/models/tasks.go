@@ -1480,6 +1480,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if err = releasePathLeasesForTask(s, t.ID); err != nil {
 			return err
 		}
+		if err = completeParentsIfSubtasksDone(s, a, t); err != nil {
+			return err
+		}
 	}
 
 	// When a task changed its done status, make sure it is in the correct bucket

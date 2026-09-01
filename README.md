@@ -67,6 +67,7 @@ The design system is documented in
 
 ## Docs
 
+* [Running your team's agents on a board](docs/agent-workflow.md)
 * [Installing](https://vikunja.io/docs/installing/)
 * [Build from source](https://vikunja.io/docs/build-from-sources/)
 * [Development setup](https://vikunja.io/docs/development/)

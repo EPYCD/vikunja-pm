@@ -39,7 +39,7 @@ const (
 type TaskReadiness struct {
 	Task           *Task                  `json:"task" doc:"The task, with assignees, labels and related tasks populated."`
 	Ready          bool                   `json:"ready" doc:"True when the task can be claimed right now: not done, unassigned, no unfinished blocker, and no path it owns is leased by another task."`
-	Reasons        []string               `json:"reasons" doc:"Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict."`
+	Reasons        []string               `json:"reasons" doc:"Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict. blocked covers an unfinished blocker, an unfinished predecessor (follows) and open subtasks."`
 	BlockedBy      []*Task                `json:"blocked_by" doc:"The unfinished tasks this one is blocked by."`
 	LeaseConflicts []ErrPathLeaseConflict `json:"lease_conflicts" doc:"Each owned path that overlaps another task's active lease, with the holder."`
 }
@@ -118,9 +118,13 @@ func GetTaskReadiness(s *xorm.Session, a web.Auth, view *ProjectView, bucketID i
 		if len(t.Assignees) > 0 {
 			r.Reasons = append(r.Reasons, ReadinessReasonAssigned)
 		}
-		for _, b := range t.RelatedTasks[RelationKindBlocked] {
-			if b != nil && !b.Done {
-				r.BlockedBy = append(r.BlockedBy, b)
+		seen := map[int64]bool{}
+		for _, kind := range blockingRelationKinds {
+			for _, b := range t.RelatedTasks[kind] {
+				if b != nil && !b.Done && !seen[b.ID] {
+					seen[b.ID] = true
+					r.BlockedBy = append(r.BlockedBy, b)
+				}
 			}
 		}
 		if len(r.BlockedBy) > 0 {
@@ -142,12 +146,17 @@ func GetTaskReadiness(s *xorm.Session, a web.Auth, view *ProjectView, bucketID i
 	return out, nil
 }
 
+// blockingRelationKinds are the relations whose other side must be done
+// before a task can be claimed: an explicit blocker, a predecessor, and the
+// task's own open subtasks (a parent is a container until its children land).
+var blockingRelationKinds = []RelationKind{RelationKindBlocked, RelationKindFollows, RelationKindSubtask}
+
 // unfinishedBlockers returns the ids of tasks that block the given task and
 // are not done. Used by the claim to refuse work whose prerequisites are
 // still open.
 func unfinishedBlockers(s *xorm.Session, taskID int64) ([]int64, error) {
 	relations := []*TaskRelation{}
-	if err := s.Where("task_id = ? AND relation_kind = ?", taskID, RelationKindBlocked).Find(&relations); err != nil {
+	if err := s.Where("task_id = ?", taskID).In("relation_kind", blockingRelationKinds).Find(&relations); err != nil {
 		return nil, err
 	}
 	if len(relations) == 0 {

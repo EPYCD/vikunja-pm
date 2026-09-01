@@ -32,6 +32,9 @@ Server: {{ .Server }}
   `veans create "<short title>" -s in-progress -d "<short description>" --paths-owned pkg/foo/** --endpoint "POST /api/v2/foo"`
   then claim it so the paths are leased: `veans claim {{ .TaskIDExample }}`
 - `veans leases` lists what every in-progress task is editing right now.
+- Paths are relative to this repository. In a project that spans several
+  repositories they carry a `repo:` prefix (`api:pkg/models/**`); when
+  `.veans.yml` sets `repository`, bare paths you pass are prefixed for you.
 
 ## WHILE you work
 - Keep the task's description in sync with what you're doing. Use HTML

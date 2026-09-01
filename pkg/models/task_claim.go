@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -147,5 +148,6 @@ func ClaimTask(s *xorm.Session, a web.Auth, c *TaskClaim) (*Task, error) {
 	if err := full.ReadOne(s, a); err != nil {
 		return nil, err
 	}
+	events.DispatchOnCommit(s, &TaskClaimedEvent{Task: full, Doer: claimant})
 	return full, nil
 }

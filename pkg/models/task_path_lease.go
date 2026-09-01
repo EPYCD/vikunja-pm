@@ -19,6 +19,8 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -194,6 +196,18 @@ func releasePathLeasesForTask(s *xorm.Session, taskID int64) error {
 // ReleaseTaskPathLeases is the explicit release used by the API: an agent
 // that abandons work, or a human unblocking a stale lease, without touching
 // the task's status. The caller has already checked write access on the task.
-func ReleaseTaskPathLeases(s *xorm.Session, taskID int64) error {
-	return releasePathLeasesForTask(s, taskID)
+func ReleaseTaskPathLeases(s *xorm.Session, a web.Auth, taskID int64) error {
+	if err := releasePathLeasesForTask(s, taskID); err != nil {
+		return err
+	}
+	task, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return err
+	}
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	events.DispatchOnCommit(s, &TaskLeasesReleasedEvent{Task: &task, Doer: doer})
+	return nil
 }

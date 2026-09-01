@@ -35,6 +35,9 @@ func TestNormalizeScopePath(t *testing.T) {
 		"pkg/models/*_test.go":    "pkg/models/*_test.go",
 		"a/b/c/d/e/f/g/h/i/j/k/l": "a/b/c/d/e/f/g/h/i/j/k/l",
 		"./././pkg":               "pkg",
+		"api:pkg/models/**":       "api:pkg/models/**",
+		"web: ./src//App.vue":     "web:src/App.vue",
+		"c:program/x":             "c:program/x",
 	}
 	for in, want := range ok {
 		got, err := NormalizeScopePath(in)
@@ -42,7 +45,7 @@ func TestNormalizeScopePath(t *testing.T) {
 		assert.Equal(t, want, got, in)
 	}
 
-	bad := []string{"", "   ", "/", ".", "./", "../etc/passwd", "pkg/../secrets", "pkg/./x", "a\nb", strings.Repeat("x", 501)}
+	bad := []string{"", "   ", "/", ".", "./", "../etc/passwd", "pkg/../secrets", "pkg/./x", "a\nb", strings.Repeat("x", 501), "api:", "bad repo:pkg/x", "api:../x"}
 	for _, in := range bad {
 		_, err := NormalizeScopePath(in)
 		require.Error(t, err, "%q must be rejected", in)
@@ -52,6 +55,7 @@ func TestNormalizeScopePath(t *testing.T) {
 
 func TestPathPatternsOverlap(t *testing.T) {
 	overlap := [][2]string{
+		{"api:pkg/models/**", "api:pkg/models/tasks.go"},
 		{"pkg/models/tasks.go", "pkg/models/tasks.go"},
 		{"pkg/models", "pkg/models/tasks.go"},
 		{"pkg/models/**", "pkg/models/tasks.go"},
@@ -74,6 +78,8 @@ func TestPathPatternsOverlap(t *testing.T) {
 	}
 
 	disjoint := [][2]string{
+		{"api:pkg/models/**", "web:pkg/models/tasks.go"},
+		{"api:src/index.ts", "src/index.ts"},
 		{"pkg/models/tasks.go", "pkg/models/labels.go"},
 		{"pkg/models/tasks.go", "pkg/models/tasks.go.bak"},
 		{"pkg/models/**", "pkg/routes/**"},

@@ -205,6 +205,16 @@ deleted, or explicitly released (`veans release`). Overlap is judged on
 patterns, conservatively: `pkg/models/**` collides with `pkg/models/tasks.go`
 and with `pkg/**/*.go`.
 
+Paths are repository-relative. A project that spans several repositories
+namespaces them with a `repo:` prefix (`api:pkg/models/**`, `web:src/**`);
+patterns in different repositories never collide. Set `repository: api` in
+a checkout's `.veans.yml` and `veans create`/`veans scope` prefix bare paths
+for you.
+
+Bots set up before scopes existed hold tokens without the new
+permissions; `veans login` mints a fresh token with everything the server
+offers.
+
 `veans ready` is the server's ready queue (`GET
 /projects/{id}/views/{view}/readiness`): every Todo task with `ready` and
 the reasons it is not — `assigned`, `blocked` (with `blocked_by`) or

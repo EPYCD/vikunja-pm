@@ -94,6 +94,11 @@
                     "comment": "Whether task comments should be enabled or not"
                 },
                 {
+                    "key": "autocompleteparenttasks",
+                    "default_value": "false",
+                    "comment": "When enabled, a parent task is marked done automatically as soon as its last open subtask is done. Meant for agent-driven boards where an epic is only a container for its subtasks; repeating parents are never auto-completed."
+                },
+                {
                     "key": "enabletotp",
                     "default_value": "true",
                     "comment": "Whether totp is enabled. In most cases you want to leave that enabled."

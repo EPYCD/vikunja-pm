@@ -102,7 +102,7 @@ func taskLeasesRelease(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, huma.Error403Forbidden("forbidden")
 	}
-	if err := models.ReleaseTaskPathLeases(s, in.TaskID); err != nil {
+	if err := models.ReleaseTaskPathLeases(s, a, in.TaskID); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

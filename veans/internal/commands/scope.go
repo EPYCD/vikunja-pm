@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -39,6 +40,8 @@ type scopeFlags struct {
 	endpSet    bool
 	notesSet   bool
 	clearScope bool
+	// repo is .veans.yml's repository, applied to bare paths on write.
+	repo string
 }
 
 func (f *scopeFlags) bind(cmd *cobra.Command) {
@@ -57,6 +60,30 @@ func (f *scopeFlags) read(cmd *cobra.Command) {
 
 func (f *scopeFlags) any() bool {
 	return f.ownedSet || f.affectSet || f.endpSet || f.notesSet
+}
+
+// withRepoPrefix namespaces bare paths with the configured repository so
+// agents in a multi-repo project can keep writing repo-relative paths.
+// Already-prefixed entries pass through untouched.
+func withRepoPrefix(repo string, paths []string) []string {
+	if repo == "" || len(paths) == 0 {
+		return paths
+	}
+	out := make([]string, 0, len(paths))
+	for _, p := range paths {
+		p = strings.TrimSpace(p)
+		if p == "" || hasRepoPrefix(p) {
+			out = append(out, p)
+			continue
+		}
+		out = append(out, repo+":"+p)
+	}
+	return out
+}
+
+func hasRepoPrefix(p string) bool {
+	i := strings.Index(p, ":")
+	return i > 0 && !strings.ContainsAny(p[:i], "/\\*?[")
 }
 
 // apply folds the passed flags into base and returns the scope to PUT.
@@ -79,10 +106,10 @@ func (f *scopeFlags) apply(base *client.TaskScope) *client.TaskScope {
 		out.Notes = base.Notes
 	}
 	if f.ownedSet {
-		out.PathsOwned = f.owned
+		out.PathsOwned = withRepoPrefix(f.repo, f.owned)
 	}
 	if f.affectSet {
-		out.PathsAffected = f.affected
+		out.PathsAffected = withRepoPrefix(f.repo, f.affected)
 	}
 	if f.endpSet {
 		out.Endpoints = f.endpoints
@@ -115,6 +142,7 @@ segments; a bare directory such as pkg/models covers its whole subtree.`,
 				return err
 			}
 			f.read(cmd)
+			f.repo = rt.cfg.Repository
 			id, err := rt.resolveTaskID(cmd.Context(), args[0])
 			if err != nil {
 				return err
