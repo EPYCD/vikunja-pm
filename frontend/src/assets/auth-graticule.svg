@@ -1,8 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" fill="none" role="presentation" aria-hidden="true">
-  <g stroke="#C81E24" stroke-width="1" opacity=".22">
-    <path d="M0 40h320M0 80h320M0 120h320M0 160h320M0 200h320M0 240h320M0 280h320"/>
-    <path d="M40 0v320M80 0v320M120 0v320M160 0v320M200 0v320M240 0v320M280 0v320"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520" fill="none" role="presentation" aria-hidden="true">
+  <defs>
+    <linearGradient id="wmFade" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#C81E24" stop-opacity=".30"/>
+      <stop offset="1" stop-color="#C81E24" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="wmMask">
+      <rect width="520" height="520" fill="url(#wmFade)"/>
+    </mask>
+  </defs>
+  <g mask="url(#wmMask)" stroke="#C81E24" stroke-width="1">
+    <path d="M0 40h520M0 80h520M0 120h520M0 160h520M0 200h520M0 240h520M0 280h520M0 320h520M0 360h520M0 400h520M0 440h520M0 480h520"/>
+    <path d="M40 0v520M80 0v520M120 0v520M160 0v520M200 0v520M240 0v520M280 0v520M320 0v520M360 0v520M400 0v520M440 0v520M480 0v520"/>
   </g>
-  <path d="M0 320V200h120z" fill="#C81E24" opacity=".10"/>
-  <path d="M0 200h120L0 320" stroke="#C81E24" stroke-width="2" opacity=".45"/>
+  <g mask="url(#wmMask)">
+    <path d="M0 520V360h160z" fill="#C81E24" fill-opacity=".14"/>
+    <path d="M0 360h160L0 520" stroke="#C81E24" stroke-width="2" stroke-opacity=".7" fill="none"/>
+  </g>
 </svg>

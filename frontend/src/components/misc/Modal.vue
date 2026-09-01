@@ -228,8 +228,8 @@ $modal-width: 1024px;
 	// though getComputedStyle still reports the color. The dialog fills the
 	// viewport anyway, and its opacity transition fades the scrim with it —
 	// same as the old div-based .modal-mask.
-	background: rgba(0, 0, 0, .8);
-	color: #ffffff;
+	background: rgba(0, 0, 0, .82);
+	color: var(--wm-text);
 	// Fill viewport
 	position: fixed;
 	inset: 0;
@@ -243,7 +243,7 @@ $modal-width: 1024px;
 	// closeDialog), and transitioning display triggers the Chromium paint
 	// bug above.
 	opacity: 0;
-	transition: opacity 150ms ease;
+	transition: opacity var(--wm-duration) var(--wm-ease);
 
 	&[open]:not([data-closing]) {
 		opacity: 1;

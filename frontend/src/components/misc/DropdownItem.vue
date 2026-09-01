@@ -33,10 +33,10 @@ defineProps<DropDownItemProps>()
 
 <style scoped lang="scss">
 .dropdown-item {
-	color: var(--text);
-	font-size: 0.875rem;
+	color: var(--wm-text-secondary);
+	font-size: var(--wm-text-sm);
 	line-height: 1.5;
-	padding: $item-padding;
+	padding: var(--wm-space-2) var(--wm-space-3);
 	position: relative;
 	text-align: inherit;
 	white-space: nowrap;
@@ -45,13 +45,16 @@ defineProps<DropDownItemProps>()
 	align-items: center;
 	justify-content: left !important;
 
+	// Active items take the accent rail + wash, not a filled block.
 	&.is-active {
-		background-color: var(--link);
-		color: var(--link-invert);
+		background-color: var(--wm-accent-wash);
+		color: var(--wm-text);
+		box-shadow: inset 2px 0 0 var(--wm-accent);
 	}
 
 	&:hover:not(.is-disabled) {
-		background-color: var(--grey-100);
+		background-color: var(--wm-surface-hover);
+		color: var(--wm-text);
 	}
 
 	&.is-disabled {
@@ -60,11 +63,11 @@ defineProps<DropDownItemProps>()
 }
 
 .icon {
-	padding-inline-end: .5rem;
-	color: var(--grey-300);
+	padding-inline-end: var(--wm-space-2);
+	color: var(--wm-text-tertiary);
 }
 
 .has-text-danger .icon {
-	color: var(--danger) !important;
+	color: var(--danger-text) !important;
 }
 </style>

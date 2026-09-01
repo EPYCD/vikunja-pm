@@ -35,33 +35,42 @@ const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
 </script>
 
 <style lang="scss" scoped>
+// Status messages read as an annotated rule: a coloured rail on the leading
+// edge, a faint wash, square corners.
 .message-wrapper {
-	border-radius: $radius;
-	background: var(--white);
+	background: transparent;
+	border-radius: 0;
 }
 
 .message {
-	padding: .75rem 1rem;
-	border-radius: $radius;
+	padding: var(--wm-space-3) var(--wm-space-4);
+	border-radius: 0;
+	border: 1px solid var(--wm-line);
+	border-inline-start-width: 2px;
+	color: var(--wm-text);
 }
 
 .info {
-	border: 1px solid var(--primary);
-	background: hsla(var(--primary-hsl), .05);
+	border-color: var(--wm-line);
+	border-inline-start-color: var(--wm-accent);
+	background: var(--wm-accent-wash);
 }
 
 .danger {
-	border: 1px solid var(--danger);
-	background: hsla(var(--danger-h), var(--danger-s), var(--danger-l), .05);
+	border-color: var(--wm-line);
+	border-inline-start-color: var(--danger);
+	background: hsla(var(--wm-danger-h), var(--wm-danger-s), var(--wm-danger-l), .1);
 }
 
 .warning {
-	border: 1px solid var(--warning);
-	background: hsla(var(--warning-h), var(--warning-s), var(--warning-l), .05);
+	border-color: var(--wm-line);
+	border-inline-start-color: var(--warning);
+	background: hsla(var(--wm-warning-h), var(--wm-warning-s), var(--wm-warning-l), .1);
 }
 
 .success {
-	border: 1px solid var(--success);
-	background: hsla(var(--success-h), var(--success-s), var(--success-l), .05);
+	border-color: var(--wm-line);
+	border-inline-start-color: var(--success);
+	background: hsla(var(--wm-success-h), var(--wm-success-s), var(--wm-success-l), .1);
 }
 </style>

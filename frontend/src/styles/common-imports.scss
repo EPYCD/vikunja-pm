@@ -60,10 +60,15 @@ $chamfer: 10px;
 //
 // $corners accepts any of: top-left, top-right, bottom-right, bottom-left.
 @mixin chamfer($size: $chamfer, $corners: bottom-right) {
-  $tl: if(index($corners, top-left), $size, 0);
-  $tr: if(index($corners, top-right), $size, 0);
-  $br: if(index($corners, bottom-right), $size, 0);
-  $bl: if(index($corners, bottom-left), $size, 0);
+  $tl: 0;
+  $tr: 0;
+  $br: 0;
+  $bl: 0;
+
+  @if index($corners, top-left) { $tl: $size; }
+  @if index($corners, top-right) { $tr: $size; }
+  @if index($corners, bottom-right) { $br: $size; }
+  @if index($corners, bottom-left) { $bl: $size; }
 
   clip-path: polygon(
     $tl 0,
@@ -86,6 +91,17 @@ $chamfer: 10px;
     drop-shadow(-1px 0 0 #{$color})
     drop-shadow(0 1px 0 #{$color})
     drop-shadow(0 -1px 0 #{$color});
+}
+
+// A focus ring for chamfered elements. `outline` and `box-shadow` are both
+// clipped away by clip-path, so the ring has to be drawn as drop-shadows off
+// the clipped alpha mask instead.
+@mixin chamfer-focus-ring($color: hsla(var(--wm-accent-hsl), 0.9)) {
+  filter:
+    drop-shadow(2px 0 0 #{$color})
+    drop-shadow(-2px 0 0 #{$color})
+    drop-shadow(0 2px 0 #{$color})
+    drop-shadow(0 -2px 0 #{$color});
 }
 
 // Uppercase monospace micro-label: table headers, section eyebrows, metric
