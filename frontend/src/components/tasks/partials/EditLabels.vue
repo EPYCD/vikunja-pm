@@ -18,8 +18,8 @@
 	>
 		<template #tag="{item: label}">
 			<span
-				:style="getLabelStyles(label)"
-				class="tag"
+				:style="labelStyles(label)"
+				class="tag has-label-color"
 			>
 				<span>{{ label.title }}</span>
 				<BaseButton
@@ -34,14 +34,14 @@
 		<template #searchResult="{option}">
 			<span
 				v-if="typeof option === 'string'"
-				class="tag search-result"
+				class="tag has-label-color search-result"
 			>
 				<span>{{ option }}</span>
 			</span>
 			<span
 				v-else
-				:style="getLabelStyles(option)"
-				class="tag search-result"
+				:style="labelStyles(option)"
+				class="tag has-label-color search-result"
 			>
 				<span>{{ option.title }}</span>
 			</span>
@@ -61,7 +61,7 @@ import type {Label} from '@/client/generated'
 import {useCreateLabelMutation} from '@/client/queries/labels'
 import {useTaskStore} from '@/stores/tasks'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
-import {useLabelStyles} from '@/composables/useLabelStyles'
+import {getLabelColor} from '@/composables/useLabelStyles'
 import {useLabels} from '@/composables/useLabels'
 
 const props = withDefaults(defineProps<{
@@ -100,7 +100,12 @@ watch(
 const taskStore = useTaskStore()
 const {filterLabelsByQuery, isPending} = useLabels()
 const createLabelMutation = useCreateLabelMutation()
-const {getLabelStyles} = useLabelStyles()
+
+// Matches Label.vue: the color becomes a hairline plus a wash, not a fill.
+function labelStyles(label: Label) {
+	const color = getLabelColor(label)
+	return color === '' ? {} : {'--label-color': color}
+}
 
 const foundLabels = computed(() => filterLabelsByQuery(labels.value, query.value))
 const loading = computed(() => isPending.value || createLabelMutation.isPending.value || taskStore.isLoading)
@@ -152,7 +157,7 @@ async function createAndAddLabel(title: string) {
 
 <style lang="scss" scoped>
 .tag {
-	margin: .25rem !important;
+	margin: var(--wm-space-1) !important;
 }
 
 .tag.search-result {
@@ -160,10 +165,10 @@ async function createAndAddLabel(title: string) {
 }
 
 :deep(.input-wrapper) {
-	padding: .25rem !important;
+	padding: var(--wm-space-1) !important;
 }
 
 :deep(input.input) {
-	padding: 0 .5rem;
+	padding: 0 var(--wm-space-2);
 }
 </style>

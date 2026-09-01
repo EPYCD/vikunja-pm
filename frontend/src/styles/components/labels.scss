@@ -1,29 +1,72 @@
-// FIXME: adapt labels.vue so that it can be used for this as well 
+// The Workman chip. Bulma exposes its tag metrics as custom properties, so the
+// shape can be reset here without fighting `.tag:not(body)` on specificity.
+.tag {
+	--tag-radius: var(--wm-radius-xs);
+	--tag-background-color: var(--wm-surface-sunken);
+	--tag-color: var(--wm-text-secondary);
+	--tag-font-size: var(--wm-text-2xs);
+
+	font-family: $workman-mono-font;
+	font-weight: 500;
+	letter-spacing: var(--wm-tracking-label);
+	font-variant-numeric: tabular-nums;
+	border: 1px solid var(--wm-line);
+}
+
+// A chip carrying a label's own color, handed to it as --label-color: a
+// hairline in that color over a wash of it. A saturated fill would force the
+// text color to flip with the hue; the wash keeps the ground's own contrast in
+// both themes.
+.tag.has-label-color {
+	@include mono-label;
+
+	position: relative;
+	background-color: transparent;
+	border-color: var(--label-color, var(--wm-line));
+	color: var(--wm-text);
+	block-size: auto;
+	min-block-size: 1.375rem;
+	line-height: 1;
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--label-color, var(--wm-text-tertiary));
+		opacity: 0.14;
+		pointer-events: none;
+	}
+
+	> span {
+		position: relative;
+	}
+}
+
+// FIXME: adapt labels.vue so that it can be used for this as well
 .labels-list {
-  a, a:hover {
-    text-decoration: none;
-  }
+	a, a:hover {
+		text-decoration: none;
+	}
 
-  .tag {
-    margin: .5rem 0 .5rem .5rem;
-    background: var(--grey-200);
+	.tag {
+		margin: var(--wm-space-2) 0 var(--wm-space-2) var(--wm-space-2);
+		text-transform: uppercase;
 
-    // FIXME: only used in ListLabels.vue
-    &.disabled {
-      opacity: 0.7;
+		// FIXME: only used in ListLabels.vue
+		&.disabled {
+			opacity: 0.7;
 
-      &, a {
-        cursor: default;
-      }
-    }
-  }
+			&, a {
+				cursor: default;
+			}
+		}
+	}
 
-  .multiselect .tag {
-    margin: 0 0 0 .5rem;
-  }
+	.multiselect .tag {
+		margin: 0 0 0 var(--wm-space-2);
+	}
 }
 
 .tasks .task span.tag span {
-  width: auto;
+	inline-size: auto;
 }
-
