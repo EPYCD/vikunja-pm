@@ -79,7 +79,11 @@ veans create "title"           --description, --label, --status, --priority, --p
 veans update <id>              --status, --title, --priority, --label-add/remove,
                                --description, --description-replace-old/new, --description-append,
                                --comment, --reason, --if-unchanged-since
-veans claim <id>               assign the bot, move to In Progress, tag with current branch label
+veans claim <id>               assign the bot, move to In Progress, tag with current branch label, lease paths_owned
+veans ready                    ready queue with reasons (assigned / blocked / lease_conflict)
+veans scope <id> [flags]       show or set the task's scope (paths owned/affected, endpoints, notes)
+veans leases                   list the paths in-progress tasks are editing right now
+veans release <id>             drop a task's leases without changing its status
 veans api METHOD PATH          raw REST passthrough — escape hatch for endpoints not wrapped here
 veans login                    re-mint the bot's token (rotation)
 veans version
@@ -179,6 +183,34 @@ has left the Todo bucket since it was listed, so acting on a stale
 task a human parked In Review); nothing overrides another user's claim.
 Re-claiming a task you already hold is a no-op.
 
+
+## Scope and path leases
+
+Every task can carry a scope — `paths_owned` (the files it will edit),
+`paths_affected` (files it reads or depends on), `endpoints` and free-form
+`notes` — written by whoever decomposes the work:
+
+```
+veans create "atomic claim" --paths-owned pkg/models/task_claim.go --paths-owned pkg/routes/api/v2/task_claim.go \
+  --paths-affected pkg/models/tasks.go --endpoint "POST /api/v2/tasks/{id}/claim"
+veans scope PROJ-12 --paths-owned frontend/src/components/tasks/**
+```
+
+Only `paths_owned` is enforced. `veans claim` leases those globs for the
+project (`POST /tasks/{id}/claim` does it in the same transaction as the
+assignment); a claim whose owned paths overlap a lease held by another
+in-progress task is refused with `CONFLICT`, as is widening a claimed task's
+scope onto a leased path. Leases go away when the task is done, scrapped,
+deleted, or explicitly released (`veans release`). Overlap is judged on
+patterns, conservatively: `pkg/models/**` collides with `pkg/models/tasks.go`
+and with `pkg/**/*.go`.
+
+`veans ready` is the server's ready queue (`GET
+/projects/{id}/views/{view}/readiness`): every Todo task with `ready` and
+the reasons it is not — `assigned`, `blocked` (with `blocked_by`) or
+`lease_conflict` (with `lease_conflicts` naming the holder). `veans list
+--ready` is that queue reduced to the claimable tasks, so agents and the
+board never disagree about what can be picked up.
 ## Merge hook
 
 `.github/actions/workman-merge-hook` in the parent repo closes the tasks a

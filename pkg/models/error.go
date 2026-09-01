@@ -1418,6 +1418,101 @@ func (err ErrTaskNotInExpectedBucket) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskBlocked represents an error where a task cannot be claimed because
+// tasks it is blocked by are not done yet.
+type ErrTaskBlocked struct {
+	TaskID     int64
+	BlockerIDs []int64
+}
+
+// IsErrTaskBlocked checks if an error is ErrTaskBlocked.
+func IsErrTaskBlocked(err error) bool {
+	_, ok := err.(ErrTaskBlocked)
+	return ok
+}
+
+func (err ErrTaskBlocked) Error() string {
+	return fmt.Sprintf("Task is blocked by unfinished tasks [TaskID: %d, BlockerIDs: %v]", err.TaskID, err.BlockerIDs)
+}
+
+// ErrCodeTaskBlocked holds the unique world-error code of this error
+const ErrCodeTaskBlocked = 4036
+
+// HTTPError holds the http error description
+func (err ErrTaskBlocked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskBlocked,
+		Message:  "This task is blocked by tasks that are not done yet.",
+	}
+}
+
+// ErrPathLeaseConflict represents an error where a task cannot be claimed
+// because a path it owns is already leased by another active task.
+type ErrPathLeaseConflict struct {
+	TaskID       int64  `json:"task_id" doc:"The task whose owned path conflicts."`
+	Pattern      string `json:"pattern" doc:"The owned path pattern that overlaps an active lease."`
+	HeldByTaskID int64  `json:"held_by_task_id" doc:"The task holding the conflicting lease."`
+	HeldByUserID int64  `json:"held_by_user_id" doc:"The user who claimed the holding task."`
+	HeldPattern  string `json:"held_pattern" doc:"The leased pattern that overlaps."`
+}
+
+// IsErrPathLeaseConflict checks if an error is ErrPathLeaseConflict.
+func IsErrPathLeaseConflict(err error) bool {
+	_, ok := err.(ErrPathLeaseConflict)
+	return ok
+}
+
+func (err ErrPathLeaseConflict) Error() string {
+	return fmt.Sprintf("Path %q of task %d overlaps lease %q held by task %d (user %d)", err.Pattern, err.TaskID, err.HeldPattern, err.HeldByTaskID, err.HeldByUserID)
+}
+
+// ErrCodePathLeaseConflict holds the unique world-error code of this error
+const ErrCodePathLeaseConflict = 4037
+
+// HTTPError holds the http error description
+func (err ErrPathLeaseConflict) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodePathLeaseConflict,
+		Message:  fmt.Sprintf("Path %q is already leased by task %d.", err.Pattern, err.HeldByTaskID),
+		I18nParams: map[string]string{
+			"pattern":      err.Pattern,
+			"heldByTaskId": fmt.Sprintf("%d", err.HeldByTaskID),
+			"heldPattern":  err.HeldPattern,
+		},
+	}
+}
+
+// ErrInvalidScopePath represents an error where a scope path pattern is
+// malformed or escapes the repository.
+type ErrInvalidScopePath struct {
+	Pattern string
+	Reason  string
+}
+
+// IsErrInvalidScopePath checks if an error is ErrInvalidScopePath.
+func IsErrInvalidScopePath(err error) bool {
+	_, ok := err.(ErrInvalidScopePath)
+	return ok
+}
+
+func (err ErrInvalidScopePath) Error() string {
+	return fmt.Sprintf("Invalid scope path %q: %s", err.Pattern, err.Reason)
+}
+
+// ErrCodeInvalidScopePath holds the unique world-error code of this error
+const ErrCodeInvalidScopePath = 4038
+
+// HTTPError holds the http error description
+func (err ErrInvalidScopePath) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidScopePath,
+		Message:  fmt.Sprintf("Invalid scope path %q: %s", err.Pattern, err.Reason),
+	}
+}
+
 // ErrInvalidReactionEntityKind represents an error where the reaction kind is invalid
 type ErrInvalidReactionEntityKind struct {
 	Kind string

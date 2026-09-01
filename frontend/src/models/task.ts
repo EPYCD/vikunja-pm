@@ -5,6 +5,7 @@ import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
+import type {ITaskPathLease, ITaskScope} from '@/modelTypes/ITaskScope'
 import type {IBucket} from '@/modelTypes/IBucket'
 
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
@@ -98,6 +99,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	projectId: IProject['id'] = 0
 	bucketId: IBucket['id'] = 0
 	buckets: IBucket[] = []
+	scope?: ITaskScope
+	leases?: ITaskPathLease[]
 
 	constructor(data: Partial<ITask> = {}) {
 		super()

@@ -17,26 +17,41 @@
 package migration
 
 import (
+	"time"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-type TaskScope20260901214314 struct {
+// Mirrors models.TaskScope. The three list columns use xorm's json type,
+// which the project already relies on for api_tokens.permissions and
+// project_views.filter across all three databases.
+type taskScopes20260901214314 struct {
+	ID            int64     `xorm:"bigint autoincr not null unique pk"`
+	TaskID        int64     `xorm:"bigint not null unique index"`
+	PathsOwned    []string  `xorm:"json null"`
+	PathsAffected []string  `xorm:"json null"`
+	Endpoints     []string  `xorm:"json null"`
+	Notes         string    `xorm:"longtext null"`
+	Created       time.Time `xorm:"created not null"`
+	Updated       time.Time `xorm:"updated not null"`
 }
 
-func (TaskScope20260901214314) TableName() string {
-	return "TaskScope"
+func (taskScopes20260901214314) TableName() string {
+	return "task_scopes"
 }
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20260901214314",
-		Description: "",
+		Description: "Add task scopes: the files and endpoints a task touches",
 		Migrate: func(tx *xorm.Engine) error {
-			return partialSync(tx, TaskScope20260901214314{})
+			// Brand-new table, so a plain Sync is safe: there are no existing
+			// indexes for it to drop.
+			return tx.Sync2(taskScopes20260901214314{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return nil
+			return tx.DropTables(taskScopes20260901214314{})
 		},
 	})
 }

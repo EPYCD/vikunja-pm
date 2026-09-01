@@ -89,7 +89,7 @@ func ClaimTask(s *xorm.Session, a web.Auth, c *TaskClaim) (*Task, error) {
 	}
 
 	alreadyThere := current.BucketID == c.BucketID
-	if !(mine && alreadyThere) && c.ExpectedBucketID != 0 && current.BucketID != c.ExpectedBucketID {
+	if (!mine || !alreadyThere) && c.ExpectedBucketID != 0 && current.BucketID != c.ExpectedBucketID {
 		return nil, ErrTaskNotInExpectedBucket{
 			TaskID:           c.TaskID,
 			BucketID:         current.BucketID,
@@ -109,12 +109,36 @@ func ClaimTask(s *xorm.Session, a web.Auth, c *TaskClaim) (*Task, error) {
 		}
 	}
 
+	// A task whose prerequisites are still open is not claimable, whatever
+	// bucket it sits in — this is what makes the dependency order real
+	// rather than advisory.
+	blockers, err := unfinishedBlockers(s, c.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	if len(blockers) > 0 {
+		return nil, ErrTaskBlocked{TaskID: c.TaskID, BlockerIDs: blockers}
+	}
+
 	if !mine {
 		project, err := GetProjectSimpleByTaskID(s, c.TaskID)
 		if err != nil {
 			return nil, err
 		}
 		if err := task.addNewAssigneeByID(s, claimant.ID, project, a); err != nil {
+			return nil, err
+		}
+	}
+
+	// Take the files the task declared. Done last, inside the same
+	// transaction, so a lease conflict rolls the move and the assignment
+	// back with it. A task without a scope leases nothing.
+	scope, err := getTaskScope(s, c.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	if scope != nil && len(scope.PathsOwned) > 0 {
+		if err := acquirePathLeasesForTask(s, &task, claimant.ID, scope.PathsOwned); err != nil {
 			return nil, err
 		}
 	}

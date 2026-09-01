@@ -1,0 +1,9 @@
+# Task 1 in project 1 is held by user 1 with pkg/models/tasks.go leased. That
+# overlaps task 9's declared pkg/models/*.go, so 9 is not ready while 1 is in
+# flight. Nothing in project 10 is leased, so task 19 starts out claimable.
+- id: 1
+  task_id: 1
+  project_id: 1
+  user_id: 1
+  pattern: pkg/models/tasks.go
+  created: 2026-09-01 12:00:00

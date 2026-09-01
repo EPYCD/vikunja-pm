@@ -401,6 +401,27 @@
 						/>
 					</div>
 
+					<!-- Scope -->
+					<div
+						v-show="activeFields.scope"
+						class="content details"
+					>
+						<h2 class="task-section-title">
+							<span class="icon is-grey">
+								<Icon icon="code" />
+							</span>
+							{{ $t('task.scope.title') }}
+						</h2>
+						<TaskScopeSection
+							v-if="task.id"
+							:ref="e => setFieldRef('scope', e)"
+							:task-id="task.id"
+							:project-id="task.projectId"
+							:can-write="canWrite"
+							@loaded="hasScope => { if (hasScope) activeFields.scope = true }"
+						/>
+					</div>
+
 					<!-- Move Task -->
 					<div
 						v-if="activeFields.moveProject"
@@ -532,6 +553,13 @@
 							@click="setRelatedTasksActive()"
 						>
 							{{ $t('task.detail.actions.relatedTasks') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="code"
+							@click="setFieldActive('scope')"
+						>
+							{{ $t('task.detail.actions.scope') }}
 						</XButton>
 						<XButton
 							v-shortcut="SHORTCUTS.taskDetail.moveProject"
@@ -688,6 +716,7 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
+import TaskScopeSection from '@/components/tasks/partials/TaskScopeSection.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
@@ -995,6 +1024,7 @@ type FieldType =
 	| 'relatedTasks'
 	| 'reminders'
 	| 'repeatAfter'
+	| 'scope'
 	| 'startDate'
 	| 'timeTracking'
 
@@ -1011,6 +1041,7 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	relatedTasks: false,
 	reminders: false,
 	repeatAfter: false,
+	scope: false,
 	startDate: false,
 	timeTracking: false,
 })

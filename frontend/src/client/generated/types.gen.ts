@@ -529,6 +529,29 @@ export type EmailConfirm = {
     token?: string;
 };
 
+export type ErrPathLeaseConflict = {
+    /**
+     * The task holding the conflicting lease.
+     */
+    held_by_task_id?: number;
+    /**
+     * The user who claimed the holding task.
+     */
+    held_by_user_id?: number;
+    /**
+     * The leased pattern that overlaps.
+     */
+    held_pattern?: string;
+    /**
+     * The owned path pattern that overlaps an active lease.
+     */
+    pattern?: string;
+    /**
+     * The task whose owned path conflicts.
+     */
+    task_id?: number;
+};
+
 export type ErrorDetail = {
     /**
      * Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'
@@ -1211,6 +1234,30 @@ export type PaginatedTaskComment = {
      */
     readonly $schema?: string;
     items?: Array<TaskComment> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
+export type PaginatedTaskPathLease = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<TaskPathLease> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
+export type PaginatedTaskReadiness = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<TaskReadiness> | null;
     page?: number;
     per_page?: number;
     total?: number;
@@ -1995,6 +2042,10 @@ export type Task = {
      */
     readonly labels?: Array<Label> | null;
     /**
+     * The path leases this task currently holds, i.e. the files it is exclusively editing. Only present when requested via the leases expand option.
+     */
+    readonly leases?: Array<TaskPathLease> | null;
+    /**
      * How far the task is from done, between 0 and 1.
      */
     percent_done?: number;
@@ -2028,6 +2079,10 @@ export type Task = {
      * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
      */
     repeat_mode?: number;
+    /**
+     * The task's scope — the files it will edit, the files it affects and the endpoints it changes. Only present when requested via the scope expand option; null when the task has none.
+     */
+    readonly scope?: TaskScope;
     start_date?: string;
     /**
      * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
@@ -2235,6 +2290,41 @@ export type TaskDuplicate = {
     readonly duplicated_task?: Task;
 };
 
+export type TaskPathLease = {
+    /**
+     * When the lease was taken.
+     */
+    readonly created?: string;
+    /**
+     * The unique, numeric id of this lease.
+     */
+    readonly id?: number;
+    /**
+     * The normalised, repository-relative glob this lease covers.
+     */
+    readonly pattern?: string;
+    /**
+     * The project the lease is scoped to. Leases never conflict across projects.
+     */
+    readonly project_id?: number;
+    /**
+     * The holding task, embedded when listing a project's leases.
+     */
+    readonly task?: Task;
+    /**
+     * The task holding the lease.
+     */
+    readonly task_id?: number;
+    /**
+     * The holding user, embedded when listing a project's leases.
+     */
+    readonly user?: User;
+    /**
+     * The user (usually a bot) that claimed the task and therefore holds the lease.
+     */
+    readonly user_id?: number;
+};
+
 export type TaskPosition = {
     /**
      * A URL to the JSON Schema for this object.
@@ -2347,6 +2437,10 @@ export type TaskReadOneBody = {
      */
     readonly labels?: Array<Label> | null;
     /**
+     * The path leases this task currently holds, i.e. the files it is exclusively editing. Only present when requested via the leases expand option.
+     */
+    readonly leases?: Array<TaskPathLease> | null;
+    /**
      * The maximum permission the requesting user has on this task (0=read, 1=read/write, 2=admin).
      */
     readonly max_permission?: number;
@@ -2384,6 +2478,10 @@ export type TaskReadOneBody = {
      * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
      */
     repeat_mode?: number;
+    /**
+     * The task's scope — the files it will edit, the files it affects and the endpoints it changes. Only present when requested via the scope expand option; null when the task has none.
+     */
+    readonly scope?: TaskScope;
     start_date?: string;
     /**
      * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
@@ -2401,6 +2499,29 @@ export type TaskReadOneBody = {
      * When this task was last updated. Set by the server; ignored on write.
      */
     readonly updated?: string;
+};
+
+export type TaskReadiness = {
+    /**
+     * The unfinished tasks this one is blocked by.
+     */
+    blocked_by?: Array<Task> | null;
+    /**
+     * Each owned path that overlaps another task's active lease, with the holder.
+     */
+    lease_conflicts?: Array<ErrPathLeaseConflict> | null;
+    /**
+     * True when the task can be claimed right now: not done, unassigned, no unfinished blocker, and no path it owns is leased by another task.
+     */
+    ready?: boolean;
+    /**
+     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict.
+     */
+    reasons?: Array<string> | null;
+    /**
+     * The task, with assignees, labels and related tasks populated.
+     */
+    task?: Task;
 };
 
 export type TaskRelation = {
@@ -2434,6 +2555,45 @@ export type TaskReminder = {
     relative_period?: number;
     relative_to?: string;
     reminder?: string;
+};
+
+export type TaskScope = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * When this scope was first written.
+     */
+    readonly created?: string;
+    /**
+     * API surface the task adds or changes, as free text such as "POST /api/v2/tasks/{id}/claim". Advisory.
+     */
+    endpoints?: Array<string> | null;
+    /**
+     * The unique, numeric id of this scope.
+     */
+    readonly id?: number;
+    /**
+     * Free-form scope notes — typically what is explicitly out of scope. May contain HTML like a task description.
+     */
+    notes?: string;
+    /**
+     * Repository-relative globs the task reads or depends on but does not edit. Advisory; shown to agents and never enforced.
+     */
+    paths_affected?: Array<string> | null;
+    /**
+     * Repository-relative globs the task will EDIT, e.g. "pkg/models/tasks.go" or "frontend/src/components**". Leased on claim: a claim overlapping another task's active lease is refused with 409.
+     */
+    paths_owned?: Array<string> | null;
+    /**
+     * The task this scope belongs to. Taken from the URL.
+     */
+    readonly task_id?: number;
+    /**
+     * When this scope was last changed.
+     */
+    readonly updated?: string;
 };
 
 export type Team = {
@@ -3831,6 +3991,22 @@ export type PaginatedTaskCommentWritable = {
     total_pages?: number;
 };
 
+export type PaginatedTaskPathLeaseWritable = {
+    items?: Array<TaskPathLeaseWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
+export type PaginatedTaskReadinessWritable = {
+    items?: Array<TaskReadinessWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedTeamWritable = {
     items?: Array<TeamWritable> | null;
     page?: number;
@@ -4219,6 +4395,10 @@ export type TaskDuplicateWritable = {
     [key: string]: never;
 };
 
+export type TaskPathLeaseWritable = {
+    [key: string]: never;
+};
+
 export type TaskPositionWritable = {
     /**
      * The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent.
@@ -4276,6 +4456,29 @@ export type TaskReadOneBodyWritable = {
     title?: string;
 };
 
+export type TaskReadinessWritable = {
+    /**
+     * The unfinished tasks this one is blocked by.
+     */
+    blocked_by?: Array<TaskWritable> | null;
+    /**
+     * Each owned path that overlaps another task's active lease, with the holder.
+     */
+    lease_conflicts?: Array<ErrPathLeaseConflict> | null;
+    /**
+     * True when the task can be claimed right now: not done, unassigned, no unfinished blocker, and no path it owns is leased by another task.
+     */
+    ready?: boolean;
+    /**
+     * Why the task is not ready. Empty when ready. One or more of: done, assigned, blocked, lease_conflict.
+     */
+    reasons?: Array<string> | null;
+    /**
+     * The task, with assignees, labels and related tasks populated.
+     */
+    task?: TaskWritable;
+};
+
 export type TaskRelationWritable = {
     /**
      * The id of the other task this relation points to.
@@ -4285,6 +4488,25 @@ export type TaskRelationWritable = {
      * The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically.
      */
     relation_kind?: 'subtask' | 'parenttask' | 'related' | 'duplicateof' | 'duplicates' | 'blocking' | 'blocked' | 'precedes' | 'follows' | 'copiedfrom' | 'copiedto';
+};
+
+export type TaskScopeWritable = {
+    /**
+     * API surface the task adds or changes, as free text such as "POST /api/v2/tasks/{id}/claim". Advisory.
+     */
+    endpoints?: Array<string> | null;
+    /**
+     * Free-form scope notes — typically what is explicitly out of scope. May contain HTML like a task description.
+     */
+    notes?: string;
+    /**
+     * Repository-relative globs the task reads or depends on but does not edit. Advisory; shown to agents and never enforced.
+     */
+    paths_affected?: Array<string> | null;
+    /**
+     * Repository-relative globs the task will EDIT, e.g. "pkg/models/tasks.go" or "frontend/src/components**". Leased on claim: a claim overlapping another task's active lease is refused with 409.
+     */
+    paths_owned?: Array<string> | null;
 };
 
 export type TeamWritable = {
@@ -6817,6 +7039,36 @@ export type ProjectsBackgroundUploadResponses = {
 
 export type ProjectsBackgroundUploadResponse = ProjectsBackgroundUploadResponses[keyof ProjectsBackgroundUploadResponses];
 
+export type ProjectsLeasesListData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/leases';
+};
+
+export type ProjectsLeasesListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsLeasesListError = ProjectsLeasesListErrors[keyof ProjectsLeasesListErrors];
+
+export type ProjectsLeasesListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTaskPathLease;
+};
+
+export type ProjectsLeasesListResponse = ProjectsLeasesListResponses[keyof ProjectsLeasesListResponses];
+
 export type SharesListData = {
     body?: never;
     path: {
@@ -7002,7 +7254,7 @@ export type ProjectTasksListData = {
         /**
          * Embed extra, more expensive data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -7133,7 +7385,7 @@ export type TasksReadByIndexData = {
         /**
          * Embed extra data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -7752,7 +8004,7 @@ export type ProjectViewBucketsTasksListData = {
         /**
          * Embed extra, more expensive data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -7866,6 +8118,45 @@ export type TaskBucketUpdateResponses = {
 
 export type TaskBucketUpdateResponse = TaskBucketUpdateResponses[keyof TaskBucketUpdateResponses];
 
+export type ProjectsViewsReadinessData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+        /**
+         * The numeric id of the kanban view.
+         */
+        view: number;
+    };
+    query?: {
+        /**
+         * The bucket to evaluate. Defaults to the view's default bucket.
+         */
+        bucket_id?: number;
+    };
+    url: '/projects/{project}/views/{view}/readiness';
+};
+
+export type ProjectsViewsReadinessErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsViewsReadinessError = ProjectsViewsReadinessErrors[keyof ProjectsViewsReadinessErrors];
+
+export type ProjectsViewsReadinessResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTaskReadiness;
+};
+
+export type ProjectsViewsReadinessResponse = ProjectsViewsReadinessResponses[keyof ProjectsViewsReadinessResponses];
+
 export type ProjectViewTasksListData = {
     body?: never;
     path: {
@@ -7914,7 +8205,7 @@ export type ProjectViewTasksListData = {
         /**
          * Embed extra, more expensive data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -8255,7 +8546,7 @@ export type TasksListData = {
         /**
          * Embed extra, more expensive data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -8369,7 +8660,7 @@ export type TasksReadData = {
         /**
          * Embed extra data per task. Repeatable.
          */
-        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread'> | null;
+        expand?: Array<'subtasks' | 'buckets' | 'reactions' | 'comments' | 'comment_count' | 'time_entries_count' | 'is_unread' | 'scope' | 'leases'> | null;
         /**
          * How rich-text fields are exchanged. See the API description.
          */
@@ -8762,6 +9053,36 @@ export type TaskLabelsDeleteResponses = {
 
 export type TaskLabelsDeleteResponse = TaskLabelsDeleteResponses[keyof TaskLabelsDeleteResponses];
 
+export type TasksLeasesReleaseData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/leases';
+};
+
+export type TasksLeasesReleaseErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksLeasesReleaseError = TasksLeasesReleaseErrors[keyof TasksLeasesReleaseErrors];
+
+export type TasksLeasesReleaseResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksLeasesReleaseResponse = TasksLeasesReleaseResponses[keyof TasksLeasesReleaseResponses];
+
 export type TasksMarkReadData = {
     body?: never;
     path: {
@@ -8791,6 +9112,126 @@ export type TasksMarkReadResponses = {
 };
 
 export type TasksMarkReadResponse = TasksMarkReadResponses[keyof TasksMarkReadResponses];
+
+export type TasksScopeDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/scope';
+};
+
+export type TasksScopeDeleteErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksScopeDeleteError = TasksScopeDeleteErrors[keyof TasksScopeDeleteErrors];
+
+export type TasksScopeDeleteResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksScopeDeleteResponse = TasksScopeDeleteResponses[keyof TasksScopeDeleteResponses];
+
+export type TasksScopeReadData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/scope';
+};
+
+export type TasksScopeReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksScopeReadError = TasksScopeReadErrors[keyof TasksScopeReadErrors];
+
+export type TasksScopeReadResponses = {
+    /**
+     * OK
+     */
+    200: TaskScope;
+};
+
+export type TasksScopeReadResponse = TasksScopeReadResponses[keyof TasksScopeReadResponses];
+
+export type PatchTasksScopeReadData = {
+    body: Array<JsonPatchOp> | null;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/scope';
+};
+
+export type PatchTasksScopeReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type PatchTasksScopeReadError = PatchTasksScopeReadErrors[keyof PatchTasksScopeReadErrors];
+
+export type PatchTasksScopeReadResponses = {
+    /**
+     * OK
+     */
+    200: TaskScope;
+};
+
+export type PatchTasksScopeReadResponse = PatchTasksScopeReadResponses[keyof PatchTasksScopeReadResponses];
+
+export type TasksScopeUpdateData = {
+    body: TaskScopeWritable;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/scope';
+};
+
+export type TasksScopeUpdateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksScopeUpdateError = TasksScopeUpdateErrors[keyof TasksScopeUpdateErrors];
+
+export type TasksScopeUpdateResponses = {
+    /**
+     * OK
+     */
+    200: TaskScope;
+};
+
+export type TasksScopeUpdateResponse = TasksScopeUpdateResponses[keyof TasksScopeUpdateResponses];
 
 export type TaskTimeEntriesListData = {
     body?: never;

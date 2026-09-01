@@ -194,6 +194,9 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 
 		// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
 		if task.Done {
+			if err = releasePathLeasesForTask(s, task.ID); err != nil {
+				return
+			}
 			viewsWithDoneBucket := []*ProjectView{}
 			err = s.
 				Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",

@@ -10,14 +10,28 @@ Server: {{ .Server }}
 # Workflow
 
 ## BEFORE you start work
+- Use `veans list --ready` to find tasks you can claim right now. The
+  server decides: Todo, unassigned, no unfinished blocker, and none of the
+  task's owned paths leased by another in-progress task. `veans ready`
+  shows every Todo task with the reasons it is NOT ready (`assigned`,
+  `blocked` + `blocked_by`, `lease_conflict` + `lease_conflicts`).
+- Read the task's scope before touching code: `veans show {{ .TaskIDExample }}` includes
+  `scope` — `paths_owned` (files you will edit; leased to you on claim),
+  `paths_affected` (read/depend on, do not edit), `endpoints`, `notes`.
+  **Stay inside `paths_owned`.** If the work needs a file outside it, widen
+  the scope first (`veans scope {{ .TaskIDExample }} --paths-owned ... --paths-owned <new>`);
+  the server refuses with `CONFLICT` if another task holds it — then split
+  the work into a new task instead of editing that file.
 - If a task already exists, claim it: `veans claim {{ .TaskIDExample }}`
   The claim is atomic and exclusive: if another agent already holds the
-  task, or it has left Todo since you listed it, the command fails with
-  `CONFLICT` — pick a different task, do NOT retry the same one. Claiming a
-  task you already hold is a harmless no-op.
-- Otherwise, create one and start it in one step:
-  `veans create "<short title>" -s in-progress -d "<short description>"`
-- Use `veans list --ready` to find tasks ready to start (Todo + not blocked).
+  task, it has left Todo since you listed it, it is blocked, or one of its
+  owned paths is leased, the command fails with `CONFLICT` — pick a
+  different task, do NOT retry the same one. Claiming a task you already
+  hold is a harmless no-op.
+- Otherwise, create one and start it in one step, with its scope:
+  `veans create "<short title>" -s in-progress -d "<short description>" --paths-owned pkg/foo/** --endpoint "POST /api/v2/foo"`
+  then claim it so the paths are leased: `veans claim {{ .TaskIDExample }}`
+- `veans leases` lists what every in-progress task is editing right now.
 
 ## WHILE you work
 - Keep the task's description in sync with what you're doing. Use HTML
@@ -44,6 +58,9 @@ Server: {{ .Server }}
   ```
 - If you abandon work, scrap the task with a reason:
   `veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: <why>"`
+- Leases are released when the task is done or scrapped. If you stop
+  working on a task without finishing it, release its paths so others can
+  proceed: `veans release {{ .TaskIDExample }}` (status and assignees stay).
 
 ## Commit messages
 Include the task identifier on a `Refs:` line so the merge hook can close
@@ -129,6 +146,9 @@ an array. Useful fields:
 - `buckets[]` — current bucket per view; match `project_view_id` to
   yours from `.veans.yml` and read `id` to know the status
 - `assignees[]`, `labels[]` — `[]` if absent
+- `scope` — `{paths_owned[], paths_affected[], endpoints[], notes}`;
+  absent when the task has no scope
+- `leases[]` — the path patterns this task currently holds; absent when none
 
 Trust your JSON parser; we won't add new fields without notice.
 
@@ -155,6 +175,7 @@ veans show {{ .TaskIDExample }}                  # full task detail (JSON)
 veans create "title" -s in-progress -d "<p>HTML body — see Description format.</p>"
 veans create "title" --label bug --priority 4 --parent {{ .TaskIDExample }}
 veans create "title" --blocked-by {{ .TaskIDExample }}
+veans create "title" --paths-owned pkg/models/** --paths-affected pkg/routes/** --endpoint "POST /api/v2/tasks/{id}/claim"
 
 veans update {{ .TaskIDExample }} -s in-review --comment '<p>Summary of changes…</p>'
 veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>new step</p></li></ul>'
@@ -162,8 +183,14 @@ veans update {{ .TaskIDExample }} --description-replace-old 'data-checked="false
 veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
 veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
 
-veans claim {{ .TaskIDExample }}                 # atomic: assign yourself + In Progress + branch label; CONFLICT if held
+veans claim {{ .TaskIDExample }}                 # atomic: assign yourself + In Progress + branch label + lease paths_owned; CONFLICT if held/blocked/leased
 veans claim --force {{ .TaskIDExample }}         # claim from a bucket other than Todo (never overrides another user)
+veans ready                        # ready queue with reasons (assigned / blocked / lease_conflict)
+veans scope {{ .TaskIDExample }}                 # show the task's scope
+veans scope {{ .TaskIDExample }} --paths-owned pkg/models/** --paths-affected docs/** --endpoint "GET /api/v2/x"
+veans scope {{ .TaskIDExample }} --clear         # drop the scope and its leases
+veans leases                       # who is editing what right now
+veans release {{ .TaskIDExample }}               # give up this task's leases without changing its status
 veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
 ```
 

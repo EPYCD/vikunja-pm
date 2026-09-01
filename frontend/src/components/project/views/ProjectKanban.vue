@@ -230,6 +230,7 @@
 												:task="task"
 												:loading="taskUpdating[task.id] ?? false"
 												:project-id="projectId"
+												:readiness="readinessByTaskId[task.id]"
 												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
 										</li>
@@ -295,6 +296,7 @@ import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
+import {useQuery} from '@tanstack/vue-query'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
 
@@ -326,6 +328,7 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {invalidateReadiness, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -486,6 +489,14 @@ const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
+// The board's READY / BLOCKED / PATH LEASED badges come from the same
+// server answer agents read, so the two never disagree.
+const readinessQuery = useQuery(computed(() => ({
+	...viewReadinessQuery(projectIdWithFallback.value, props.viewId),
+	enabled: projectIdWithFallback.value > 0,
+})))
+const readinessByTaskId = computed(() => readinessByTask(readinessQuery.data.value ?? []))
+
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
 watch(
@@ -500,6 +511,7 @@ watch(
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
 		kanbanStore.loadBucketsForProject(projectId, viewId, params)
+		invalidateReadiness(projectId, viewId)
 	},
 	{
 		immediate: true,
@@ -652,6 +664,8 @@ async function updateTaskPosition(e) {
 		taskUpdating.value[task.id] = false
 		oneTaskUpdating.value = false
 	}
+
+	invalidateReadiness(projectIdWithFallback.value, props.viewId)
 }
 
 function toggleShowNewTaskInput(bucketId: IBucket['id']) {

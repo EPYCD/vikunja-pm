@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -93,10 +94,15 @@ func tasksClaim(ctx context.Context, in *struct {
 	claimed, err := models.ClaimTask(s, a, claim)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	// The assignment and bucket move queued their events on the session;
+	// they only go out once the claim is durable.
+	events.DispatchPending(ctx, s)
 	return &singleBody[models.Task]{Body: claimed}, nil
 }

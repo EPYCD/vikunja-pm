@@ -35,6 +35,7 @@ type createFlags struct {
 	labels      []string
 	parent      string
 	blockedBy   []string
+	scope       scopeFlags
 }
 
 func newCreateCmd() *cobra.Command {
@@ -49,6 +50,7 @@ func newCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			f.scope.read(cmd)
 			task, err := runCreate(cmd.Context(), rt, args[0], f)
 			if err != nil {
 				return err
@@ -62,6 +64,7 @@ func newCreateCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&f.labels, "label", nil, "labels to attach (repeatable; veans: prefix added if missing)")
 	cmd.Flags().StringVar(&f.parent, "parent", "", "parent task ID (creates parenttask relation)")
 	cmd.Flags().StringSliceVar(&f.blockedBy, "blocked-by", nil, "task IDs that block this one (repeatable)")
+	f.scope.bind(cmd)
 	return cmd
 }
 
@@ -127,6 +130,15 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 			return nil, err
 		}
 		if _, err := rt.client.CreateRelation(ctx, created.ID, blockerID, "blocked"); err != nil {
+			return nil, err
+		}
+	}
+
+	// Scope goes on after the relations so a task that is created straight
+	// into in-progress (and therefore claimed later, not now) carries its
+	// paths from the first read.
+	if f.scope.any() {
+		if _, err := rt.client.PutTaskScope(ctx, created.ID, f.scope.apply(nil)); err != nil {
 			return nil, err
 		}
 	}

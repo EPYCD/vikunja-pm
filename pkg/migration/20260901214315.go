@@ -17,26 +17,37 @@
 package migration
 
 import (
+	"time"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-type TaskPathLease20260901214315 struct {
+// Mirrors models.TaskPathLease.
+type taskPathLeases20260901214315 struct {
+	ID        int64     `xorm:"bigint autoincr not null unique pk"`
+	TaskID    int64     `xorm:"bigint not null index"`
+	ProjectID int64     `xorm:"bigint not null index"`
+	UserID    int64     `xorm:"bigint not null"`
+	Pattern   string    `xorm:"varchar(500) not null"`
+	Created   time.Time `xorm:"created not null"`
 }
 
-func (TaskPathLease20260901214315) TableName() string {
-	return "TaskPathLease"
+func (taskPathLeases20260901214315) TableName() string {
+	return "task_path_leases"
 }
 
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20260901214315",
-		Description: "",
+		Description: "Add task path leases: the files an in-progress task holds exclusively",
 		Migrate: func(tx *xorm.Engine) error {
-			return partialSync(tx, TaskPathLease20260901214315{})
+			// Brand-new table, so a plain Sync is safe: there are no existing
+			// indexes for it to drop.
+			return tx.Sync2(taskPathLeases20260901214315{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return nil
+			return tx.DropTables(taskPathLeases20260901214315{})
 		},
 	})
 }

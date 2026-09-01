@@ -66,8 +66,8 @@ overrides another user's claim.`,
 				var oe *output.Error
 				if errors.As(err, &oe) && oe.Code == output.CodeConflict {
 					return output.Wrap(output.CodeConflict, err,
-						"task %s is held by someone else or is no longer in Todo (use --force to claim from another bucket)",
-						args[0])
+						"cannot claim task %s: %v — it is held by someone else, left Todo, is blocked, or owns a path another task has leased; run `veans ready` and pick another (use --force to claim from another bucket)",
+						args[0], err)
 				}
 				return err
 			}

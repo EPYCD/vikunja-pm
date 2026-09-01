@@ -117,6 +117,10 @@ type Task struct {
 	DueDate      *time.Time         `json:"due_date,omitempty"`
 	EndDate      *time.Time         `json:"end_date,omitempty"`
 	PercentDone  float64            `json:"percent_done,omitempty"`
+	// Scope and Leases only arrive with expand=scope / expand=leases, which
+	// GetTask always requests; list reads leave them nil.
+	Scope  *TaskScope       `json:"scope,omitempty"`
+	Leases []*TaskPathLease `json:"leases,omitempty"`
 }
 
 // TaskPatch is the JSON Merge Patch body for UpdateTask (PATCH /tasks/{id}).

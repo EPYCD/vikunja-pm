@@ -107,6 +107,30 @@
 					:task="task"
 					class="project-task-icon"
 				/>
+				<span
+					v-if="readiness?.ready"
+					class="wm-badge is-ready"
+				>{{ $t('task.scope.badges.ready') }}</span>
+				<span
+					v-else-if="readinessReason === 'blocked'"
+					v-tooltip="$t('task.scope.badges.blockedTooltip')"
+					class="wm-badge is-halted"
+				>{{ $t('task.scope.badges.blocked') }}</span>
+				<span
+					v-else-if="readinessReason === 'lease_conflict'"
+					v-tooltip="$t('task.scope.badges.leaseConflictTooltip')"
+					class="wm-badge is-halted"
+				>{{ $t('task.scope.badges.leaseConflict') }}</span>
+				<span
+					v-if="leaseCount > 0"
+					v-tooltip="leasePatterns"
+					class="wm-badge"
+					role="img"
+					:aria-label="$t('task.scope.badges.leases', leaseCount)"
+				>
+					<Icon icon="lock" />
+					{{ leaseCount }}
+				</span>
 				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
@@ -136,6 +160,8 @@ import CommentCount from './CommentCount.vue'
 
 import {getHexColor, getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
+import type {TaskReadiness} from '@/client/generated'
+import {READINESS_REASON} from '@/client/queries/taskScope'
 import type {IProject} from '@/modelTypes/IProject'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
@@ -153,13 +179,29 @@ const props = withDefaults(defineProps<{
 	task: ITask,
 	projectId: IProject['id'],
 	loading?: boolean,
+	readiness?: TaskReadiness,
 }>(), {
 	loading: false,
+	readiness: undefined,
 })
 
 const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
 }>()
+// Assigned tasks already show their avatars; only the two reasons a human
+// has to act on get a badge.
+const readinessReason = computed(() => {
+	const reasons = props.readiness?.reasons ?? []
+	if (reasons.includes(READINESS_REASON.BLOCKED)) {
+		return READINESS_REASON.BLOCKED
+	}
+	if (reasons.includes(READINESS_REASON.LEASE_CONFLICT)) {
+		return READINESS_REASON.LEASE_CONFLICT
+	}
+	return null
+})
+const leaseCount = computed(() => props.task.leases?.length ?? 0)
+const leasePatterns = computed(() => (props.task.leases ?? []).map(l => l.pattern).join('\n'))
 
 const router = useRouter()
 
@@ -321,6 +363,48 @@ watch(
 		margin-block-start: var(--wm-space-2);
 		color: var(--wm-text-tertiary);
 		font-size: var(--wm-text-2xs);
+
+		.wm-badge {
+			@include mono-label;
+
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 1px var(--wm-space-1);
+			color: var(--wm-text-secondary);
+			border: 1px solid var(--wm-line-strong);
+
+			&.is-ready,
+			&.is-halted {
+				color: var(--wm-text);
+
+				&::before {
+					content: '';
+					inline-size: 6px;
+					block-size: 6px;
+				}
+			}
+
+			&.is-ready {
+				border-color: var(--success);
+
+				&::before {
+					background: var(--success);
+				}
+			}
+
+			&.is-halted {
+				border-color: var(--warning);
+
+				&::before {
+					background: var(--warning);
+				}
+			}
+
+			.icon {
+				font-size: inherit;
+			}
+		}
 
 		:deep(.checklist-summary) {
 			padding-inline-start: 0;

@@ -30,7 +30,7 @@ import (
 
 // expandDoc lists the accepted expand values; shared between the by-id and
 // by-index operations so the docs stay in sync.
-const expandDoc = "Embed extra, more expensive data in each task. Repeatable. One of: subtasks, buckets, reactions, comments, comment_count, time_entries_count, is_unread. Expanding can return more tasks than the page limit (subtasks) and inflate the response."
+const expandDoc = "Embed extra, more expensive data in each task. Repeatable. One of: subtasks, buckets, reactions, comments, comment_count, time_entries_count, is_unread, scope, leases. Expanding can return more tasks than the page limit (subtasks) and inflate the response."
 
 // parseTaskExpand turns the raw `expand` query values into validated
 // TaskCollectionExpandable entries. Kept package-level for the TaskCollection
@@ -111,7 +111,7 @@ type taskReadOneBody struct {
 
 func tasksRead(ctx context.Context, in *struct {
 	ID     int64    `path:"projecttask" doc:"The numeric id of the task."`
-	Expand []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Expand []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread,scope,leases" doc:"Embed extra data per task. Repeatable."`
 	Format string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskReadOneBody], error) {
@@ -136,7 +136,7 @@ func tasksRead(ctx context.Context, in *struct {
 func tasksReadByIndex(ctx context.Context, in *struct {
 	Project string   `path:"project" doc:"A numeric project id or a textual project identifier (e.g. \"PROJ\")."`
 	Index   int64    `path:"index" doc:"The per-project task index."`
-	Expand  []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Expand  []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread,scope,leases" doc:"Embed extra data per task. Repeatable."`
 	Format  string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskReadOneBody], error) {
