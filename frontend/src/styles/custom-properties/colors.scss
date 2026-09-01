@@ -55,7 +55,7 @@
   // Status. Hues sit far enough from the crimson accent to stay readable
   // next to it; danger is the hotter, brighter red so it never reads as brand.
   --wm-success-h: 158;
-  --wm-success-s: 68%;
+  --wm-success-s: 52%;
   --wm-success-l: 30%;
   --wm-warning-h: 38;
   --wm-warning-s: 92%;
@@ -330,7 +330,8 @@
       --wm-text-inverted: hsl(350, 6%, 5%);
 
       // Status hues brighten so they still read on near-black.
-      --wm-success-l: 48%;
+      --wm-success-s: 44%;
+      --wm-success-l: 52%;
       --wm-warning-l: 56%;
       --wm-danger-l: 58%;
       --wm-info-l: 62%;
