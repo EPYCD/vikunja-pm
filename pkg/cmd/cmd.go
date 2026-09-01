@@ -27,14 +27,14 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "vikunja",
-	Short: "Vikunja is the to-do app to organize your life.",
-	Long: `Vikunja (/vɪˈkuːnjə/)
-The to-do app to organize your life.
+	Short: "Workman is the work console you actually own.",
+	Long: `Workman
+The work console you actually own.
 
-Also one of the two wild South American camelids which live in the high
-alpine areas of the Andes and a relative of the llama.
+Projects, tasks, time and teams — self-hosted, with a web app, a desktop app,
+CalDAV sync and a full REST API.
 
-Vikunja is a self-hosted To-Do list application with a web app and mobile apps for all platforms. It is licensed under the AGPL-3.0-or-later.
+Workman is built on Vikunja and is licensed under the AGPL-3.0-or-later.
 
 Find out more at vikunja.io.`,
 	PreRun: webCmd.PreRun,

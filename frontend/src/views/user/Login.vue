@@ -78,13 +78,14 @@
 
 			<XButton
 				:loading="isLoading"
+				class="is-fullwidth mbs-4"
 				@click="submit"
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>
 			<p
 				v-if="registrationEnabled"
-				class="mbs-2"
+				class="mbs-4 auth-hint"
 			>
 				{{ $t('user.auth.noAccountYet') }}
 				<RouterLink
@@ -99,7 +100,7 @@
 
 		<div
 			v-if="!isDesktop && hasOpenIdProviders"
-			class="mbs-4"
+			class="mbs-4 openid-providers"
 		>
 			<XButton
 				v-for="(p, k) in openidConnect.providers"
@@ -249,12 +250,13 @@ async function submit() {
 </script>
 
 <style lang="scss" scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-
 .reset-password-link {
+	@include mono-label;
+
 	display: inline-block;
+	color: var(--wm-accent-text);
+	// Underlined so the link isn't distinguished by colour alone
+	text-decoration: underline;
 }
 
 // Underline links sitting inside body text so they're not distinguished by color alone
@@ -262,13 +264,27 @@ async function submit() {
 	text-decoration: underline;
 }
 
+.auth-hint {
+	font-size: var(--wm-text-sm);
+	color: var(--wm-text-secondary);
+	margin-block-end: 0;
+}
+
 .label-with-link {
 	display: flex;
 	justify-content: space-between;
-	margin-block-end: .5rem;
+	align-items: baseline;
+	gap: var(--wm-space-3);
+	margin-block-end: var(--wm-space-2);
 
 	.label {
 		margin-block-end: 0;
 	}
+}
+
+// A hairline separates the third-party providers from the credential form.
+.openid-providers {
+	border-block-start: 1px solid var(--wm-line-faint);
+	padding-block-start: var(--wm-space-4);
 }
 </style>

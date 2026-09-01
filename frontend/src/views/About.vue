@@ -18,6 +18,9 @@
 					<p>{{ $t('about.frontendVersion', {version: frontendVersion}) }}</p>
 					<p>{{ $t('about.apiVersion', {version: apiVersion}) }}</p>
 				</template>
+				<p class="about-attribution">
+					{{ $t('about.builtOn') }}
+				</p>
 			</div>
 			<template #footer>
 				<XButton
@@ -42,3 +45,13 @@ const configStore = useConfigStore()
 const apiVersion = computed(() => configStore.version)
 const versionsEqual = computed(() => apiVersion.value === frontendVersion)
 </script>
+
+<style lang="scss" scoped>
+.about-attribution {
+	margin-block-start: var(--wm-space-4);
+	padding-block-start: var(--wm-space-3);
+	border-block-start: 1px solid var(--wm-line-faint);
+	color: var(--wm-text-tertiary);
+	font-size: var(--wm-text-xs);
+}
+</style>

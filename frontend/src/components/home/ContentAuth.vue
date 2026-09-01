@@ -164,26 +164,31 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .menu-hide-button {
 	position: fixed;
-	inset-block-start: 0.5rem;
-	inset-inline-end: 0.5rem;
+	inset-block-start: var(--wm-space-2);
+	inset-inline-end: var(--wm-space-2);
 	z-index: 31;
-	inline-size: 3rem;
-	block-size: 3rem;
+	inline-size: var(--wm-control-height-lg);
+	block-size: var(--wm-control-height-lg);
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	font-size: 2rem;
-	color: var(--grey-400);
+	font-size: var(--wm-text-lg);
+	color: var(--wm-text-tertiary);
 	line-height: 1;
-	transition: all $transition;
+	transition: color var(--wm-duration) var(--wm-ease);
 
 	@media screen and (min-width: $tablet) {
 		display: none;
 	}
 
-	&:hover,
-	&:focus {
-		color: var(--grey-600);
+	&:hover {
+		color: var(--wm-text);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+
+		color: var(--wm-text);
 	}
 }
 
@@ -201,7 +206,8 @@ onBeforeUnmount(() => {
 	display: flow-root;
 	z-index: 10;
 	position: relative;
-	padding: 1.5rem 0.5rem 0;
+	padding-block: var(--wm-space-5) 0;
+	padding-inline: var(--wm-space-2);
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
 	transition: margin-inline-start $transition-duration;
 
@@ -212,7 +218,8 @@ onBeforeUnmount(() => {
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding: $navbar-height + 1.5rem 1.5rem 0 1.5rem;
+		padding-block: $navbar-height + 1.5rem 0;
+		padding-inline: var(--wm-space-5);
 	}
 
 	&.is-menu-enabled {
@@ -228,7 +235,7 @@ onBeforeUnmount(() => {
 
 	// FIXME: This should be somehow defined inside Card.vue
 	.card {
-		background: var(--white);
+		background: var(--wm-surface);
 	}
 }
 
@@ -241,24 +248,46 @@ onBeforeUnmount(() => {
 	inset-inline-end: 0;
 	block-size: 100vh;
 	inline-size: 100vw;
-	background: hsla(var(--grey-100-hsl), 0.8);
+	// A scrim in the ground color rather than a tint, so it darkens the content
+	// in both themes.
+	background: var(--wm-canvas);
 	z-index: 5;
 	opacity: 0;
-	transition: all $transition;
+	transition: opacity var(--wm-duration) var(--wm-ease);
 
 	@media screen and (max-width: $tablet) {
 		display: block;
-		opacity: 1;
+		opacity: 0.82;
 	}
 }
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	inset-block-end: calc(1rem - 4px);
-	inset-inline-end: 1rem;
+	inset-block-end: var(--wm-space-4);
+	inset-inline-end: var(--wm-space-4);
 	z-index: 4500; // The modal has a z-index of 4000
-	color: var(--grey-500);
-	transition: color $transition;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: var(--wm-control-height-sm);
+	block-size: var(--wm-control-height-sm);
+	color: var(--wm-text-tertiary);
+	background: var(--wm-surface);
+	border: 1px solid var(--wm-line-control);
+	transition:
+		color var(--wm-duration) var(--wm-ease),
+		border-color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-text);
+		border-color: var(--wm-text-tertiary);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+
+		color: var(--wm-text);
+	}
 
 	@media screen and (max-width: $tablet) {
 		display: none;
@@ -268,5 +297,11 @@ onBeforeUnmount(() => {
 .content-auth {
 	position: relative;
 	z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.app-content {
+		transition: none;
+	}
 }
 </style>

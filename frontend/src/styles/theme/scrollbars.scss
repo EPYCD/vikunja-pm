@@ -1,31 +1,41 @@
-$scrollbar-height: 8px;
-$scrollbar-track-color: var(--grey-200);
-$scrollbar-thumb-color: var(--grey-300);
-$scrollbar-hover-color: var(--grey-500);
+// Scrollbars are instrument chrome, not content: a thin hairline-coloured
+// thumb on a transparent track, so a scrolling list keeps reading as one
+// continuous surface instead of gaining a second, brighter edge.
 
-// Chrome
+$scrollbar-size: 8px;
+$scrollbar-thumb-color: var(--wm-line-strong);
+$scrollbar-thumb-hover-color: var(--wm-text-tertiary);
+
+// Chrome / Safari
 ::-webkit-scrollbar {
-  width: $scrollbar-height;
-  height: $scrollbar-height;
+  inline-size: $scrollbar-size;
+  block-size: $scrollbar-size;
+  background: transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: $scrollbar-track-color;
-  border-radius: .5rem;
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: .5rem;
+  border-radius: 0;
   background: $scrollbar-thumb-color;
-  transition: all $transition;
+  transition: background-color var(--wm-duration) var(--wm-ease);
 
   &:hover {
-    background: $scrollbar-hover-color;
+    background: $scrollbar-thumb-hover-color;
   }
 }
 
 // Firefox
 * {
-  scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
+  scrollbar-color: $scrollbar-thumb-color transparent;
   scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::-webkit-scrollbar-thumb {
+    transition-duration: 1ms;
+  }
 }

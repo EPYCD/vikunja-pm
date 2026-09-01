@@ -179,17 +179,18 @@ async function changeBucket(bucket: IBucket) {
 
 <style lang="scss" scoped>
 .bucket-name {
-	color: var(--grey-800);
+	color: var(--wm-text);
+	transition: color var(--wm-duration) var(--wm-ease);
 
 	&:hover {
-		color: var(--primary);
+		color: var(--wm-accent-text);
 	}
 }
 
 .change-indicator {
 	font-size: .75em;
-	margin-inline-start: .25rem;
-	color: var(--grey-400);
+	margin-inline-start: var(--wm-space-1);
+	color: var(--wm-text-tertiary);
 }
 
 :deep(.dropdown) {

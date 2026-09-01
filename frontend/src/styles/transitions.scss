@@ -1,6 +1,12 @@
+// Vue <Transition> classes.
+//
+// Motion in Workman is short and mechanical: a state change readout, never a
+// flourish. Everything runs on the shared duration/easing tokens so the whole
+// console moves at one speed.
+
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity $transition-duration;
+  transition: opacity var(--wm-duration) var(--wm-ease);
 }
 
 .fade-enter-from,
@@ -10,10 +16,19 @@
 
 .width-enter-active,
 .width-leave-active {
-  transition: width $transition-duration;
+  transition: inline-size var(--wm-duration) var(--wm-ease);
 }
 
 .width-enter-from,
 .width-leave-to {
-  width: 0;
+  inline-size: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active,
+  .fade-leave-active,
+  .width-enter-active,
+  .width-leave-active {
+    transition-duration: 1ms;
+  }
 }

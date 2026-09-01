@@ -178,7 +178,7 @@ function cropAvatar() {
 }
 
 .vue-advanced-cropper__background {
-	background: var(--white);
+	background: var(--wm-surface);
 }
 </style>
 

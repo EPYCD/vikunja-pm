@@ -142,8 +142,8 @@ function updateData() {
 .reminder-period {
 	display: flex;
 	flex-direction: column;
-	gap: .25rem;
-	padding: .5rem .5rem 0;
+	gap: var(--wm-space-1);
+	padding: var(--wm-space-2) var(--wm-space-2) 0;
 
 	.input, .select select {
 		inline-size: 100% !important;

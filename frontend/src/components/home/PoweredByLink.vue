@@ -22,11 +22,25 @@ const computedUrl = computed(() => `${poweredByUrl}&utm_medium=${props.utmMedium
 
 <style lang="scss">
 .menu-bottom-link {
-	color: var(--grey-300);
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
 	text-align: center;
 	display: block;
-	padding-block-start: 1rem;
-	padding-block-end: 1rem;
-	font-size: .8rem;
+	// Sits at the foot of the sidebar, under a hairline; in block layout the
+	// auto margin simply resolves to zero.
+	margin-block-start: auto;
+	border-block-start: 1px solid var(--wm-line);
+	padding-block: var(--wm-space-3);
+	padding-inline: var(--wm-space-4);
+	transition: color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-text);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+	}
 }
 </style>

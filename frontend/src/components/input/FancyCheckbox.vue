@@ -53,7 +53,7 @@ const emit = defineEmits<{
 }
 
 .fancy-checkbox__content {
-	font-size: 0.8rem;
+	font-size: var(--wm-text-sm);
 	vertical-align: top;
 	padding-inline-start: .5rem;
 }
@@ -61,29 +61,29 @@ const emit = defineEmits<{
 .fancy-checkbox__icon:deep() {
 	position: relative;
 	z-index: 1;
-	stroke: var(--stroke-color, #c8ccd4);
+	stroke: var(--stroke-color, var(--wm-line-strong));
 	transform: translate3d(0, 0, 0);
-	transition: all 0.2s ease;
+	transition: all var(--wm-duration) var(--wm-ease);
 
 	path,
 	polyline {
-		transition: all 0.2s linear, color 0.2s ease;
+		transition: all var(--wm-duration) linear, color var(--wm-duration) var(--wm-ease);
 	}
 }
 
 .fancy-checkbox:hover input:not(:disabled) + .fancy-checkbox__icon,
 .fancy-checkbox input:checked + .fancy-checkbox__icon {
-	--stroke-color: var(--primary);
+	--stroke-color: var(--wm-accent);
 }
 
 .fancy-checkbox input:focus-visible + .fancy-checkbox__icon {
-	border-radius: 4px;
+	border-radius: var(--wm-radius-xs);
 	@include focus-ring;
 }
 
 @supports not selector(:focus-visible) {
 	.fancy-checkbox input:focus + .fancy-checkbox__icon {
-		border-radius: 4px;
+		border-radius: var(--wm-radius-xs);
 		@include focus-ring;
 	}
 }

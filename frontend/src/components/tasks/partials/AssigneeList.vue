@@ -75,7 +75,8 @@ defineEmits<{
 	}
 
 	:deep(.user > .username) {
-		font-size: .75rem;
+		font-size: var(--wm-text-2xs);
+		color: var(--wm-text-secondary);
 	}
 
 	&.is-inline {
@@ -88,14 +89,14 @@ defineEmits<{
 
 .assignee {
 	position: relative;
-	transition: all $transition;
+	transition: margin-inline-start var(--wm-duration) var(--wm-ease);
 
 	&:not(:first-child) {
 		margin-inline-start: -1rem;
 	}
 
 	:deep(.user img) {
-		border: 2px solid var(--white);
+		border: 2px solid var(--wm-surface);
 		margin-inline-end: 0;
 	}
 }
@@ -105,10 +106,10 @@ defineEmits<{
 	inset-block-start: 4px;
 	inset-inline-start: 2px;
 	color: var(--danger);
-	background: var(--white);
+	background: var(--wm-surface);
 	display: block;
-	border-radius: 100%;
-	font-size: .75rem;
+	border-radius: var(--wm-radius-full);
+	font-size: var(--wm-text-2xs);
 	inline-size: 18px;
 	block-size: 18px;
 	z-index: 100;

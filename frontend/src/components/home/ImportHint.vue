@@ -34,7 +34,7 @@ onMounted(async () => {
 
 <template>
 	<template v-if="show && !loading">
-		<p class="mbs-4">
+		<p class="mbs-4 import-hint">
 			{{ $t('home.project.importText') }}
 		</p>
 		<XButton
@@ -45,3 +45,10 @@ onMounted(async () => {
 		</XButton>
 	</template>
 </template>
+
+<style lang="scss" scoped>
+.import-hint {
+	color: var(--wm-text-secondary);
+	font-size: var(--wm-text-sm);
+}
+</style>

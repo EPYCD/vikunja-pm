@@ -25,10 +25,13 @@ withDefaults(defineProps<{
 
 <style lang="scss" scoped>
 .progress-bar {
-	--progress-height: #{$size-normal};
-	--progress-bar-background-color: var(--border-light, #{$border-light});
-	--progress-value-background-color: var(--grey-500, #{$text});
-	--progress-border-radius: #{$radius};
+	--progress-height: 4px;
+	--progress-bar-background-color: var(--wm-line);
+	// Neutral, not accent: percent-done reports magnitude, it is neither the
+	// primary action nor an active state, and a row of crimson bars was
+	// outshouting the one thing on the page that is.
+	--progress-value-background-color: var(--wm-text-tertiary);
+	--progress-border-radius: 0;
 	--progress-indeterminate-duration: 1.5s;
 
 	appearance: none;

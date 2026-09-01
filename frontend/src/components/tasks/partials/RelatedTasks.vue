@@ -401,7 +401,7 @@ async function toggleTaskDone(task: ITask) {
 	margin-block-start: -3rem;
 
 	svg {
-		transition: transform $transition;
+		transition: transform var(--wm-duration) var(--wm-ease);
 	}
 
 	&.is-active svg {
@@ -410,37 +410,43 @@ async function toggleTaskDone(task: ITask) {
 }
 
 .different-project {
-	color: var(--grey-500);
+	color: var(--wm-text-tertiary);
 	inline-size: auto;
 }
 
+// Each relation kind is its own labelled bank of rows.
 .title {
-	font-size: 1rem;
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
 	margin: 0;
 }
 
 .tasks {
-	padding: .5rem;
+	padding: var(--wm-space-2) 0;
 }
 
 .task {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	padding: .75rem;
-	transition: background-color $transition;
-	border-radius: $radius;
+	align-items: center;
+	min-block-size: 40px;
+	padding: var(--wm-space-2) var(--wm-space-2);
+	transition: background-color var(--wm-duration) var(--wm-ease);
+	border-radius: 0;
+	border-block-end: 1px solid var(--wm-line-faint);
 
 	&:hover {
-		background-color: var(--grey-200);
+		background-color: var(--wm-surface-hover);
 	}
 
 	a {
-		color: var(--text);
-		transition: color ease $transition-duration;
+		color: var(--wm-text);
+		transition: color var(--wm-duration) var(--wm-ease);
 
 		&:hover {
-			color: var(--grey-900);
+			color: var(--wm-accent-text);
 		}
 	}
 
@@ -450,20 +456,22 @@ async function toggleTaskDone(task: ITask) {
 	text-align: center;
 	color: var(--danger);
 	opacity: 0;
-	transition: opacity $transition;
+	transition: opacity var(--wm-duration) var(--wm-ease);
 }
 
-.task:hover .remove {
+.task:hover .remove,
+.task:focus-within .remove {
 	opacity: 1;
 }
 
 .none {
+	color: var(--wm-text-tertiary);
 	font-style: italic;
 	text-align: center;
 }
 
 :deep(.multiselect .search-results button) {
-	padding: 0.5rem;
+	padding: var(--wm-space-2);
 }
 
 .task-relation-search-field {
@@ -471,8 +479,8 @@ async function toggleTaskDone(task: ITask) {
 
 	:deep(.quick-add-magic-trigger-btn) {
 		position: absolute;
-		inset-block-start: .75rem;
-		inset-inline-end: .75rem;
+		inset-block-start: var(--wm-space-3);
+		inset-inline-end: var(--wm-space-3);
 		z-index: 4;
 	}
 }
@@ -483,6 +491,6 @@ async function toggleTaskDone(task: ITask) {
 .task-done-checkbox {
 	padding: 0;
 	block-size: 18px; // The exact height of the checkbox in the container
-	margin-inline-end: .75rem;
+	margin-inline-end: var(--wm-space-3);
 }
 </style>

@@ -1,6 +1,11 @@
-// these are general menu styles
-// should be in own components
+// Sidebar menu styles — the top-level navigation and the project tree.
+// Rows are deliberately compact: this is a dense console index, not a touch
+// list. Structure comes from hairlines, and the only accent is the rail on the
+// active row.
 .menu {
+  --menu-row-height: 32px;
+  --menu-nested-list-margin: 1rem;
+
   .menu-list .list-menu-link,
   .menu-list a {
     display: flex;
@@ -8,10 +13,11 @@
     cursor: pointer;
 
     .color-bubble {
-      height: 12px;
+      block-size: 12px;
       flex: 0 0 12px;
       opacity: 1;
-      margin: 0 .5rem 0 .25rem;
+      margin-block: 0;
+      margin-inline: var(--wm-space-1) var(--wm-space-2);
     }
   }
 
@@ -19,22 +25,42 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    
+
     &.other-menu-items li,
     li > div {
-      height: 44px;
+      position: relative;
+      block-size: var(--menu-row-height);
       display: flex;
       align-items: center;
+      transition: background-color var(--wm-duration) var(--wm-ease);
 
       &:hover {
-        background: var(--white);
+        background: var(--wm-surface-hover);
+      }
+    }
+
+    // The active row: a 2px accent rail on the inline-start edge over an accent
+    // wash — never a rounded filled pill.
+    &.other-menu-items li:has(> .router-link-exact-active),
+    li > div:has(> .router-link-exact-active) {
+      // Keeps its wash on hover: the plain --wm-surface-hover fill above would
+      // wipe out the active marking.
+      background: var(--wm-accent-wash);
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        inline-size: $vikunja-nav-selected-width;
+        background: var(--wm-accent);
       }
     }
 
     li > div {
       .menu-list-dropdown {
         opacity: 1;
-        transition: $transition;
+        transition: opacity var(--wm-duration) var(--wm-ease);
       }
 
       @media(hover: hover) and (pointer: fine) {
@@ -49,24 +75,37 @@
     }
 
     li > menu {
-      margin: 0 0 0 var(--menu-nested-list-margin);
+      margin-block: 0;
+      margin-inline: var(--menu-nested-list-margin) 0;
     }
 
     .menu-item-icon {
-      color: var(--grey-400);
+      color: var(--wm-text-tertiary);
     }
 
     .menu-list-dropdown-trigger {
       display: flex;
-      padding: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      inline-size: var(--wm-control-height-sm);
+      block-size: var(--wm-control-height-sm);
+      color: var(--wm-text-tertiary);
+      transition: color var(--wm-duration) var(--wm-ease);
+
+      &:hover {
+        color: var(--wm-text);
+      }
     }
 
     .flip-list-move {
-      transition: transform $transition-duration;
+      transition: transform var(--wm-duration) var(--wm-ease);
     }
 
+    // The gap a dragged row leaves behind reads as a cut-out slot.
     .ghost {
-      background: var(--grey-200);
+      background: var(--wm-surface-sunken);
+      outline: 1px dashed var(--wm-line-strong);
+      outline-offset: -1px;
 
       * {
         opacity: 0;
@@ -80,48 +119,61 @@
     .list-menu-link,
     li, li > div {
       .collapse-project-button {
-        padding: .5rem .25rem .5rem .5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        block-size: 100%;
+        padding-inline: var(--wm-space-2) var(--wm-space-1);
+        color: var(--wm-text-tertiary);
+        transition: color var(--wm-duration) var(--wm-ease);
+
+        &:hover {
+          color: var(--wm-text);
+        }
 
         svg {
-          transition: all $transition;
-          color: var(--grey-400);
-          width: 1.25rem;
+          transition: transform var(--wm-duration) var(--wm-ease);
+          inline-size: 1.25rem;
         }
       }
 
       .collapse-project-button-placeholder {
-        width: 2rem;
+        inline-size: 2rem;
         flex-shrink: 0;
       }
 
       > a {
         color: $vikunja-nav-color;
-        padding: .75rem .5rem .75rem .25rem;
-        transition: all 0.2s ease;
+        font-size: var(--wm-text-sm);
+        block-size: 100%;
+        padding-block: 0;
+        padding-inline: 0 var(--wm-space-2);
+        transition: color var(--wm-duration) var(--wm-ease);
 
         border-radius: 0;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-        width: 100%;
+        inline-size: 100%;
 
         &.router-link-exact-active {
-          color: var(--primary);
+          color: var(--wm-text);
+          font-weight: 500;
         }
 
         .icon {
-          height: 1rem;
+          block-size: 1rem;
           vertical-align: middle;
-          padding-inline-end: 0.5rem;
+          padding-inline-end: var(--wm-space-2);
         }
 
         &.router-link-exact-active .icon:not(.handle) {
-          color: var(--primary);
+          color: var(--wm-text);
         }
 
         .handle {
           opacity: 0;
-          transition: opacity $transition;
+          transition: opacity var(--wm-duration) var(--wm-ease);
         }
 
         &:hover .handle {
@@ -133,9 +185,51 @@
     &:not(.dragging-disabled) .handle {
       cursor: grab;
     }
-    
+
+    // Nested projects hang off a hairline guide so the tree depth is readable.
     menu {
-      border-inline-start: 0;
+      border-inline-start: 1px solid var(--wm-line-faint);
     }
   }
+}
+
+// Section eyebrow: `PROJECTS / 12` followed by a hairline filling the row.
+.menu-section {
+  display: flex;
+  align-items: center;
+  gap: var(--wm-space-2);
+  margin: 0;
+  padding-inline: var(--wm-space-4);
+  padding-block: var(--wm-space-2);
+}
+
+.menu-section__label {
+  @include mono-label;
+
+  color: var(--wm-text-secondary);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-section__count {
+  @include mono-data;
+
+  color: var(--wm-text-secondary);
+  font-size: var(--wm-text-2xs);
+  line-height: 1;
+  flex: 0 0 auto;
+
+  &::before {
+    content: '/';
+    margin-inline-end: 0.35em;
+    color: var(--wm-line-strong);
+  }
+}
+
+.menu-section__rule {
+  flex: 1 1 auto;
+  min-inline-size: var(--wm-space-4);
+  border-block-start: 1px solid var(--wm-line);
 }

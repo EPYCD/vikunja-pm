@@ -56,6 +56,8 @@ func GetTables() []interface{} {
 		&LinkSharing{},
 		&TaskRelation{},
 		&TaskAttachment{},
+		&TaskScope{},
+		&TaskPathLease{},
 		&TaskComment{},
 		&Bucket{},
 		&UnsplashPhoto{},

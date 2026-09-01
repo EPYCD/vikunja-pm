@@ -23,14 +23,16 @@ const menuActive = computed(() => baseStore.menuActive)
 </script>
 
 <style lang="scss" scoped>
-$line-width: 2rem;
-$size: $line-width + 1rem;
+$line-width: 1.125rem;
+$size: 2.25rem;
 
 .menu-show-button {
 	min-block-size: $size;
 	inline-size: $size;
 
 	position: relative;
+	color: var(--wm-text-tertiary);
+	transition: color var(--wm-duration) var(--wm-ease);
 
 	$transform-x: translateX(-50%);
 
@@ -39,38 +41,46 @@ $size: $line-width + 1rem;
 		content: '';
 		display: block;
 		position: absolute;
-		block-size: 3px;
+		block-size: 2px;
 		inline-size: $line-width;
 		inset-inline-start: 50%;
 		transform: $transform-x;
-		background-color: var(--grey-400);
-		border-radius: 2px;
-		transition: all $transition;
+		background-color: currentcolor;
+		border-radius: var(--wm-radius-xs);
+		transition: transform var(--wm-duration) var(--wm-ease);
 	}
 
 	&::before {
 		inset-block-start: 50%;
-		transform: $transform-x translateY(-0.4rem)
+		transform: $transform-x translateY(-0.3rem)
 	}
 
 	&::after {
 		inset-block-end: 50%;
-		transform: $transform-x translateY(0.4rem)
+		transform: $transform-x translateY(0.3rem)
 	}
 
 	&:hover,
-	&:focus {
-		&::before,
-		&::after {
-			background-color: var(--grey-600);
-		}
+	&:focus-visible {
+		color: var(--wm-text);
 
 		&::before {
-			transform: $transform-x translateY(-0.5rem);
+			transform: $transform-x translateY(-0.4rem);
 		}
 
 		&::after {
-			transform: $transform-x translateY(0.5rem)
+			transform: $transform-x translateY(0.4rem)
+		}
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&::before,
+		&::after {
+			transition: none;
 		}
 	}
 }

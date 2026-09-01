@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
 .filter-container {
 	display: flex;
 	align-items: center;
-	gap: .5rem;
+	gap: var(--wm-space-2);
 
 	:deep(.popup) {
 		inset-block-start: 3rem;
@@ -370,13 +370,12 @@ onBeforeUnmount(() => {
 }
 
 .tasks {
-	padding: .5rem;
+	padding: var(--wm-space-2);
 }
 
 .task-ghost {
-	border-radius: $radius;
-	background: var(--grey-100);
-	border: 2px dashed var(--grey-300);
+	background: var(--wm-accent-wash);
+	border: 1px dashed var(--wm-line-strong);
 
 	* {
 		opacity: 0;
@@ -384,7 +383,10 @@ onBeforeUnmount(() => {
 }
 
 .list-view__add-task {
-	padding: 1rem 1rem 0;
+	padding: var(--wm-space-4) var(--wm-space-4) 0;
+	border-block-end: 1px solid var(--wm-line-faint);
+	margin-block-end: var(--wm-space-2);
+	padding-block-end: var(--wm-space-4);
 }
 
 .link-share-view .card {
@@ -394,8 +396,8 @@ onBeforeUnmount(() => {
 
 :deep(.single-task .handle) {
 	cursor: grab;
-	margin-inline-end: .25rem;
-	color: var(--grey-400);
+	margin-inline-end: var(--wm-space-1);
+	color: var(--wm-text-tertiary);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -416,7 +418,7 @@ onBeforeUnmount(() => {
 }
 
 .list-view {
-	padding-block-end: 1rem;
+	padding-block-end: var(--wm-space-4);
 
 	:deep(.card) {
 		margin-block-end: 0;

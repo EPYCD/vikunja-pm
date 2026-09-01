@@ -49,7 +49,7 @@
 
 			<div
 				v-if="hintText !== '' && !isNewTaskCommand"
-				class="help has-text-grey-light p-2"
+				class="help quick-actions-hint"
 			>
 				{{ hintText }}
 			</div>
@@ -763,45 +763,76 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+// The command palette reads as a terminal: a cut panel on the raised surface,
+// a monospace prompt line, mono group headers, and an accent rail marking the
+// row that is about to fire.
 .quick-actions {
-	// global Bulma .card styles are gone (ported into Card.vue, scoped),
-	// so this bare .card div needs its own card visuals
-	background-color: var(--white);
-	border-radius: $radius;
-	border: 1px solid var(--card-border-color);
-	box-shadow: var(--shadow-sm);
-	color: var(--text);
+	background-color: var(--wm-surface-raised);
+	color: var(--wm-text);
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
 	overflow: hidden;
 	justify-content: flex-start !important;
 
+	@include chamfer(var(--wm-chamfer-lg));
+	@include chamfer-outline(var(--wm-line-strong));
+
+	// In quick-add mode the Electron window *is* the panel, so it keeps its
+	// square edges and full bleed.
 	&.is-quick-add-mode {
 		padding: 0;
 		margin: 0;
 		border: none;
 		box-shadow: none;
+		clip-path: none;
+		filter: none;
 	}
 }
 
 .action-input {
 	display: flex;
 	align-items: center;
+	background-color: var(--wm-surface-sunken);
+	border-block-end: 1px solid var(--wm-line);
 
 	.input {
 		border: 0;
-		font-size: 1.5rem;
+		background: transparent;
+		block-size: var(--wm-control-height-lg);
+		font-family: $workman-mono-font;
+		font-size: var(--wm-text-lg);
+		color: var(--wm-text);
+		padding-inline: var(--wm-space-4);
+
+		&::placeholder {
+			color: var(--wm-text-tertiary);
+		}
+
+		&:focus {
+			border: 0;
+			box-shadow: none;
+		}
 
 		@media screen and (max-width: $tablet) {
-			padding-inline-end: .25rem;
+			padding-inline-end: var(--wm-space-1);
 		}
 	}
 
 	&.has-active-cmd .input {
-		padding-inline-start: .5rem;
+		padding-inline-start: var(--wm-space-2);
 	}
 
 	.close {
-		padding: 0 1rem 0 .5rem;
-		font-size: 1.5rem;
+		padding-block: 0;
+		padding-inline: var(--wm-space-2) var(--wm-space-4);
+		font-size: var(--wm-text-lg);
+		color: var(--wm-text-tertiary);
+		transition: color var(--wm-duration) var(--wm-ease);
+
+		&:hover {
+			color: var(--wm-text);
+		}
 
 		@media screen and (min-width: $tablet + 1) {
 			display: none;
@@ -809,61 +840,115 @@ onBeforeUnmount(() => {
 	}
 }
 
-.active-cmd {
-	font-size: 1.25rem;
-	margin-inline-start: .5rem;
-	background-color: var(--grey-100);
-	color: var(--grey-800);
+// The selected command reads as a mode chip, not a pill — the accent in this
+// panel belongs to the highlighted result. Nested one level deeper than the
+// class alone because Bulma's `.tag:not(body)` ties on specificity and lands
+// later in the bundle.
+.action-input .active-cmd {
+	@include mono-label;
+
+	margin-inline-start: var(--wm-space-4);
+	padding-block: var(--wm-space-1);
+	padding-inline: var(--wm-space-2);
+	block-size: auto;
+	border: 1px solid var(--wm-line);
+	border-radius: 0;
+	background-color: var(--wm-surface-hover);
+	color: var(--wm-text-secondary);
+}
+
+.quick-actions-hint {
+	font-family: $workman-mono-font;
+	font-size: var(--wm-text-2xs);
+	line-height: 1.5;
+	color: var(--wm-text-tertiary);
+	padding-block: var(--wm-space-2);
+	padding-inline: var(--wm-space-4);
+	border-block-end: 1px solid var(--wm-line-faint);
 }
 
 .results {
 	text-align: start;
 	inline-size: 100%;
-	color: var(--grey-800);
+	color: var(--wm-text);
 }
 
 .result-title {
-	background: var(--grey-100);
-	padding: .5rem;
+	@include mono-label;
+
 	display: block;
-	font-size: .75rem;
+	background: var(--wm-surface-sunken);
+	color: var(--wm-text-tertiary);
+	border-block-end: 1px solid var(--wm-line-faint);
+	padding-block: var(--wm-space-2);
+	padding-inline: var(--wm-space-4);
 }
 
 .result-item-button {
-	font-size: .9rem;
+	position: relative;
 	inline-size: 100%;
 	background: transparent;
-	color: var(--grey-800);
+	color: var(--wm-text);
 	text-align: start;
 	box-shadow: none;
+	border: none;
 	border-radius: 0;
 	text-transform: none;
 	font-family: $family-sans-serif;
+	font-size: var(--wm-text-base);
 	font-weight: normal;
-	padding: .5rem .75rem;
-	border: none;
+	padding-block: var(--wm-space-2);
+	padding-inline: var(--wm-space-4);
 	cursor: pointer;
+	transition: background-color var(--wm-duration) var(--wm-ease);
 
-	&:focus,
-	&:hover {
-		background: var(--grey-100);
-		box-shadow: none !important;
+	// The rail that marks the row the palette will act on.
+	&::before {
+		content: '';
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 0;
+		inline-size: $vikunja-nav-selected-width;
+		background: var(--wm-accent);
+		opacity: 0;
+		transition: opacity var(--wm-duration) var(--wm-ease);
 	}
 
+	&:focus,
+	&:hover,
 	&:active {
-		background: var(--grey-100);
+		background: var(--wm-surface-hover);
+		box-shadow: none;
+
+		&::before {
+			opacity: 1;
+		}
+	}
+
+	// The panel is clipped, so an outset focus ring would be cut off at the
+	// edges — this one is drawn inside the row instead.
+	&:focus-visible {
+		box-shadow: inset 0 0 0 2px hsla(var(--wm-accent-hsl), 0.9);
 	}
 
 	.saved-filter-icon {
-		font-size: .75rem;
-		inline-size: .75rem;
-		margin-inline-end: .25rem;
-		color: var(--grey-400)
+		font-size: var(--wm-text-xs);
+		inline-size: var(--wm-text-xs);
+		margin-inline-end: var(--wm-space-1);
+		color: var(--wm-text-tertiary);
 	}
 
 	&:has(.saved-filter-icon) {
 		display: inline-flex;
 		align-items: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.result-item-button,
+	.result-item-button::before,
+	.action-input .close {
+		transition-duration: 1ms;
 	}
 }
 </style>

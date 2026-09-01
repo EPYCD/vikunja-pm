@@ -105,3 +105,74 @@ h1, h2, h3 {
     height: auto;
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Workman form language
+//
+// Flat fields on a hairline: no radius, no inner shadow, accent border on
+// focus. Inputs deliberately keep square corners — the chamfer is reserved for
+// panels and the primary action, and clip-path would slice an input's border
+// open exactly where the focus state needs it.
+// ---------------------------------------------------------------------------
+
+.input,
+.textarea,
+.select select {
+  border-radius: 0;
+  box-shadow: none;
+  font-family: $family-sans-serif;
+  font-size: var(--wm-text-base);
+  color: var(--wm-text);
+  background-color: var(--wm-surface);
+  // Control edges use the higher-contrast token: the border is the only thing
+  // marking where the field is, so it has to clear 3:1.
+  border-color: var(--wm-line-control);
+  transition:
+    border-color var(--wm-duration) var(--wm-ease),
+    background-color var(--wm-duration) var(--wm-ease);
+
+  &::placeholder {
+    color: var(--wm-text-tertiary);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--wm-text-tertiary);
+  }
+
+  &:focus,
+  &:focus-within {
+    border-color: var(--wm-accent);
+  }
+}
+
+.input,
+.select select:not([multiple]) {
+  block-size: var(--wm-control-height);
+}
+
+// Field captions are mono micro-labels — the single change that makes a form
+// read as an instrument panel rather than a web form.
+.label {
+  @include mono-label;
+
+  color: var(--wm-text-tertiary);
+  margin-block-end: var(--wm-space-2);
+}
+
+.help {
+  font-size: var(--wm-text-xs);
+  color: var(--wm-text-tertiary);
+}
+
+// Search and filter inputs carry a leading mono affordance.
+.field.has-addons .button {
+  block-size: var(--wm-control-height);
+  border-radius: 0;
+}
+
+// Bulma draws the select arrow with a rotated border box; recolour it to the
+// token ramp so it does not stay blue in dark mode.
+.select:not(.is-multiple):not(.is-loading)::after {
+  border-color: var(--wm-text-tertiary);
+}

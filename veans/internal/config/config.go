@@ -46,6 +46,11 @@ type Config struct {
 	Buckets           Buckets `yaml:"buckets"`
 	Bot               Bot     `yaml:"bot"`
 
+	// Repository namespaces this checkout's scope paths (`repo:path`) so a
+	// project spanning several repositories never confuses two files with
+	// the same relative path. Leave empty for single-repository projects.
+	Repository string `yaml:"repository,omitempty"`
+
 	// HTTPTimeout overrides the default 30s HTTP client timeout when
 	// non-zero. Accepts Go duration syntax in YAML ("60s", "5m", "1h30m").
 	// Omitted from a freshly-written .veans.yml via omitempty so init flows

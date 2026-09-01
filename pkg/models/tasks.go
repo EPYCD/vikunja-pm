@@ -156,6 +156,10 @@ type Task struct {
 
 	// Time entry count of this task. Only present when fetching tasks with the `expand` parameter set to `time_entries_count`.
 	TimeEntriesCount *int64 `xorm:"-" json:"time_entries_count,omitempty" readOnly:"true" doc:"The number of time entries on this task. Only present when requested via the time_entries_count expand option."`
+	// The task's scope: the files and endpoints it touches. Only present when requested via the scope expand option.
+	Scope *TaskScope `xorm:"-" json:"scope,omitempty" readOnly:"true" doc:"The task's scope — the files it will edit, the files it affects and the endpoints it changes. Only present when requested via the scope expand option; null when the task has none."`
+	// The path leases the task currently holds. Only present when requested via the leases expand option.
+	Leases []*TaskPathLease `xorm:"-" json:"leases,omitempty" readOnly:"true" doc:"The path leases this task currently holds, i.e. the files it is exclusively editing. Only present when requested via the leases expand option."`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
@@ -786,6 +790,26 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				if err != nil {
 					return err
 				}
+			case TaskCollectionExpandScope:
+				scopes, err := getTaskScopesForTasks(s, taskIDs)
+				if err != nil {
+					return err
+				}
+				for id, sc := range scopes {
+					sc.ensureLists()
+					taskMap[id].Scope = sc
+				}
+			case TaskCollectionExpandLeases:
+				leases, err := getLeasesForTasks(s, taskIDs)
+				if err != nil {
+					return err
+				}
+				for id, t := range taskMap {
+					t.Leases = leases[id]
+					if t.Leases == nil {
+						t.Leases = []*TaskPathLease{}
+					}
+				}
 			case TaskCollectionExpandTimeEntriesCount:
 				err = addTimeEntriesCountToTasks(s, a, taskIDs, taskMap)
 				if err != nil {
@@ -1404,6 +1428,11 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// When a task was moved between projects, ensure it is in the correct bucket
 	if t.ProjectID != ot.ProjectID {
+		// Leases are held per project, so they do not follow the task.
+		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPathLease{})
+		if err != nil {
+			return err
+		}
 		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
 		if err != nil {
 			return err
@@ -1442,6 +1471,17 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// Finishing a task releases the files it was editing so the next task
+	// owning them becomes claimable.
+	if t.Done && !ot.Done {
+		if err = releasePathLeasesForTask(s, t.ID); err != nil {
+			return err
+		}
+		if err = completeParentsIfSubtasksDone(s, a, t); err != nil {
+			return err
 		}
 	}
 
@@ -2090,6 +2130,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	// A task in the bin must not keep its files locked for everyone else.
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPathLease{})
+	if err != nil {
+		return
+	}
+
 	// The deleted tag on Task.DeletedAt turns this into an update setting
 	// deleted_at. Must be a pointer: xorm tracks the after-delete closure that
 	// stamps DeletedAt in a map keyed by the bean, and a Task value is unhashable.
@@ -2204,6 +2250,16 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	}
 
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPathLease{})
+	if err != nil {
+		return
+	}
+
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskScope{})
 	if err != nil {
 		return
 	}

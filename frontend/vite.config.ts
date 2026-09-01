@@ -72,17 +72,16 @@ function getSentryConfig(env: Record<string, string>): SentryVitePluginOptions {
 }
 
 /**
- * @param fontNames Array of the file names of the fonts without axis and hash suffixes
+ * @param fontNames Array of the source font file names without the content hash
  */
 function createFontMatcher(fontNames: string[]) {
 	// The `match` option for the files of VitePluginInjectPreload
-	// matches the _output_ files.
-	// Since we only want to mach variable fonts, we exploit here the fact
-	// that we added the `wght` term to indicate the variable weight axis.
+	// matches the _output_ files, which carry our content hash plus Vite's.
+	// We only preload the latin faces: the other unicode ranges are fetched
+	// on demand by the browser and preloading them would waste the budget.
 	// The format is something like:
-	// `/assets/OpenSans-Italic_wght__c9a8fe68-5f21f1e7.woff2`
-	// see: https://regex101.com/r/UgUWr1/1
-	return new RegExp(`^.+\\/(${fontNames.join('|')})_wght__[a-z1-9]{8}-[a-z1-9]{8}\\.woff2$`)
+	// `/assets/Inter-latin_7a002b09-5f21f1e7.woff2`
+	return new RegExp(`^.+\\/(${fontNames.join('|')})-latin_[a-f0-9]{8}-[a-z0-9]{8}\\.woff2$`)
 }
 
 // https://vitejs.dev/config/
@@ -158,7 +157,7 @@ function getBuildConfig(env: Record<string, string>) {
 			// https://github.com/Applelo/unplugin-inject-preload
 			UnpluginInjectPreload({
 				files: [{
-					outputMatch: createFontMatcher(['Quicksand', 'OpenSans', 'OpenSans-Italic']),
+					outputMatch: createFontMatcher(['Inter', 'SpaceGrotesk', 'JetBrainsMono']),
 					attributes: {crossorigin: 'anonymous'},
 				}],
 				injectTo: 'custom',
@@ -170,9 +169,9 @@ function getBuildConfig(env: Record<string, string>) {
 				injectRegister: false,
 				useCredentials: true,
 				manifest: {
-					name: 'Vikunja',
-					short_name: 'Vikunja',
-					theme_color: '#1973ff',
+					name: 'Workman',
+					short_name: 'Workman',
+					theme_color: '#0A0A0B',
 					icons: [
 						{
 							src: './images/icons/android-chrome-192x192.png',

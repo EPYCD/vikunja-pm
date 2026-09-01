@@ -35,8 +35,8 @@
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "goToOverview": "Go to overview",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
-      "import": "Import your data into Vikunja"
+      "importText": "Import your projects and tasks from other services into Workman:",
+      "import": "Import your data into Workman"
     }
   },
   "demo": {
@@ -49,7 +49,7 @@
     "text": "The page you requested does not exist."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
+    "loading": "Workman is loading…",
     "errorOccured": "An error occurred:",
     "checkApiUrl": "Please check if the api url is correct.",
     "noApiUrlConfigured": "No API url was configured. Please set one below:"
@@ -64,7 +64,7 @@
       "usernameEmail": "Username Or Email Address",
       "usernamePlaceholder": "e.g. frederick",
       "email": "Email address",
-      "emailPlaceholder": "e.g. frederic{'@'}vikunja.io",
+      "emailPlaceholder": "e.g. frederic{'@'}workman.io",
       "password": "Password",
       "passwordPlaceholder": "Your password",
       "forgotPassword": "Forgot your password?",
@@ -86,7 +86,7 @@
       "oauthRedirectedToApp": "You have been redirected to the app. You can close this tab now.",
       "desktopTryDemo": "Try the Demo",
       "desktopCustomServer": "Custom Server URL",
-      "desktopCustomServerDescription": "Enter the URL of your Vikunja server to get started.",
+      "desktopCustomServerDescription": "Enter the URL of your Workman server to get started.",
       "desktopWaitingForAuth": "Waiting for authentication…",
       "desktopOAuthError": "Authentication failed: {error}",
       "logout": "Logout",
@@ -220,8 +220,8 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all your tasks from different clients. Enter this URL into your client:",
-        "more": "More information about CalDAV in Vikunja",
+        "howTo": "You can connect Workman to CalDAV clients to view and manage all your tasks from different clients. Enter this URL into your client:",
+        "more": "More information about CalDAV in Workman",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "For CalDAV authentication you can use either your normal account password or a dedicated CalDAV token.",
         "createToken": "Create a CalDAV token",
@@ -233,7 +233,7 @@
       },
       "feeds": {
         "title": "Atom Feed",
-        "howTo": "You can subscribe to your Vikunja notifications from any Atom-compatible feed reader. Use the following URL:",
+        "howTo": "You can subscribe to your Workman notifications from any Atom-compatible feed reader. Use the following URL:",
         "usernameIs": "Your username for the feed is: {0}",
         "apiTokenHint": "Authenticate with an API token that has the {scope} permission. Create one in {link}.",
         "tokenTitle": "Atom feed"
@@ -254,7 +254,7 @@
         "title": "Quick Add Magic Mode",
         "disabled": "Disabled",
         "todoist": "Todoist",
-        "vikunja": "Vikunja"
+        "vikunja": "Workman"
       },
       "appearance": {
         "title": "Color Scheme",
@@ -273,7 +273,7 @@
       },
       "apiTokens": {
         "title": "API Tokens",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
+        "general": "API tokens allow you to use Workman's API without user credentials.",
         "apiDocs": "Check out the api docs",
         "createAToken": "Create a token",
         "createToken": "Create token",
@@ -321,7 +321,7 @@
       }
     },
     "deletion": {
-      "title": "Delete your Vikunja Account",
+      "title": "Delete your Workman Account",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
       "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
@@ -329,7 +329,7 @@
       "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
       "passwordRequired": "Please enter your password.",
       "confirmSuccess": "You've successfully confirmed the deletion of your account. We will delete your account in three days.",
-      "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
+      "scheduled": "We will delete your Workman account at {date} ({dateSince}).",
       "scheduledCancel": "To cancel the deletion of your account, click here.",
       "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
       "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
@@ -337,12 +337,12 @@
       "scheduledCancelSuccess": "We will not delete your account."
     },
     "export": {
-      "title": "Export your Vikunja data",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "title": "Export your Workman data",
+      "description": "You can request a copy of all your Workman data. This includes Projects, Tasks and everything associated to them. You can import this data in any Workman instance through the migration function.",
       "descriptionPasswordRequired": "Please enter your password to proceed:",
-      "request": "Request a copy of my Vikunja Data",
-      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
-      "downloadTitle": "Download your exported Vikunja data",
+      "request": "Request a copy of my Workman Data",
+      "success": "You've successfully requested your Workman Data! We will send you an email once it's ready to download.",
+      "downloadTitle": "Download your exported Workman data",
       "ready": "Your export is ready to download. You can download it until {0}.",
       "requestNew": "Request another export"
     }
@@ -427,7 +427,7 @@
       "links": {
         "title": "Share Links",
         "what": "What is a share link?",
-        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
+        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Workman.",
         "create": "Create a link share",
         "name": "Name (optional)",
         "namePlaceholder": "e.g. Lorem Ipsum",
@@ -689,21 +689,21 @@
   },
   "migrate": {
     "title": "Import from other services",
-    "titleService": "Import your data from {name} into Vikunja",
+    "titleService": "Import your data from {name} into Workman",
     "description": "Click on the logo of one of the third-party services below to get started.",
-    "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
-    "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
+    "descriptionDo": "Workman will import all lists, tasks, notes, reminders and files you have access to.",
+    "authorize": "To authorize Workman to access your {name} Account, click the button below.",
     "getStarted": "Get Started",
     "inProgress": "Importing in progress…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "I am sure, please start migrating now!",
-    "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
+    "importUpload": "To import data from {name} into Workman, click the button below to select a file.",
     "upload": "Upload file",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationStartedWillReciveEmail": "Workman will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
     "credentials": {
-      "description": "Enter the address of your {name} instance and how Vikunja should log in. Vikunja imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",
+      "description": "Enter the address of your {name} instance and how Workman should log in. Workman imports all projects and boards you have access to; the credentials are only used for this import and are not stored.",
       "url": "{name} URL",
       "authMethod": "Log in with",
       "apiKey": "API key",
@@ -719,7 +719,7 @@
       "description": "Import tasks from a CSV file with custom column mapping.",
       "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
       "selectFile": "Select CSV file",
-      "columnMappingDescription": "Map each column in your CSV file to a task attribute. Vikunja has auto-detected the most likely mappings. The preview below will update automatically when you change settings.",
+      "columnMappingDescription": "Map each column in your CSV file to a task attribute. Workman has auto-detected the most likely mappings. The preview below will update automatically when you change settings.",
       "parsingOptions": "Parsing Options",
       "delimiter": "Delimiter",
       "dateFormat": "Date Format",
@@ -779,7 +779,7 @@
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
     "closeSidebar": "Close sidebar",
-    "home": "Vikunja home",
+    "home": "Workman home",
     "toggleChildProjects": "Toggle sub-projects",
     "main": "Main navigation",
     "savedFilters": "Saved filters"
@@ -957,7 +957,7 @@
       "canuse": "You can use date math to filter for relative dates.",
       "learnhow": "Check out how it works",
       "title": "Date Math",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Specify relative dates which are resolved on the fly by Workman when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Add one day",
@@ -1059,6 +1059,7 @@
         "attachments": "Add Attachments",
         "timeTracking": "Track time",
         "relatedTasks": "Add Relation",
+        "scope": "Set Scope",
         "moveProject": "Move",
         "duplicate": "Duplicate",
         "color": "Set Color",
@@ -1066,6 +1067,50 @@
         "favorite": "Add to Favorites",
         "unfavorite": "Remove from Favorites"
       }
+    },
+    "scope": {
+      "title": "Scope",
+      "pathsOwned": "Owned paths",
+      "pathsOwnedHint": "Files this task edits. Leased when it is claimed; no other in-progress task may own them.",
+      "pathsAffected": "Affected paths",
+      "pathsAffectedHint": "Files this task reads or depends on but does not edit.",
+      "endpoints": "Endpoints",
+      "endpointsHint": "API surface this task adds or changes.",
+      "notes": "Scope notes",
+      "notesHint": "What is explicitly out of scope.",
+      "notesPlaceholder": "e.g. no frontend changes, do not touch the migration",
+      "none": "None",
+      "add": "Add",
+      "addPath": "pkg/models/** or frontend/src/App.vue",
+      "addEndpoint": "POST /api/v2/…",
+      "remove": "Remove {entry}",
+      "leasedTooltip": "Currently leased by this task",
+      "leases": "Active leases",
+      "leasesHint": "Paths this task holds exclusively while in progress.",
+      "leasedBy": "held by {user} · {date}",
+      "release": "Release leases",
+      "released": "The task's path leases were released.",
+      "saved": "The scope was saved successfully.",
+      "badges": {
+        "ready": "Ready",
+        "blocked": "Blocked",
+        "blockedTooltip": "Blocked by an unfinished task",
+        "leaseConflict": "Path leased",
+        "leaseConflictTooltip": "One of its owned paths is leased by another in-progress task",
+        "leases": "{n} leased path | {n} leased paths"
+      }
+    },
+    "leasesPanel": {
+      "button": "Leases",
+      "title": "Who holds what",
+      "subtitle": "Paths leased by in-progress tasks in this project. A lease blocks every other task that owns an overlapping path until the holder finishes or releases it.",
+      "empty": "No paths are leased right now.",
+      "holder": "held by {user}",
+      "since": "since {date}",
+      "release": "Release",
+      "released": "The task's path leases were released.",
+      "readyOnly": "Ready only",
+      "readyOnlyHint": "Hide tasks in the queue that cannot be claimed right now"
     },
     "attributes": {
       "assignees": "Assignees",
@@ -1237,12 +1282,12 @@
     },
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
-      "quickEntryHint": "Use magic prefixes for dates, labels & more. Open the main Vikunja app and check the tooltip on the task input for more details.",
+      "quickEntryHint": "Use magic prefixes for dates, labels & more. Open the main Workman app and check the tooltip on the task input for more details.",
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
       "label1": "To add a label, simply prefix the name of the label with {prefix}.",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
+      "label2": "Workman will first check if the label already exist and create it if not.",
       "label3": "To use spaces, simply add a \" or ' around the label name.",
       "label4": "For example: {prefix}\"Label with spaces\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
@@ -1392,12 +1437,12 @@
     "views": "Views"
   },
   "apiConfig": {
-    "url": "Vikunja URL",
+    "url": "Workman URL",
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
-    "use": "Using Vikunja installation at {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
-    "success": "Using Vikunja installation at \"{domain}\".",
+    "use": "Using Workman installation at {0}",
+    "error": "Could not find or use Workman installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
+    "success": "Using Workman installation at \"{domain}\".",
     "urlRequired": "A url is required."
   },
   "loadingError": {
@@ -1417,7 +1462,7 @@
   },
   "quickActions": {
     "title": "Search and quick actions",
-    "notLoggedIn": "Please log in to the main Vikunja window first.",
+    "notLoggedIn": "Please log in to the main Workman window first.",
     "commands": "Commands",
     "placeholder": "Type a command or search…",
     "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
@@ -1516,6 +1561,11 @@
     "4021": "This user is already assigned to that task.",
     "4022": "Please provide what the reminder date is relative to.",
     "4023": "Cannot create a task relation cycle.",
+    "4034": "This task is already claimed by another user.",
+    "4035": "This task is no longer in the bucket it was expected in.",
+    "4036": "This task is blocked by tasks that are not done yet.",
+    "4037": "The path {pattern} is already leased by task #{heldByTaskId} ({heldPattern}).",
+    "4038": "This scope path is invalid.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
@@ -1549,13 +1599,14 @@
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
-    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Workman can reach the instance."
   },
   "about": {
     "title": "About",
     "version": "Version: {version}",
     "frontendVersion": "Frontend version: {version}",
-    "apiVersion": "API version: {version}"
+    "apiVersion": "API version: {version}",
+    "builtOn": "Workman is built on Vikunja, which is free software under the GNU AGPL-3.0-or-later."
   },
   "timeTracking": {
     "title": "Time tracking",

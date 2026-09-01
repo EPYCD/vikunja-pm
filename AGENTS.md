@@ -83,6 +83,20 @@ Use the **Conventional Commits** style when committing changes (for example, `fe
 
 The web client lives in `frontend/` and uses Vue 3 + TypeScript. Formatting and style are enforced by `frontend/eslint.config.js` and `frontend/.editorconfig` — obey what they specify.
 
+### Design system
+
+**Before writing or changing any styling, read `frontend/src/styles/WORKMAN-DESIGN.md`.** It is the contract for the Workman look: the token layers, the five visual signatures, and the component patterns.
+
+- Use the tokens and mixins. Never hand-write a hex color, a px radius, a font stack or a transition duration.
+- `frontend/src/styles/common-imports.scss` is auto-injected into every `<style lang="scss">`, so `chamfer`, `chamfer-outline`, `mono-label`, `mono-data`, `graticule` and `focus-ring` are available with no import.
+- `--wm-*` custom properties are the source of truth; the legacy Bulma/`--grey-*` names map onto them. Only the `--wm-*` layer is redefined for dark mode.
+- `clip-path` (the chamfer) slices a `border` open and suppresses `box-shadow`. Chamfered elements carry their outline via `chamfer-outline` and put any shadow on an unclipped parent.
+- Both themes must stay correct, and contrast must hold in both (4.5:1 body, 3:1 large text and UI borders).
+
+### Product naming
+
+The user-facing product is **Workman**. The Go module path (`code.vikunja.io/api`), package names, API routes, config keys, i18n *keys*, CSS class names, DB tables and `$vikunja-*` SCSS variables all keep their existing names — only visible copy says Workman. Workman is built on Vikunja; keep the upstream AGPL attribution intact wherever it appears.
+
 ## Translations
 
 When adding or changing functionality which touches user-facing messages, these need to be translated.

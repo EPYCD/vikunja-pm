@@ -822,9 +822,8 @@ onUnmounted(() => {
 
 .gantt-group-band {
 	position: absolute;
-	background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06);
-	border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12);
-	border-radius: 6px;
+	background: var(--wm-accent-wash);
+	border: 1px solid var(--wm-accent-line);
 	pointer-events: none;
 	z-index: 1;
 }

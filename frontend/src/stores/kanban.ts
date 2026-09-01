@@ -264,7 +264,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		try {
 			const newBuckets = await taskCollectionService.getAll({projectId, viewId}, {
 				...params,
-				expand: ['comment_count', 'is_unread'],
+				expand: ['comment_count', 'is_unread', 'leases'],
 				per_page: TASKS_PER_BUCKET,
 			})
 			setBuckets(newBuckets)

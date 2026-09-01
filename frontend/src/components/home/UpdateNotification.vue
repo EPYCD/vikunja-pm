@@ -64,24 +64,29 @@ function refreshApp() {
 	// at least define it centrally
 	// the highest z-index of a modal is .hint-modal with 4500
 	z-index: 5000;
-	inset-block-end: 1rem;
-	inset-inline: 1rem;
+	inset-block-end: var(--wm-space-4);
+	inset-inline: var(--wm-space-4);
 	max-inline-size: max-content;
 	margin-inline: auto;
 
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
-	padding: .5rem .5rem .5rem 1rem;
-	background: $warning;
-	border-radius: $radius;
-	font-size: .9rem;
-	color: hsl(220.9, 39.3%, 11%); // color copied to avoid it changing in dark mode
+	gap: var(--wm-space-4);
+	padding-block: var(--wm-space-2);
+	padding-inline: var(--wm-space-4) var(--wm-space-2);
+	background: var(--warning);
+	// --warning-invert is the readable-on-warning pair in both themes.
+	color: var(--warning-invert);
+
+	@include chamfer(var(--wm-chamfer-sm), bottom-right);
 }
 
 .update-notification__message {
+	@include mono-label(var(--wm-text-2xs));
+
 	inline-size: 100%;
 	text-align: center;
+	color: inherit;
 }
 </style>

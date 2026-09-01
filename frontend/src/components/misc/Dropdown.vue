@@ -171,18 +171,18 @@ onClickOutside(dropdown, (e) => {
 }
 
 .dropdown-content {
-	background-color: var(--scheme-main);
-	border-radius: $radius;
-	padding-block-end: .5rem;
-	padding-block-start: .5rem;
+	background-color: var(--wm-surface-raised);
+	border: 1px solid var(--wm-line);
+	border-radius: 0;
+	padding-block: var(--wm-space-1);
 	box-shadow: var(--shadow-md);
 }
 
 .dropdown-divider {
-	background-color: var(--border-light);
+	background-color: var(--wm-line-faint);
 	border: none;
 	display: block;
 	block-size: 1px;
-	margin: 0.5rem 0;
+	margin-block: var(--wm-space-1);
 }
 </style>

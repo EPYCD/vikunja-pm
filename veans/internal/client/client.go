@@ -307,6 +307,9 @@ func mapHTTPError(method, path string, status int, body []byte, retryAfter time.
 	}
 
 	formatted := fmt.Sprintf("%s %s: %d %s", method, path, status, msg)
+	if status == http.StatusForbidden && isScopeEraPath(path) {
+		formatted += " — if this bot was set up before scopes existed its token lacks these permissions; run `veans login` to mint a new one"
+	}
 	if retryAfter > 0 {
 		formatted += fmt.Sprintf(" (retry-after %s)", retryAfter)
 	}
@@ -314,6 +317,15 @@ func mapHTTPError(method, path string, status int, body []byte, retryAfter time.
 		Code:    code,
 		Message: formatted,
 	}
+}
+
+// isScopeEraPath matches the endpoints added with task scopes. A 403 there
+// is almost always a token minted before they existed, not a real denial.
+func isScopeEraPath(path string) bool {
+	return strings.HasSuffix(path, "/claim") ||
+		strings.HasSuffix(path, "/scope") ||
+		strings.HasSuffix(path, "/leases") ||
+		strings.HasSuffix(path, "/readiness")
 }
 
 // maxErrorMessageBytes caps how much upstream-error text we embed in the

@@ -82,11 +82,14 @@ func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *Ta
 
 // GetTask fetches a single task by numeric ID. expand=buckets is requested
 // because Vikunja's bare GET returns bucket_id=0 — the per-view bucket
-// memberships only surface under the Buckets slice.
+// memberships only surface under the Buckets slice. scope and leases ride
+// along so an agent reading a task sees what it may edit and what it holds.
 func (c *Client) GetTask(ctx context.Context, id int64) (*Task, error) {
 	var out Task
 	q := url.Values{}
 	q.Add("expand", "buckets")
+	q.Add("expand", "scope")
+	q.Add("expand", "leases")
 	if err := c.Do(ctx, "GET", fmt.Sprintf("/tasks/%d", id), q, nil, &out); err != nil {
 		return nil, err
 	}

@@ -1,0 +1,53 @@
+// Workman geometry, elevation and motion tokens.
+//
+// The signature shape is a 45° chamfer, not a radius: panels, inputs and
+// primary actions have one corner cut away. Structure is carried by hairlines
+// and the chamfer; shadows only appear on things that genuinely float.
+
+:root {
+  // Chamfer sizes. --wm-chamfer is the default for panels and controls.
+  --wm-chamfer-sm: 6px;
+  --wm-chamfer: 10px;
+  --wm-chamfer-lg: 16px;
+  --wm-chamfer-xl: 24px;
+
+  // A small radius still exists for things a chamfer would fight: avatars,
+  // color bubbles, pills, and anything drawn at 16px or smaller.
+  --wm-radius-xs: 2px;
+  --wm-radius-sm: 3px;
+  --wm-radius: 4px;
+  --wm-radius-full: 9999px;
+
+  // Control metrics.
+  --wm-control-height: 34px;
+  --wm-control-height-sm: 26px;
+  --wm-control-height-lg: 42px;
+
+  // Spacing rhythm (4px base).
+  --wm-space-1: 0.25rem;
+  --wm-space-2: 0.5rem;
+  --wm-space-3: 0.75rem;
+  --wm-space-4: 1rem;
+  --wm-space-5: 1.5rem;
+  --wm-space-6: 2rem;
+  --wm-space-7: 3rem;
+
+  // Motion. Short and mechanical — this is an instrument, not a toy.
+  --wm-duration-fast: 90ms;
+  --wm-duration: 140ms;
+  --wm-duration-slow: 240ms;
+  --wm-ease: cubic-bezier(0.2, 0, 0.13, 1);
+
+  // Type scale.
+  --wm-text-2xs: 0.6875rem;
+  --wm-text-xs: 0.75rem;
+  --wm-text-sm: 0.8125rem;
+  --wm-text-base: 0.875rem;
+  --wm-text-md: 1rem;
+  --wm-text-lg: 1.25rem;
+  --wm-text-xl: 1.625rem;
+  --wm-text-2xl: 2.25rem;
+
+  --wm-tracking-label: 0.08em;
+  --wm-tracking-tight: -0.015em;
+}

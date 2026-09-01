@@ -1,45 +1,38 @@
 <template>
 	<div class="no-auth-wrapper">
-		<Logo
-			class="logo"
-			width="200"
-			height="58"
-		/>
-		<div class="noauth-container">
-			<section
-				class="image"
-				:class="{ 'has-message': motd !== '' }"
-			>
-				<Message v-if="motd !== ''">
-					{{ motd }}
-				</Message>
-				<h2 class="image-title">
-					{{ $t("misc.welcomeBack") }}
-				</h2>
-			</section>
+		<div class="auth-stack">
+			<Logo
+				class="auth-logo"
+				width="200"
+				height="58"
+			/>
 			<main
 				id="main-content"
 				tabindex="-1"
-				class="content"
+				class="auth-panel"
 			>
-				<div>
+				<header class="auth-panel__head">
+					<p class="auth-panel__eyebrow">
+						{{ $t("misc.welcomeBack") }}
+					</p>
 					<h2
 						v-if="title"
-						class="title"
+						class="auth-panel__title"
 					>
 						{{ title }}
 					</h2>
-					<ApiConfig v-if="shouldShowApiConfig" />
-					<Message
-						v-if="motd !== ''"
-						class="is-hidden-tablet mbe-4"
-					>
-						{{ motd }}
-					</Message>
-					<slot />
-				</div>
-				<Legal />
+				</header>
+
+				<Message
+					v-if="motd !== ''"
+					class="mbe-4"
+				>
+					{{ motd }}
+				</Message>
+				<ApiConfig v-if="shouldShowApiConfig" />
+				<slot />
 			</main>
+			<Legal class="auth-legal" />
 		</div>
 	</div>
 </template>
@@ -83,99 +76,146 @@ useTitle(() => title.value)
 </script>
 
 <style lang="scss" scoped>
+// The way in: a full-bleed ASCII landscape — crimson sun, receding ridges,
+// drawn entirely in JetBrains Mono glyphs by scripts/generate-auth-art.py —
+// with one cut panel floating over it.
 .no-auth-wrapper {
-	background: var(--site-background) url("@/assets/llama.svg?url") no-repeat
-		fixed bottom left;
+	position: relative;
 	min-block-size: 100vh;
 	display: flex;
 	flex-direction: column;
-	place-items: center;
+	align-items: center;
+	padding-block: var(--wm-space-6);
+	padding-inline: var(--wm-space-4);
+	background-color: var(--wm-canvas);
+	background-image: url("@/assets/auth-backdrop-light.webp");
+	background-repeat: no-repeat;
+	background-position: center bottom;
+	background-size: cover;
+	background-attachment: fixed;
+	isolation: isolate;
+}
 
-	@media screen and (max-width: $fullhd) {
-		padding-block-end: 15rem;
+html.dark .no-auth-wrapper {
+	background-image: url("@/assets/auth-backdrop.webp");
+}
+
+// A scrim over the artwork so the panel always has quiet ground under it and
+// the legal links stay readable wherever the ridges happen to fall.
+.no-auth-wrapper::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background:
+		radial-gradient(
+			ellipse 46rem 34rem at 50% 46%,
+			color-mix(in srgb, var(--wm-canvas) 74%, transparent) 0%,
+			color-mix(in srgb, var(--wm-canvas) 30%, transparent) 55%,
+			transparent 100%
+		);
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.no-auth-wrapper {
+		// A fixed backdrop would jitter on mobile browsers that resize the
+		// viewport as the URL bar hides.
+		@media screen and (max-width: $tablet) {
+			background-attachment: scroll;
+		}
 	}
 }
 
-.noauth-container {
-	max-inline-size: $desktop;
+.auth-stack {
+	position: relative;
+	z-index: 1;
 	inline-size: 100%;
-	min-block-size: 60vh;
-	display: flex;
-	background-color: var(--white);
-	box-shadow: var(--shadow-md);
-	overflow: hidden;
-
-	@media screen and (min-width: $desktop) {
-		border-radius: $radius;
-	}
-}
-
-.image {
-	inline-size: 50%;
-	padding: 1rem;
+	max-inline-size: 27rem;
+	// `margin: auto` rather than `justify-content: center`: a form taller than
+	// the viewport must overflow downwards, not have its top cut off.
+	margin-block: auto;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
+	gap: var(--wm-space-4);
+}
+
+.auth-logo {
+	align-self: center;
+
+	:deep(.logo) {
+		block-size: 40px;
+	}
+}
+
+.auth-panel {
+	// Translucent so the artwork reads through it, blurred so the text on top
+	// of it never has to fight the character matrix underneath.
+	background-color: color-mix(in srgb, var(--wm-surface) 82%, transparent);
+	backdrop-filter: blur(18px) saturate(120%);
+	color: var(--wm-text);
+	padding: var(--wm-space-6);
+
+	// Panel edge: the outline traces the cut, because a border would be sliced
+	// open along the diagonal.
+	@include chamfer(var(--wm-chamfer-lg));
+	@include chamfer-outline(var(--wm-line-strong));
+
+	// The skip link focuses this panel, and clip-path would swallow the normal
+	// box-shadow ring — so the ring is drawn off the clipped mask instead.
+	&:focus-visible {
+		@include chamfer-focus-ring;
+	}
 
 	@media screen and (max-width: $tablet) {
-		display: none;
-	}
-
-	@media screen and (min-width: $tablet) {
-		background: url("@/assets/no-auth-image.jpg") no-repeat bottom/cover;
-		position: relative;
-
-		&.has-message {
-			justify-content: space-between;
-		}
-
-		// Darken mainly the lower part of the photo where the white heading sits so
-		// the text keeps a reliable contrast ratio across the whole image.
-		&::before {
-			content: "";
-			position: absolute;
-			inset-block-start: 0;
-			inset-inline-start: 0;
-			inset-inline-end: 0;
-			inset-block-end: 0;
-			background-image: linear-gradient(
-				to top,
-				rgba(0, 0, 0, 0.7) 0%,
-				rgba(0, 0, 0, 0.4) 35%,
-				rgba(0, 0, 0, 0.15) 100%
-			);
-		}
-
-		> * {
-			position: relative;
-		}
+		padding: var(--wm-space-5);
 	}
 }
 
-.content {
-	display: flex;
-	justify-content: space-between;
-	flex-direction: column;
-	padding: 2rem 2rem 1.5rem;
-
-	@media screen and (max-width: $desktop) {
-		inline-size: 100%;
-		max-inline-size: 450px;
-		margin-inline: auto;
-	}
-
-	@media screen and (min-width: $desktop) {
-		inline-size: 50%;
+// backdrop-filter is unevenly supported; without it the translucent panel would
+// leave glyphs showing through the form.
+@supports not (backdrop-filter: blur(1px)) {
+	.auth-panel {
+		background-color: var(--wm-surface);
 	}
 }
 
-.logo {
-	max-inline-size: 100%;
-	margin: 1rem 0;
+.auth-panel__head {
+	margin-block-end: var(--wm-space-5);
+	padding-block-end: var(--wm-space-4);
+	border-block-end: 1px solid var(--wm-line-faint);
 }
 
-.image-title {
-	color: hsl(0deg, 0%, 100%);
-	font-size: 2.5rem;
+.auth-panel__eyebrow {
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
+	margin-block: 0 var(--wm-space-2);
+}
+
+.auth-panel__title {
+	font-family: $workman-display-font;
+	font-size: var(--wm-text-xl);
+	letter-spacing: var(--wm-tracking-tight);
+	line-height: 1.15;
+	color: var(--wm-text);
+	margin-block: 0;
+}
+
+// Scoped inside .auth-stack to outrank Legal.vue's own scoped rule, which has
+// the same specificity and would otherwise win on source order.
+.auth-stack .auth-legal {
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
+	text-align: center;
+	margin-block-start: 0;
+
+	// The links inherit the container's colour, so they need the underline to
+	// read as links at all.
+	:deep(.base-button) {
+		color: var(--wm-text-secondary);
+		text-decoration: underline;
+	}
 }
 </style>

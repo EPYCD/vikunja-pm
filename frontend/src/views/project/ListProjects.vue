@@ -67,18 +67,21 @@ const projects = computed(() => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	gap: 1rem;
-	margin-block-end: 1rem;
+	gap: var(--wm-space-4);
+	margin-block-end: var(--wm-space-4);
+	padding-block-end: var(--wm-space-3);
+	border-block-end: 1px solid var(--wm-line);
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+		align-items: stretch;
 	}
 }
 
 .action-buttons {
 	display: flex;
 	justify-content: space-between;
-	gap: 1rem;
+	gap: var(--wm-space-2);
 
 	@media screen and (max-width: $tablet) {
 		inline-size: 100%;
@@ -88,7 +91,7 @@ const projects = computed(() => {
 }
 
 .project:not(:first-child) {
-	margin-block-start: 1rem;
+	margin-block-start: var(--wm-space-4);
 }
 
 .project-title {
@@ -97,13 +100,12 @@ const projects = computed(() => {
 }
 
 .is-archived {
-	font-size: 0.75rem;
-	border: 1px solid var(--grey-500);
-	color: $grey !important;
-	padding: 2px 4px;
-	border-radius: 3px;
-	font-family: $vikunja-font;
-	background: var(--white-translucent);
-	margin-inline-start: .5rem;
+	@include mono-label;
+
+	border: 1px solid var(--wm-line);
+	color: var(--wm-text-tertiary);
+	padding: 0 var(--wm-space-1);
+	background: var(--wm-surface);
+	margin-inline-start: var(--wm-space-2);
 }
 </style>

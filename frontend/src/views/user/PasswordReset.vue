@@ -37,9 +37,10 @@
 			</div>
 
 			<div class="field is-grouped">
-				<div class="control">
+				<div class="control is-expanded">
 					<XButton
 						:loading="passwordResetService.loading"
+						class="is-fullwidth"
 						@click="resetPassword"
 					>
 						{{ $t('user.auth.resetPassword') }}
@@ -94,8 +95,8 @@ async function resetPassword() {
 }
 </script>
 
-<style scoped>
-.button {
-	margin: 0 0.4rem 0 0;
+<style lang="scss" scoped>
+.field.is-grouped {
+	margin-block-start: var(--wm-space-4);
 }
 </style>

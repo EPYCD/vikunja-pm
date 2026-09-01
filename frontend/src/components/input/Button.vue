@@ -70,10 +70,6 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 
 <style lang="scss" scoped>
 .button {
-	// Button text must stay white regardless of theme, so we use a fixed value
-	// instead of var(--white) which changes in dark mode.
-	--button-text-color: #ffffff;
-
 	// Base structure (replaces Bulma's .button)
 	display: inline-flex;
 	align-items: center;
@@ -83,49 +79,45 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 	text-align: center;
 	white-space: var(--button-white-space);
 
-	// Custom styles
-	transition: all $transition;
-	border: 0;
+	// Workman controls are compact, mono-labelled and square. Only the primary
+	// action takes the chamfer — the same restraint the rest of the system uses.
+	font-family: $workman-mono-font;
+	font-size: var(--wm-text-2xs);
+	font-weight: 500;
+	letter-spacing: var(--wm-tracking-label);
 	text-transform: uppercase;
-	font-size: 0.85rem;
-	font-weight: bold;
-	block-size: auto;
-	min-block-size: $button-height;
-	box-shadow: var(--shadow-sm);
 	line-height: 1;
-	padding-inline: .5rem;
-	gap: .25rem;
+	block-size: auto;
+	min-block-size: var(--wm-control-height);
+	padding-inline: var(--wm-space-3);
+	gap: var(--wm-space-2);
+	border: 1px solid transparent;
+	border-radius: 0;
+	box-shadow: none;
+	transition:
+		background-color var(--wm-duration) var(--wm-ease),
+		border-color var(--wm-duration) var(--wm-ease),
+		color var(--wm-duration) var(--wm-ease);
 
-	// Default/Primary variant colors
-	background-color: var(--primary);
-	color: var(--button-text-color);
-	border-radius: $radius;
+	// Filled accent is the default (primary) look.
+	background-color: var(--wm-accent);
+	color: var(--wm-on-accent);
 
 	[dir="rtl"] & {
 		flex-direction: row-reverse;
 	}
 
 	&:hover {
-		box-shadow: var(--shadow-md);
-		background-color: var(--primary-dark, color-mix(in srgb, var(--primary) 85%, black));
+		background-color: var(--wm-accent-hover);
 	}
 
-	&:focus,
 	&:focus-visible {
-		outline: 2px solid var(--primary);
+		outline: 2px solid var(--wm-accent);
 		outline-offset: 2px;
 	}
 
-	&.is-active,
-	&.is-focused,
-	&:active,
-	&:focus,
-	&:focus:not(:active) {
-		box-shadow: var(--shadow-xs) !important;
-	}
-
 	&[disabled] {
-		opacity: 0.5;
+		opacity: 0.45;
 		cursor: not-allowed;
 		pointer-events: none;
 	}
@@ -134,35 +126,54 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 		margin: 0 !important;
 	}
 
-	// Primary variant (default, explicit)
+	// Primary — the one filled, chamfered action per view.
 	&.is-primary {
-		background-color: var(--primary);
-		color: var(--button-text-color);
+		background-color: var(--wm-accent);
+		color: var(--wm-on-accent);
+		@include chamfer(var(--wm-chamfer-sm), bottom-right);
 
 		&:hover {
-			background-color: var(--primary-dark, color-mix(in srgb, var(--primary) 85%, black));
+			background-color: var(--wm-accent-hover);
+		}
+
+		&:active {
+			background-color: var(--wm-accent-active);
+		}
+
+		// clip-path removes both outline and box-shadow, so the focus ring has
+		// to be traced off the clipped silhouette instead.
+		&:focus-visible {
+			outline: none;
+			@include chamfer-focus-ring;
 		}
 	}
 
-	// Secondary/Outlined variant
+	// Secondary — hairline outline, transparent fill, square corners.
 	&.is-outlined {
-		background-color: var(--scheme-main);
-		color: var(--grey-900);
+		background-color: transparent;
+		border-color: var(--wm-line);
+		color: var(--wm-text);
 
 		&:hover {
-			color: var(--grey-600);
+			background-color: var(--wm-surface-hover);
+			border-color: var(--wm-line-strong);
+			color: var(--wm-text);
+		}
+
+		&:active {
+			background-color: var(--wm-surface-sunken);
 		}
 	}
 
-	// Tertiary/Text variant
+	// Tertiary — text only.
 	&.is-text {
 		background-color: transparent;
-		color: var(--text);
-		box-shadow: none;
+		border-color: transparent;
+		color: var(--wm-text-secondary);
 
 		&:hover {
-			background-color: var(--grey-100);
-			box-shadow: none;
+			background-color: var(--wm-surface-hover);
+			color: var(--wm-text);
 		}
 	}
 
@@ -171,63 +182,59 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 		color: inherit;
 	}
 
-	// Danger modifier - solid filled button (default and primary variant)
+	// Danger modifier — solid fill. Uses the hotter status red so it never
+	// reads as the brand crimson.
 	&.is-danger {
 		background-color: var(--danger);
 		border-color: transparent;
-		color: var(--button-text-color);
+		color: var(--wm-text-inverted);
 
 		&:hover {
 			background-color: var(--danger-dark);
-			border-color: transparent;
 		}
 
-		&:focus,
 		&:focus-visible {
 			outline-color: var(--danger);
-			&:not(:active) {
-				box-shadow: 0 0 0 0.125em hsla(var(--danger-h), var(--danger-s), var(--danger-l), 0.25);
-			}
 		}
 
 		&:active {
 			background-color: var(--danger-dark);
-			border-color: transparent;
 		}
 	}
 
-	// Danger + outlined/secondary variant
+	&.is-danger.is-primary:focus-visible {
+		outline: none;
+		@include chamfer-focus-ring(hsla(var(--wm-danger-h), var(--wm-danger-s), var(--wm-danger-l), 0.9));
+	}
+
 	&.is-danger.is-outlined {
 		background-color: transparent;
-		border: 1px solid var(--danger);
-		color: var(--danger);
-
-		&:hover,
-		&:focus {
-			background-color: var(--danger);
-			border-color: var(--danger);
-			color: var(--button-text-color);
-		}
-	}
-
-	// Danger + text/tertiary variant
-	&.is-danger.is-text {
-		background-color: transparent;
-		color: var(--danger);
+		border-color: var(--danger);
+		color: var(--danger-text);
 
 		&:hover {
-			background-color: hsla(var(--danger-h), var(--danger-s), var(--danger-l), 0.1);
+			background-color: var(--danger);
+			border-color: var(--danger);
+			color: var(--wm-text-inverted);
 		}
 	}
 
-	// Danger loading spinner - white on solid, danger-colored on outlined/text
+	&.is-danger.is-text {
+		background-color: transparent;
+		color: var(--danger-text);
+
+		&:hover {
+			background-color: hsla(var(--wm-danger-h), var(--wm-danger-s), var(--wm-danger-l), 0.12);
+		}
+	}
+
 	&.is-danger.is-loading::after {
-		border-color: transparent transparent var(--white) var(--white);
+		border-color: transparent transparent var(--wm-text-inverted) var(--wm-text-inverted);
 	}
 
 	&.is-danger.is-outlined.is-loading::after,
 	&.is-danger.is-text.is-loading::after {
-		border-color: transparent transparent var(--danger) var(--danger);
+		border-color: transparent transparent var(--danger-text) var(--danger-text);
 	}
 
 	// Loading state
@@ -242,8 +249,8 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 			display: block;
 			block-size: 1em;
 			inline-size: 1em;
-			border: 2px solid var(--button-text-color);
-			border-radius: 50%;
+			border: 2px solid var(--wm-on-accent);
+			border-radius: var(--wm-radius-full);
 			border-inline-end-color: transparent;
 			border-block-start-color: transparent;
 			animation: spin-around 500ms infinite linear;
@@ -256,7 +263,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 
 	&.is-outlined.is-loading::after,
 	&.is-text.is-loading::after {
-		border-color: var(--grey-700);
+		border-color: var(--wm-text-secondary);
 		border-inline-end-color: transparent;
 		border-block-start-color: transparent;
 	}
@@ -271,8 +278,10 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
 	}
 }
 
-.is-small {
-	border-radius: $radius;
+@media (prefers-reduced-motion: reduce) {
+	.button.is-loading::after {
+		animation-duration: 1.5s;
+	}
 }
 
 .underline-none {

@@ -7,6 +7,23 @@
 	>
 		<template #header>
 			<div class="filter-container">
+				<XButton
+					v-if="!isSavedFilter(project)"
+					v-tooltip="$t('task.leasesPanel.readyOnlyHint')"
+					variant="secondary"
+					icon="check-double"
+					class="kanban-ready-toggle"
+					:class="{'is-active': readyOnly}"
+					:aria-pressed="readyOnly"
+					@click="readyOnly = !readyOnly"
+				>
+					{{ $t('task.leasesPanel.readyOnly') }}
+				</XButton>
+				<ProjectLeasesPanel
+					v-if="!isSavedFilter(project)"
+					:project-id="projectIdWithFallback"
+					:can-write="canWrite"
+				/>
 				<FilterPopup
 					v-if="!isSavedFilter(project)"
 					v-model="params"
@@ -216,6 +233,7 @@
 									<template #item="{element: task}">
 										<li
 											class="task-item"
+											:class="{'is-hidden': hiddenByReadiness(bucket, task)}"
 											:data-task-id="task.id"
 										>
 											<span
@@ -230,6 +248,7 @@
 												:task="task"
 												:loading="taskUpdating[task.id] ?? false"
 												:project-id="projectId"
+												:readiness="readinessByTaskId[task.id]"
 												@taskCompletedRecurring="handleRecurringTaskCompletion"
 											/>
 										</li>
@@ -294,7 +313,9 @@
 import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
+import {useStorage} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
+import {useQuery} from '@tanstack/vue-query'
 import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
 
@@ -311,6 +332,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import ProjectLeasesPanel from '@/components/project/partials/ProjectLeasesPanel.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -326,6 +348,7 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
+import {invalidateReadiness, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -486,6 +509,26 @@ const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
+// The board's READY / BLOCKED / PATH LEASED badges come from the same
+// server answer agents read, so the two never disagree.
+const readinessQuery = useQuery(computed(() => ({
+	...viewReadinessQuery(projectIdWithFallback.value, props.viewId),
+	enabled: projectIdWithFallback.value > 0,
+})))
+const readinessByTaskId = computed(() => readinessByTask(readinessQuery.data.value ?? []))
+
+// "Ready only" trims the queue bucket to what an agent could claim now. The
+// cards stay in the draggable list and are only hidden, so positions and
+// drag targets are unaffected.
+const readyOnly = useStorage('kanbanReadyOnly', false)
+function hiddenByReadiness(bucket: IBucket, task: ITask): boolean {
+	if (!readyOnly.value || bucket.id !== view.value?.defaultBucketId) {
+		return false
+	}
+	const readiness = readinessByTaskId.value[task.id]
+	return readiness !== undefined && !readiness.ready
+}
+
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
 watch(
@@ -500,6 +543,7 @@ watch(
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
 		kanbanStore.loadBucketsForProject(projectId, viewId, params)
+		invalidateReadiness(projectId, viewId)
 	},
 	{
 		immediate: true,
@@ -652,6 +696,8 @@ async function updateTaskPosition(e) {
 		taskUpdating.value[task.id] = false
 		oneTaskUpdating.value = false
 	}
+
+	invalidateReadiness(projectIdWithFallback.value, props.viewId)
 }
 
 function toggleShowNewTaskInput(bucketId: IBucket['id']) {
@@ -920,7 +966,7 @@ function unCollapseBucket(bucket: IBucket) {
     inset-inline-end: 50%;
     transform: translate(-50%, 0);
 
-	--loader-border-color: var(--grey-500);
+	--loader-border-color: var(--wm-text-tertiary);
   }
 }
 </style>
@@ -929,13 +975,30 @@ function unCollapseBucket(bucket: IBucket) {
 <style lang="scss">
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 $bucket-width: 300px;
-$bucket-header-height: 60px;
+$bucket-header-height: 52px;
 $bucket-right-margin: 1rem;
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
 $crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
 
+.filter-container {
+	display: flex;
+	align-items: center;
+	gap: var(--wm-space-2);
+}
+
+.kanban-ready-toggle.is-active {
+	background: var(--wm-accent-wash);
+	color: var(--wm-accent-text);
+
+	@include chamfer-outline(var(--wm-accent-line));
+}
+
+// The board floor: a faint blueprint graticule so the columns read as
+// instruments placed on a grid rather than cards floating in space.
 .kanban {
+	@include graticule;
+
 	overflow-x: auto;
 	overflow-y: hidden;
 	block-size: calc(#{$crazy-height-calculation});
@@ -968,18 +1031,19 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			content: '';
 			position: absolute;
 			display: block;
-			inset-block-start: 0.25rem;
-			inset-inline-end: 0.5rem;
-			inset-block-end: 0.25rem;
-			inset-inline-start: 0.5rem;
-			border: 3px dashed var(--grey-300);
-			border-radius: $radius;
+			inset-block-start: var(--wm-space-1);
+			inset-inline-end: var(--wm-space-2);
+			inset-block-end: var(--wm-space-1);
+			inset-inline-start: var(--wm-space-2);
+			border: 1px dashed var(--wm-line-strong);
+			background: var(--wm-accent-wash);
 		}
 	}
 
 	.bucket {
-		border-radius: $radius;
 		position: relative;
+		background: var(--wm-surface-sunken);
+		border: 1px solid var(--wm-line);
 
 		margin: 0 $bucket-right-margin 0 0;
 		max-block-size: calc(100% - 1rem); // 1rem spacing to the bottom
@@ -987,7 +1051,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		inline-size: $bucket-width;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden; // Make sure the edges are always rounded
+		overflow: hidden;
 
 		@media screen and (max-width: $tablet) {
 			scroll-snap-align: center;
@@ -1000,16 +1064,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.task-item {
-			background-color: var(--grey-100);
-			padding: .25rem .5rem;
+			padding: var(--wm-space-1) var(--wm-space-2);
 			position: relative;
 
 			&:first-of-type {
-				padding-block-start: .5rem;
+				padding-block-start: var(--wm-space-2);
 			}
 
 			&:last-of-type {
-				padding-block-end: .5rem;
+				padding-block-end: var(--wm-space-2);
 			}
 
 			.handle {
@@ -1028,9 +1091,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		h2 {
-			font-size: 1rem;
 			margin: 0;
-			font-weight: 600 !important;
 		}
 
 		&.new-bucket {
@@ -1040,9 +1101,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			// to hide the fact we just made the button smaller.
 			min-inline-size: calc(#{$bucket-width} + 1rem);
 			background: transparent;
+			border: 1px dashed var(--wm-line-strong);
 
 			.button {
-				background: var(--grey-100);
+				background: transparent;
 				inline-size: 100%;
 			}
 		}
@@ -1061,12 +1123,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 	}
 
+	// Column header: a mono micro-label with its count, sitting on a hairline.
 	.bucket-header {
-		background-color: var(--grey-100);
+		background-color: var(--wm-surface-sunken);
+		border-block-end: 1px solid var(--wm-line);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: .5rem;
+		padding: var(--wm-space-2);
 		block-size: $bucket-header-height;
 
 		.icon.has-text-success {
@@ -1074,8 +1138,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.limit {
-			padding: 0 .5rem;
-			font-weight: bold;
+			@include mono-label;
+
+			padding: 0 var(--wm-space-2);
+			color: var(--wm-text-tertiary);
 
 			&.is-max {
 				color: var(--danger-text);
@@ -1083,15 +1149,26 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		.title.input {
+			@include mono-label($size: var(--wm-text-xs));
+
+			font-weight: 500 !important;
+			color: var(--wm-text);
+			background: transparent;
+			border: 0;
+			box-shadow: none;
 			block-size: auto;
-			padding: .4rem .5rem;
+			padding: var(--wm-space-1) var(--wm-space-2);
 			display: inline-block;
 			cursor: pointer;
+
+			&:hover {
+				background: var(--wm-surface-hover);
+			}
 		}
 	}
 
 	:deep(.dropdown-trigger) {
-		padding: .5rem;
+		padding: var(--wm-space-2);
 	}
 
 	.bucket-footer {
@@ -1099,17 +1176,16 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		inset-block-end: 0;
 		z-index: 2;
 		block-size: min-content;
-		padding: .5rem;
-		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
+		padding: var(--wm-space-2);
+		background-color: var(--wm-surface-sunken);
+		border-block-start: 1px solid var(--wm-line-faint);
 		transform: none;
 
 		.button {
 			background-color: transparent;
 
 			&:hover {
-				background-color: var(--white);
+				background-color: var(--wm-surface-hover);
 			}
 		}
 	}
@@ -1118,12 +1194,12 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 // FIXME: This does not seem to work
 .task-dragging {
 	transform: rotateZ(3deg);
-	transition: transform 0.18s ease;
+	transition: transform var(--wm-duration-slow) var(--wm-ease);
 }
 
 .move-card-move {
 	transform: rotateZ(3deg);
-	transition: transform $transition-duration;
+	transition: transform var(--wm-duration) var(--wm-ease);
 }
 
 .move-card-leave-from,

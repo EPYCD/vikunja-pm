@@ -10,7 +10,8 @@
 // are defined here.
 //
 
-$family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
+$family-sans-serif: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+$family-monospace: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
 // the default values get overwritten by the definitions above
 @import "bulma-css-variables/sass/utilities/_all";
@@ -18,28 +19,113 @@ $family-sans-serif: 'Open Sans', Helvetica, Arial, sans-serif;
 // mobile minimum width
 $mobile: 320px;
 
-$vikunja-font: 'Quicksand', sans-serif;
+// Display face: wordmark, headings and anything that should read as Workman
+// rather than as interface chrome.
+$workman-display-font: 'Space Grotesk', 'Inter', sans-serif;
+$workman-mono-font: $family-monospace;
+
+// Kept as an alias so existing component styles keep compiling.
+$vikunja-font: $workman-display-font;
 
 $pagination-current-border: var(--primary);
 $navbar-item-active-color: var(--primary);
 
-$site-background: var(--grey-100);
+$site-background: var(--wm-canvas);
 
-$transition-duration: 150ms;
-$transition: $transition-duration ease;
+$transition-duration: 140ms;
+$transition: $transition-duration cubic-bezier(0.2, 0, 0.13, 1);
 
 $button-height: 34px;
-$switch-view-height: 2.69rem;
+$switch-view-height: 2.25rem;
 
-$navbar-height: 4rem;
-$navbar-width: 300px;
-$navbar-padding: 2rem;
+$navbar-height: 3.5rem;
+$navbar-width: 272px;
+$navbar-padding: 1.5rem;
 
-$vikunja-nav-color: var(--grey-700);
-$vikunja-nav-selected-width: 0.4rem;
+$vikunja-nav-color: var(--wm-text-secondary);
+$vikunja-nav-selected-width: 2px;
 
 $close-button-min-space: 84px;
 
+// The 45° corner cut that gives Workman its shape.
+$chamfer: 10px;
+
 @mixin focus-ring {
-  box-shadow: 0 0 0 2px hsla(var(--primary-hsl), 0.5);
+  box-shadow: 0 0 0 2px var(--wm-canvas), 0 0 0 3px hsla(var(--wm-accent-hsl), 0.9);
+}
+
+// Cuts $size off one or more corners. Because clip-path also clips the border
+// box, chamfered elements should carry their outline via `chamfer-outline`
+// rather than a `border` — a border would be sliced open at the cut.
+//
+// $corners accepts any of: top-left, top-right, bottom-right, bottom-left.
+@mixin chamfer($size: $chamfer, $corners: bottom-right) {
+  $tl: 0;
+  $tr: 0;
+  $br: 0;
+  $bl: 0;
+
+  @if index($corners, top-left) { $tl: $size; }
+  @if index($corners, top-right) { $tr: $size; }
+  @if index($corners, bottom-right) { $br: $size; }
+  @if index($corners, bottom-left) { $bl: $size; }
+
+  clip-path: polygon(
+    $tl 0,
+    calc(100% - #{$tr}) 0,
+    100% $tr,
+    100% calc(100% - #{$br}),
+    calc(100% - #{$br}) 100%,
+    $bl 100%,
+    0 calc(100% - #{$bl}),
+    0 $tl
+  );
+}
+
+// A 1px outline that follows the chamfered silhouette. drop-shadow works off
+// the clipped alpha mask, so four offset copies trace the diagonal that a
+// plain `border` cannot.
+@mixin chamfer-outline($color: var(--wm-line)) {
+  filter:
+    drop-shadow(1px 0 0 #{$color})
+    drop-shadow(-1px 0 0 #{$color})
+    drop-shadow(0 1px 0 #{$color})
+    drop-shadow(0 -1px 0 #{$color});
+}
+
+// A focus ring for chamfered elements. `outline` and `box-shadow` are both
+// clipped away by clip-path, so the ring has to be drawn as drop-shadows off
+// the clipped alpha mask instead.
+@mixin chamfer-focus-ring($color: hsla(var(--wm-accent-hsl), 0.9)) {
+  filter:
+    drop-shadow(2px 0 0 #{$color})
+    drop-shadow(-2px 0 0 #{$color})
+    drop-shadow(0 2px 0 #{$color})
+    drop-shadow(0 -2px 0 #{$color});
+}
+
+// Uppercase monospace micro-label: table headers, section eyebrows, metric
+// captions. The workhorse of the Workman console look.
+@mixin mono-label($size: var(--wm-text-2xs)) {
+  font-family: $workman-mono-font;
+  font-size: $size;
+  font-weight: 500;
+  letter-spacing: var(--wm-tracking-label);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+// Numeric/identifier text: counts, dates, task identifiers, durations.
+@mixin mono-data {
+  font-family: $workman-mono-font;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
+}
+
+// The faint blueprint graticule behind empty states and auth screens.
+@mixin graticule($size: var(--wm-grid-size)) {
+  background-image:
+    linear-gradient(to right, var(--wm-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--wm-grid-line) 1px, transparent 1px);
+  background-size: $size $size;
 }

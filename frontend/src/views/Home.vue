@@ -1,8 +1,16 @@
 <template>
 	<div class="content has-text-centered">
-		<h1 v-if="salutation">
-			{{ salutation }}
-		</h1>
+		<header class="greeting">
+			<p class="greeting__eyebrow">
+				<time :datetime="todayISO">{{ today }}</time>
+			</p>
+			<h1
+				v-if="salutation"
+				class="greeting__title"
+			>
+				{{ salutation }}
+			</h1>
+		</header>
 
 		<Message
 			v-if="deletionScheduledAt !== null"
@@ -28,7 +36,13 @@
 			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
-			<h2>{{ $t('home.lastViewed') }}</h2>
+			<h2 class="section-heading">
+				<span class="section-heading__label">{{ $t('home.lastViewed') }}</span>
+				<span
+					class="section-heading__rule"
+					aria-hidden="true"
+				/>
+			</h2>
 			<ProjectCardGrid
 				v-cy="'projectCardGrid'"
 				:projects="projectHistory"
@@ -58,13 +72,18 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDate, formatDateSince, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
+import {useGlobalNow} from '@/composables/useGlobalNow'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 
 const salutation = useDaytimeSalutation()
+
+const {now} = useGlobalNow()
+const today = computed(() => formatDate(now.value, 'ddd, DD MMM YYYY'))
+const todayISO = computed(() => formatISO(now.value))
 
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
@@ -114,7 +133,55 @@ function handleClearLabelFilter() {
 </script>
 
 <style scoped lang="scss">
+// Nested one level deeper than the class alone so these outrank Bulma's
+// `.content p:not(:last-child)` / `.content h1:not(:first-child)` margins.
+.greeting {
+	margin-block-end: var(--wm-space-5);
+
+	.greeting__eyebrow {
+		@include mono-label;
+		@include mono-data;
+
+		color: var(--wm-text-tertiary);
+		margin-block: 0 var(--wm-space-2);
+	}
+
+	.greeting__title {
+		font-family: $workman-display-font;
+		font-size: var(--wm-text-2xl);
+		letter-spacing: var(--wm-tracking-tight);
+		line-height: 1.1;
+		margin-block: 0;
+		text-wrap: balance;
+
+		@media screen and (max-width: $tablet) {
+			font-size: var(--wm-text-xl);
+		}
+	}
+}
+
+// Section eyebrow: a mono label followed by a hairline that fills the row.
+// Prefixed with .content so it outranks Bulma's `.content h2:not(:first-child)`.
+.content .section-heading {
+	display: flex;
+	align-items: center;
+	gap: var(--wm-space-3);
+	margin-block: 0 var(--wm-space-3);
+}
+
+.section-heading__label {
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
+}
+
+.section-heading__rule {
+	flex: 1 1 auto;
+	min-inline-size: var(--wm-space-4);
+	border-block-start: 1px solid var(--wm-line);
+}
+
 .show-tasks {
-	margin-block-start: 2rem;
+	margin-block-start: var(--wm-space-6);
 }
 </style>

@@ -232,19 +232,21 @@ async function removeBackground() {
 
 <style lang="scss" scoped>
 .unsplash-credit {
+	@include mono-label;
+
 	text-align: end;
-	font-size: .8rem;
+	color: var(--wm-text-tertiary);
 }
 
 .unsplash-credit__link {
-	color: var(--grey-800);
+	color: var(--wm-text-secondary);
 }
 
 .image-search__result-list {
 	--items-per-row: 1;
-	margin: 1rem 0 0;
+	margin: var(--wm-space-4) 0 0;
 	display: grid;
-	gap: 1rem;
+	gap: var(--wm-space-4);
 	grid-template-columns: repeat(var(--items-per-row), 1fr);
 
 	@media screen and (min-width: $mobile) {
@@ -265,6 +267,7 @@ async function removeBackground() {
 	background-position: center;
 	display: flex;
 	position: relative;
+	border: 1px solid var(--wm-line);
 }
 
 .image-search__image-button {
@@ -278,24 +281,24 @@ async function removeBackground() {
 }
 
 .image-search__info {
+	@include mono-label;
+
 	position: absolute;
 	inset-block-end: 0;
 	inline-size: 100%;
-	padding: .25rem 0;
+	padding: var(--wm-space-1) 0;
 	opacity: 0;
 	text-align: center;
-	background: rgba(0, 0, 0, 0.5);
-	font-size: .75rem;
-	font-weight: bold;
-	color: $white;
-	transition: opacity $transition;
+	background: hsla(var(--black-h), var(--black-s), var(--black-l), 0.72);
+	color: var(--wm-on-accent);
+	transition: opacity var(--wm-duration) var(--wm-ease);
 }
 .image-search__result-item:hover .image-search__info {
 		opacity: 1;
 }
 
 .is-load-more-button {
-	margin: 1rem auto 0 !important;
+	margin: var(--wm-space-4) auto 0 !important;
 	display: block;
 	inline-size: 200px;
 }

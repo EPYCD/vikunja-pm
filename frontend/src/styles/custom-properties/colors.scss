@@ -1,351 +1,368 @@
-// Vikunja colors as CSS custom properties.
-// Defines the full color token system (Bulma scheme variables, Vikunja --grey-* scale,
-// semantic colors like --primary/--success/--danger) and their dark-mode overrides.
+// Workman color system.
+//
+// Layer 1 (--wm-*) is the source of truth: a cool near-black ground, hairline
+// rules, and a single crimson accent. Layer 2 maps the legacy Bulma / grey-scale
+// token names onto it so existing components keep working unchanged.
+//
+// Dark is the signature identity; light is the same system inverted, not a
+// separate palette. Only layer 1 is redefined in `.dark` — layer 2 never is.
 // See frontend/src/styles/README.md for the token conventions.
 
 :root {
-  // Core Bulma color variables
-  // Added (from bulma-css-variables/css/bulma.css) to fix issues with undefined variables
-  // This section should be removed once bulma/sass scoping issues are fixed
-  // see https://kolaente.dev/vikunja/frontend/issues/1064
-  // Variables overridden in Vikunja specific rules below are commented out
-  //--scheme-main: white;
-  --scheme-main-bis: #fafafa;
-  --scheme-main-ter: whitesmoke;
-  --scheme-invert: #0a0a0a;
+  // ###########################################################
+  // LAYER 1 — Workman primitives
+  // ###########################################################
+
+  // Accent: deep crimson. Reserved for brand, primary action and active state.
+  --wm-accent-h: 352;
+  --wm-accent-s: 72%;
+  --wm-accent-l: 45%;
+  --wm-accent-hsl: var(--wm-accent-h), var(--wm-accent-s), var(--wm-accent-l);
+  --wm-accent: hsl(var(--wm-accent-hsl));
+  --wm-accent-hover: hsl(var(--wm-accent-h), var(--wm-accent-s), 38%);
+  --wm-accent-active: hsl(var(--wm-accent-h), var(--wm-accent-s), 32%);
+  // Accent as text/icon on the canvas — darkened until it clears 4.5:1.
+  --wm-accent-text: hsl(var(--wm-accent-h), var(--wm-accent-s), 42%);
+  // Washes for selected rows, active nav rails and tinted badges.
+  --wm-accent-wash: hsla(var(--wm-accent-hsl), 0.08);
+  --wm-accent-wash-strong: hsla(var(--wm-accent-hsl), 0.16);
+  --wm-accent-line: hsla(var(--wm-accent-hsl), 0.32);
+  // Contrast color for text sitting on a filled accent surface.
+  --wm-on-accent: hsl(0, 0%, 100%);
+
+  // Ground: canvas is the floor, surfaces stack upward from it. The steps are
+  // deliberately wide — at 2% apart the canvas, columns and cards read as one
+  // flat wash and the layout stops explaining itself.
+  --wm-canvas: hsl(220, 16%, 93%);
+  --wm-surface: hsl(0, 0%, 100%);
+  --wm-surface-raised: hsl(0, 0%, 100%);
+  --wm-surface-sunken: hsl(220, 16%, 96%);
+  --wm-surface-hover: hsl(220, 18%, 97%);
+
+  // Hairlines carry the structure in this system — not shadows, so on a light
+  // ground they have to be dark enough to actually draw it.
+  --wm-line: hsl(220, 13%, 85%);
+  --wm-line-strong: hsl(220, 12%, 72%);
+  --wm-line-faint: hsl(220, 14%, 90%);
+  // Border for form controls, where the edge is the only affordance and so has
+  // to clear 3:1 against the surface behind it. Applying that to every hairline
+  // would make the decorative rules shout, hence the separate token.
+  --wm-line-control: hsl(220, 13%, 58%);
+
+  // Text ramp.
+  --wm-text: hsl(222, 24%, 11%);
+  --wm-text-secondary: hsl(220, 10%, 38%);
+  --wm-text-tertiary: hsl(220, 9%, 43%);
+  --wm-text-inverted: hsl(0, 0%, 100%);
+
+  // Status. Hues sit far enough from the crimson accent to stay readable
+  // next to it; danger is the hotter, brighter red so it never reads as brand.
+  --wm-success-h: 158;
+  --wm-success-s: 52%;
+  --wm-success-l: 30%;
+  --wm-warning-h: 38;
+  --wm-warning-s: 92%;
+  --wm-warning-l: 32%;
+  --wm-danger-h: 6;
+  --wm-danger-s: 78%;
+  --wm-danger-l: 48%;
+  --wm-info-h: 216;
+  --wm-info-s: 84%;
+  --wm-info-l: 48%;
+
+  // The faint graticule behind empty states and the auth screen.
+  --wm-grid-line: hsla(222, 24%, 11%, 0.045);
+  --wm-grid-size: 32px;
+
+  // ###########################################################
+  // LAYER 2 — legacy token mapping (never redefined per-theme)
+  // ###########################################################
+
+  // Core Bulma color variables.
+  // Kept because Bulma partials reference them directly; values now derive
+  // from layer 1 so a theme change only has to touch --wm-*.
+  --scheme-main: var(--wm-surface);
+  --scheme-main-bis: var(--wm-surface-sunken);
+  --scheme-main-ter: var(--wm-surface-hover);
+  --scheme-invert: var(--wm-text);
   --scheme-invert-rgb: 10.2, 10.2, 10.2;
-  --scheme-invert-bis: #121212;
-  --scheme-invert-ter: #242424;
-  --background: whitesmoke;
-  //--border: #dbdbdb;
+  --scheme-invert-bis: var(--wm-text);
+  --scheme-invert-ter: var(--wm-text-secondary);
+  --background: var(--wm-surface-sunken);
   --border-rgb: 219.3, 219.3, 219.3;
-  --border-hover: #b5b5b5;
-  --border-light: #ededed;
-  --border-light-hover: #b5b5b5;
-  --text: #4a4a4a;
-  --text-invert: #fff;
-  --text-light: #7a7a7a;
-  --text-strong: #363636;
-  --code: #da1039;
-  --code-background: var(--background, whitesmoke);
-  --pre: var(--text, #4a4a4a);
-  --pre-background: var(--background, whitesmoke);
-  --link-visited: #b86bff;
-  //--link-hover: #363636;
-  --link-hover-border: #b5b5b5;
-  --link-focus: #363636;
-  --link-focus-border: var(--link, #485fc7);
-  --link-active: #363636;
-  --link-active-border: #4a4a4a;
-  //--white-h: 0deg;
-  //--white-s: 0%;
-  //--white-l: 100%;
-  //--white-a: 1;
-  //--white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
+  --border-hover: var(--wm-line-strong);
+  --border-light: var(--wm-line-faint);
+  --border-light-hover: var(--wm-line-strong);
+  --text: var(--wm-text-secondary);
+  --text-invert: var(--wm-text-inverted);
+  --text-light: var(--wm-text-tertiary);
+  --text-strong: var(--wm-text);
+  --code: var(--code-variable);
+  --code-background: var(--wm-surface-sunken);
+  --pre: var(--wm-text);
+  --pre-background: var(--wm-surface-sunken);
+  --link-visited: var(--wm-accent-text);
+  --link-hover-border: var(--wm-line-strong);
+  --link-focus: var(--wm-text);
+  --link-focus-border: var(--wm-accent);
+  --link-active: var(--wm-text);
+  --link-active-border: var(--wm-accent-active);
+
   --white-invert-l: 4%;
-  --white-invert: #0a0a0a;
+  --white-invert: var(--wm-text);
   --white-light-l: 100%;
   --white-light: hsla(var(--white-h), var(--white-s), var(--white-light-l), var(--white-a));
   --white-dark-l: 29%;
   --white-dark: hsla(var(--white-h), var(--white-s), var(--white-dark-l), var(--white-a));
-  //--black-h: 0deg;
-  //--black-s: 0%;
-  //--black-l: 4%;
-  //--black-a: 1;
-  //--black: hsla(var(--black-h), var(--black-s), var(--black-l), var(--black-a));
   --black-invert-l: 100%;
-  --black-invert: white;
+  --black-invert: var(--wm-surface);
   --black-light-l: 96%;
   --black-light: hsla(var(--black-h), var(--black-s), var(--black-light-l), var(--black-a));
   --black-dark-l: 57%;
   --black-dark: hsla(var(--black-h), var(--black-s), var(--black-dark-l), var(--black-a));
-  --light-h: 0deg;
-  --light-s: 0%;
-  --light-l: 96%;
+
+  --light-h: 220deg;
+  --light-s: 20%;
+  --light-l: 95%;
   --light-a: 1;
-  --light: hsla(var(--light-h), var(--light-s), var(--light-l), var(--light-a));
+  --light: var(--wm-surface-sunken);
   --light-invert-l: 0%;
-  --light-invert: rgba(0, 0, 0, 0.7);
+  --light-invert: var(--wm-text);
   --light-light-l: 96%;
-  --light-light: hsla(var(--light-h), var(--light-s), var(--light-light-l), var(--light-a));
+  --light-light: var(--wm-surface-hover);
   --light-dark-l: 29%;
-  --light-dark: hsla(var(--light-h), var(--light-s), var(--light-dark-l), var(--light-a));
-  --dark-h: 0deg;
-  --dark-s: 0%;
-  --dark-l: 21%;
+  --light-dark: var(--wm-text-secondary);
+
+  --dark-h: 222deg;
+  --dark-s: 24%;
+  --dark-l: 11%;
   --dark-a: 1;
-  --dark: hsla(var(--dark-h), var(--dark-s), var(--dark-l), var(--dark-a));
+  --dark: var(--wm-text);
   --dark-invert-l: 100%;
-  --dark-invert: #fff;
+  --dark-invert: var(--wm-surface);
   --dark-light-l: 96%;
-  --dark-light: hsla(var(--dark-h), var(--dark-s), var(--dark-light-l), var(--dark-a));
+  --dark-light: var(--wm-surface-hover);
   --dark-dark-l: 54%;
-  --dark-dark: hsla(var(--dark-h), var(--dark-s), var(--dark-dark-l), var(--dark-a));
-  //--primary-h: 171deg;
-  //--primary-s: 100%;
-  //--primary-l: 41%;
-  //--primary-a: 1;
-  //--primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
+  --dark-dark: var(--wm-text-tertiary);
+
   --primary-invert-l: 100%;
-  --primary-invert: #fff;
+  --primary-invert: var(--wm-on-accent);
   --primary-light-l: 96%;
-  --primary-light: hsla(var(--primary-h), var(--primary-s), var(--primary-light-l), var(--primary-a));
+  --primary-light: var(--wm-accent-wash);
   --primary-dark-l: 29%;
-  --primary-dark: hsla(var(--primary-h), var(--primary-s), var(--primary-dark-l), var(--primary-a));
-  --link-h: 229deg;
-  --link-s: 53%;
-  --link-l: 53%;
+  --primary-dark: var(--wm-accent-active);
+
+  --link-h: var(--wm-accent-h);
+  --link-s: var(--wm-accent-s);
+  --link-l: var(--wm-accent-l);
   --link-a: 1;
-  //--link: hsla(var(--link-h), var(--link-s), var(--link-l), var(--link-a));
   --link-invert-l: 100%;
-  --link-invert: #fff;
+  --link-invert: var(--wm-on-accent);
   --link-light-l: 96%;
-  --link-light: hsla(var(--link-h), var(--link-s), var(--link-light-l), var(--link-a));
+  --link-light: var(--wm-accent-wash);
   --link-dark-l: 47%;
-  --link-dark: hsla(var(--link-h), var(--link-s), var(--link-dark-l), var(--link-a));
-  --info-h: 207deg;
-  --info-s: 61%;
-  --info-l: 53%;
+  --link-dark: var(--wm-accent-hover);
+
+  --info-h: var(--wm-info-h);
+  --info-s: var(--wm-info-s);
+  --info-l: var(--wm-info-l);
   --info-a: 1;
-  --info: hsla(var(--info-h), var(--info-s), var(--info-l), var(--info-a));
+  --info: hsl(var(--wm-info-h), var(--wm-info-s), var(--wm-info-l));
   --info-invert-l: 100%;
-  --info-invert: #fff;
+  --info-invert: var(--wm-text-inverted);
   --info-light-l: 96%;
-  --info-light: hsla(var(--info-h), var(--info-s), var(--info-light-l), var(--info-a));
+  --info-light: hsla(var(--wm-info-h), var(--wm-info-s), var(--wm-info-l), 0.1);
   --info-dark-l: 41%;
-  --info-dark: hsla(var(--info-h), var(--info-s), var(--info-dark-l), var(--info-a));
-  //--success-h: 153deg;
-  //--success-s: 53%;
-  //--success-l: 53%;
-  //--success-a: 1;
-  //--success: hsla(var(--success-h), var(--success-s), var(--success-l), var(--success-a));
+  --info-dark: hsl(var(--wm-info-h), var(--wm-info-s), 38%);
+
   --success-invert-l: 100%;
-  --success-invert: #fff;
+  --success-invert: var(--wm-text-inverted);
   --success-light-l: 96%;
-  --success-light: hsla(var(--success-h), var(--success-s), var(--success-light-l), var(--success-a));
+  --success-light: hsla(var(--wm-success-h), var(--wm-success-s), var(--wm-success-l), 0.12);
   --success-dark-l: 31%;
-  --success-dark: hsla(var(--success-h), var(--success-s), var(--success-dark-l), var(--success-a));
-  //--warning-h: 44deg;
-  //--warning-s: 100%;
-  //--warning-l: 77%;
-  //--warning-a: 1;
-  //--warning: hsla(var(--warning-h), var(--warning-s), var(--warning-l), var(--warning-a));
+  --success-dark: hsl(var(--wm-success-h), var(--wm-success-s), 26%);
+
   --warning-invert-l: 0%;
-  --warning-invert: rgba(0, 0, 0, 0.7);
+  --warning-invert: hsl(38, 95%, 12%);
   --warning-light-l: 96%;
-  --warning-light: hsla(var(--warning-h), var(--warning-s), var(--warning-light-l), var(--warning-a));
+  --warning-light: hsla(var(--wm-warning-h), var(--wm-warning-s), var(--wm-warning-l), 0.14);
   --warning-dark-l: 29%;
-  --warning-dark: hsla(var(--warning-h), var(--warning-s), var(--warning-dark-l), var(--warning-a));
-  //--danger-h: 348deg;
-  //--danger-s: 86%;
-  //--danger-l: 61%;
-  //--danger-a: 1;
-  //--danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
+  --warning-dark: hsl(var(--wm-warning-h), var(--wm-warning-s), 34%);
+
   --danger-invert-l: 100%;
-  --danger-invert: #fff;
+  --danger-invert: var(--wm-text-inverted);
   --danger-light-l: 96%;
-  --danger-light: hsla(var(--danger-h), var(--danger-s), var(--danger-light-l), var(--danger-a));
+  --danger-light: hsla(var(--wm-danger-h), var(--wm-danger-s), var(--wm-danger-l), 0.12);
   --danger-dark-l: 43%;
-  --danger-dark: hsla(var(--danger-h), var(--danger-s), var(--danger-dark-l), var(--danger-a));
-  --input-color: var(--text-strong, #363636);
-  --input-background-color: var(--scheme-main, white);
-  //--input-border-color: var(--border, #dbdbdb);
-  --input-shadow: inset 0 0.0625em 0.125em rgba(var(--scheme-invert-rgb, 10.2, 10.2, 10.2), 0.05);
-  --input-placeholder-color: #6e6e6e;
-  --input-hover-color: var(--text-strong, #363636);
-  --input-hover-border-color: var(--border-hover, #b5b5b5);
-  --input-focus-color: var(--text-strong, #363636);
-  --input-focus-border-color: var(--link, #485fc7);
-  --input-focus-box-shadow-color: var(--input-focus-box-shadow-color-hsla, rgba(72, 95, 199, 0.25));
-  --input-disabled-color: var(--text-light, #7a7a7a);
-  //--input-disabled-background-color: var(--background, whitesmoke);
-  //--input-disabled-border-color: var(--background, whitesmoke);
-  --input-disabled-placeholder-color: rgba(122, 122, 122, 0.3);
-  --input-arrow: var(--link, #485fc7);
-  --input-icon-color: var(--border, #dbdbdb);
-  --input-icon-active-color: var(--text, #4a4a4a);
-  --black-bis: #121212;
-  --black-ter: #242424;
-  //--grey-darker: #363636;
-  //--grey-dark: #4a4a4a;
-  //--grey: #7a7a7a;
-  //--grey-light: #b5b5b5;
-  //--grey-lighter: #dbdbdb;
-  --white-ter: whitesmoke;
-  --white-bis: #fafafa;
+  --danger-dark: hsl(var(--wm-danger-h), var(--wm-danger-s), 38%);
+
+  --input-color: var(--wm-text);
+  --input-background-color: var(--wm-surface);
+  --input-shadow: none;
+  --input-placeholder-color: var(--wm-text-tertiary);
+  --input-hover-color: var(--wm-text);
+  --input-hover-border-color: var(--wm-line-strong);
+  --input-focus-color: var(--wm-text);
+  --input-focus-border-color: var(--wm-accent);
+  --input-focus-box-shadow-color: hsla(var(--wm-accent-hsl), 0.22);
+  --input-disabled-color: var(--wm-text-tertiary);
+  --input-disabled-placeholder-color: var(--wm-text-tertiary);
+  --input-arrow: var(--wm-text-tertiary);
+  --input-icon-color: var(--wm-text-tertiary);
+  --input-icon-active-color: var(--wm-text);
+
+  --black-bis: hsl(222, 24%, 9%);
+  --black-ter: hsl(222, 22%, 14%);
+  --white-ter: var(--wm-surface-hover);
+  --white-bis: var(--wm-surface-sunken);
   // END core Bulma color variables
 
 
-  // Vikunja specific variables
-  --grey-50: hsl(210, 20%, 98%);
-  --grey-100-hsl: 220, 14.3%, 95.9%;
-  --grey-100: hsl(var(--grey-100-hsl));
-  --grey-200: hsl(220, 13%, 91%);
-  --grey-300: hsl(216, 12.2%, 83.9%);
-  --grey-400: hsl(217.9, 10.6%, 64.9%);
-  --grey-500-hsl: 220, 8.9%, 46.1%;
+  // Grey scale, expressed against the ground so it inverts with the theme.
+  --grey-50: var(--wm-canvas);
+  --grey-100-hsl: 220, 20%, 95%;
+  --grey-100: var(--wm-surface-sunken);
+  --grey-200: var(--wm-line);
+  --grey-300: var(--wm-line-strong);
+  --grey-400: var(--wm-text-tertiary);
+  --grey-500-hsl: 220, 10%, 44%;
   --grey-500: hsl(var(--grey-500-hsl));
-  --grey-600: hsl(215, 13.8%, 34.1%);
-  --grey-700: hsl(216.9, 19.1%, 26.7%);
-  --grey-800: hsl(215, 27.9%, 16.9%);
-  --grey-900: hsl(220.9, 39.3%, 11%);
-  --site-background: var(--grey-100);
+  --grey-600: var(--wm-text-secondary);
+  --grey-700: hsl(220, 14%, 26%);
+  --grey-800: hsl(221, 18%, 18%);
+  --grey-900: var(--wm-text);
+  --site-background: var(--wm-canvas);
 
-  // Muted body text (metadata, counts) darkened from --grey-500 to clear 4.5:1 on both white and --grey-100
-  --text-muted: hsl(220, 8.9%, 42%);
+  // Muted body text (metadata, counts) — clears 4.5:1 on canvas and surface.
+  --text-muted: var(--wm-text-secondary);
 
   // Overrides of Bulma defaults
-  --scheme-main: var(--white);
-  --grey-darker: var(--grey-700);
-  --grey-dark: var(--grey-800);
-  --grey: var(--grey-500);
-  --grey-light: var(--grey-300);
-  --grey-lighter: var(--grey-200);
-  --grey-lightest: var(--grey-100);
-  --input-border-color: var(--grey-200);
+  --grey-darker: var(--wm-text);
+  --grey-dark: var(--wm-text-secondary);
+  --grey: var(--wm-text-tertiary);
+  --grey-light: var(--wm-line-strong);
+  --grey-lighter: var(--wm-line);
+  --grey-lightest: var(--wm-line-faint);
+  --input-border-color: var(--wm-line-control);
 
   --white-h: 0deg;
   --white-s: 0%;
   --white-l: 100%;
   --white-a: 1;
-  --white: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
-  --white-translucent: hsla(var(--white-h), var(--white-s), var(--white-l), 0.75);
+  // --white is the surface color, not literal white: components use it for
+  // cards, so in dark mode it has to darken with the theme.
+  --white: var(--wm-surface);
+  --white-translucent: hsla(0, 0%, 100%, 0.72);
 
-  --black-h: 0deg;
-  --black-s: 0%;
-  --black-l: 4%;
+  --black-h: 222deg;
+  --black-s: 24%;
+  --black-l: 11%;
   --black-a: 1;
-  --black: hsla(var(--black-h), var(--black-s), var(--black-l), var(--black-a));
+  --black: var(--wm-text);
 
-  // $warning / $orange: #ff851b
-  --warning-h: 27.9deg;
-  --warning-s: 100%;
-  --warning-l: 55.3%;
   --warning-a: 1;
-  --warning: hsla(var(--warning-h), var(--warning-s), var(--warning-l), var(--warning-a));
+  --warning: hsl(var(--wm-warning-h), var(--wm-warning-s), var(--wm-warning-l));
 
-  // $success / $green is #00db60
-  --success-h: 146.3deg;
-  --success-s: 100%;
-  --success-l: 42.9%;
   --success-a: 1;
-  --success: hsla(var(--success-h), var(--success-s), var(--success-l), var(--success-a));
+  --success: hsl(var(--wm-success-h), var(--wm-success-s), var(--wm-success-l));
 
-  // $danger / $red is #ff4136
-  --danger-h: 3.3deg;
-  --danger-s: 100%;
-  --danger-l: 60.6%;
   --danger-a: 1;
-  --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
+  --danger: hsl(var(--wm-danger-h), var(--wm-danger-s), var(--wm-danger-l));
+  --danger-text: hsl(var(--wm-danger-h), var(--wm-danger-s), 42%);
 
-  // Darker than --danger: --danger as text fails WCAG contrast (3.46:1 on white)
-  --danger-text-l: 40%;
-  --danger-text: hsla(var(--danger-h), var(--danger-s), var(--danger-text-l), var(--danger-a));
-
-  // var(--primary) / $blue is #1973ff
-  --primary-h: 217deg;
-  --primary-s: 98%;
-  --primary-l: 53%;
+  --primary-h: var(--wm-accent-h);
+  --primary-s: var(--wm-accent-s);
+  --primary-l: var(--wm-accent-l);
   --primary-a: 1;
-  --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
-  --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
+  --primary-hsl: var(--wm-accent-hsl);
+  --primary: var(--wm-accent);
 
-  --link: var(--primary);
-  --link-hover: hsla(var(--primary-h), var(--primary-s), var(--primary-l), .75);
-  --border: var(--grey-200);
-  --input-disabled-background-color: var(--grey-100);
-  --input-disabled-border-color: var(--grey-300);
-  --progress-value-background-color: var(--grey-500);
+  --link: var(--wm-accent-text);
+  --link-hover: var(--wm-accent-hover);
+  --border: var(--wm-line);
+  --input-disabled-background-color: var(--wm-surface-sunken);
+  --input-disabled-border-color: var(--wm-line);
+  --progress-value-background-color: var(--wm-accent);
   // END Overrides of Bulma defaults
 
+  // View switcher keeps the accent rather than inverting in dark mode.
+  --switch-view-color: var(--wm-surface);
+  --switch-view-active-background: var(--wm-accent);
 
-  // Define custom color variable to prevent change in dark mode
-  --switch-view-color: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
-  --switch-view-active-background: var(--primary);
+  --card-border-color: var(--wm-line);
+  --logo-text-color: var(--wm-text);
 
-  // Define custom color variable to allow change in dark mode
-  --card-border-color: var(--grey-200);
-  --logo-text-color: hsl(180, 1%, 15%);
-
-  // Code colors
-  --code-variable: #da2222;
-  --code-literal: #fd8a09;
-  --code-symbol: #0ead69;
-  --code-section: #3a86ff;
-  --code-keyword: #8338ec;
+  // Code colors — tuned to sit on the light surface.
+  --code-variable: hsl(352, 68%, 45%);
+  --code-literal: hsl(28, 82%, 42%);
+  --code-symbol: hsl(158, 68%, 30%);
+  --code-section: hsl(216, 80%, 46%);
+  --code-keyword: hsl(266, 62%, 52%);
 
   &.dark {
     @media screen {
-      // Light mode colours reversed for dark mode
-      --grey-900-hsl: 210, 20%, 98%;
-      --grey-900: hsl(var(--grey-900-hsl));
-      --grey-800: hsl(220, 14.3%, 95.9%);
-      --grey-700: hsl(220, 13%, 91%);
-      --grey-600: hsl(216, 12.2%, 83.9%);
-      --grey-500-hsl: 217.9, 10.6%, 64.9%;
-      --grey-500: hsl(var(--grey-500-hsl));
-      --grey-400: hsl(220, 8.9%, 46.1%);
-      --grey-300: hsl(215, 13.8%, 34.1%);
-      --grey-200: hsl(216.9, 19.1%, 26.7%);
-      --grey-100-hsl: 215, 27.9%, 16.9%;
-      --grey-100: hsl(var(--grey-100-hsl));
-      --grey-50-hsl: 220.9, 39.3%, 11%;
-      --grey-50: hsl(var(--grey-50-hsl));
+      // Only layer 1 moves. Everything above re-resolves from these.
 
-      // Dark grey looks better than black
-      --white: var(--grey-50);
-      --black-l: 100%;
+      // The accent lifts in dark so it keeps its punch against near-black.
+      --wm-accent-l: 53%;
+      --wm-accent-hover: hsl(var(--wm-accent-h), var(--wm-accent-s), 65%);
+      --wm-accent-active: hsl(var(--wm-accent-h), var(--wm-accent-s), 50%);
+      --wm-accent-text: hsl(var(--wm-accent-h), 84%, 68%);
+      --wm-accent-wash: hsla(var(--wm-accent-hsl), 0.14);
+      --wm-accent-wash-strong: hsla(var(--wm-accent-hsl), 0.24);
+      --wm-accent-line: hsla(var(--wm-accent-hsl), 0.42);
 
-      // Text renders better in grey than black
-      --text: var(--grey-800);
-      --text-invert: #000;
-      --text-light: var(--grey-300);
-      --text-strong: var(--grey-900);
+      // Near-neutral black with a whisper of the accent's warmth, so the
+      // crimson sits in the same family as the ground instead of on top of it.
+      // Canvas is the floor; surfaces stack up from it, so panels read as
+      // raised rather than punched into the page.
+      --wm-canvas: hsl(350, 6%, 4%);
+      --wm-surface: hsl(350, 5%, 7%);
+      --wm-surface-raised: hsl(350, 5%, 10%);
+      --wm-surface-sunken: hsl(350, 6%, 5%);
+      --wm-surface-hover: hsl(350, 5%, 13%);
 
-      // Elements that rely on Bulma defaults in light mode but
-      // need to be overridden in dark mode
-      --input-placeholder-color: hsla(var(--grey-900-hsl), 0.6);
-      --tag-color: var(--grey-300);
-      --table-row-hover-background-color: var(--grey-100);
-      --dropdown-item-hover-background-color: var(--grey-100);
-      --dropdown-item-hover-color: var(--text);
-      --pre-background: var(--grey-200);
-      --code-background: var(--grey-200);
-      --code: var(--code-variable);
-      --button-text-hover-background-color: var(--grey-200);
-      --button-hover-color: var(--grey-600);
-      --button-active-color: var(--grey-600);
-      --button-focus-color: var(--grey-600);
+      --wm-line: hsl(350, 5%, 16%);
+      --wm-line-strong: hsl(350, 4%, 26%);
+      --wm-line-faint: hsl(350, 5%, 11%);
+      --wm-line-control: hsl(350, 4%, 40%);
 
-      // Custom color variables we need to override
-      --card-border-color: hsla(var(--grey-100-hsl), 0.3);
-      --logo-text-color: var(--grey-700);
+      --wm-text: hsl(0, 0%, 97%);
+      --wm-text-secondary: hsl(350, 4%, 66%);
+      --wm-text-tertiary: hsl(350, 4%, 52%);
+      --wm-text-inverted: hsl(350, 6%, 5%);
 
-      // Slightly different primary color to make sure it has a sufficient contrast ratio
-      --primary-h: 217deg;
-      --primary-s: 98%;
-      --primary-l: 58%;
+      // Status hues brighten so they still read on near-black.
+      --wm-success-s: 44%;
+      --wm-success-l: 52%;
+      --wm-warning-l: 56%;
+      --wm-danger-l: 58%;
+      --wm-info-l: 62%;
 
-      // Muted text is a light grey on dark backgrounds and already passes; keep it
-      --text-muted: var(--grey-500);
-      // The lighter dark-mode primary fails white-text contrast on the active view tab, so darken it there
-      --switch-view-active-background: hsl(var(--primary-h), var(--primary-s), 50%);
+      --wm-grid-line: hsla(0, 0%, 100%, 0.045);
 
-      // Bright values already pass contrast on dark backgrounds; skip the light-theme darkening
-      --danger-text: var(--danger);
+      // Layer-2 values that can't be expressed as a pure --wm-* remap.
+      --white-translucent: hsla(350, 5%, 7%, 0.78);
+      --warning-invert: hsl(38, 95%, 10%);
+      --danger-text: hsl(var(--wm-danger-h), 88%, 68%);
+      --grey-700: hsl(350, 4%, 76%);
+      --grey-800: hsl(350, 3%, 88%);
+      --grey-500-hsl: 350, 4%, 54%;
 
-      --scheme-main-bis: var(--grey-100);
-      --scheme-main-ter: var(--grey-100);
-      --scheme-invert: var(--grey-900);
-      --scheme-invert-bis: var(--grey-900);
-      --scheme-invert-ter: var(--grey-800);
+      --tag-color: var(--wm-text-secondary);
+      --table-row-hover-background-color: var(--wm-surface-hover);
+      --dropdown-item-hover-background-color: var(--wm-surface-hover);
+      --dropdown-item-hover-color: var(--wm-text);
+      --button-text-hover-background-color: var(--wm-surface-hover);
+      --button-hover-color: var(--wm-text);
+      --button-active-color: var(--wm-text);
+      --button-focus-color: var(--wm-text);
 
-      // Code colors
-      --code-variable: #f98181;
-      --code-literal: #fbbc88;
-      --code-symbol: #b9f18d;
-      --code-section: #faf594;
-      --code-keyword: #70cff8;
+      --code-variable: hsl(352, 88%, 72%);
+      --code-literal: hsl(28, 92%, 68%);
+      --code-symbol: hsl(158, 62%, 58%);
+      --code-section: hsl(216, 90%, 72%);
+      --code-keyword: hsl(266, 88%, 76%);
     }
   }
 }

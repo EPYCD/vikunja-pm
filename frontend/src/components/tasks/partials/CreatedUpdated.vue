@@ -62,8 +62,11 @@ const doneFormatted = computed(() => formatDateLong(props.task.doneAt))
 
 <style lang="scss" scoped>
 .created {
-	font-size: .75rem;
-	color: var(--text-muted);
+	@include mono-data;
+
+	font-size: var(--wm-text-2xs);
+	color: var(--wm-text-tertiary);
 	text-align: end;
+	line-height: 1.7;
 }
 </style>

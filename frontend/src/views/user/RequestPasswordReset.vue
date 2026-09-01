@@ -37,7 +37,7 @@
 				autocomplete="email"
 			/>
 
-			<div class="is-flex">
+			<div class="is-flex reset-actions">
 				<XButton
 					type="submit"
 					:loading="passwordResetService.loading"
@@ -79,8 +79,9 @@ async function requestPasswordReset() {
 }
 </script>
 
-<style scoped>
-.button {
-	margin: 0 0.4rem 0 0;
+<style lang="scss" scoped>
+.reset-actions {
+	gap: var(--wm-space-2);
+	margin-block-start: var(--wm-space-4);
 }
 </style>

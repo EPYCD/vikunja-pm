@@ -232,58 +232,60 @@ onUnmounted(hide)
 	display: inline;
 }
 
+// Genuinely floating, so it keeps its shadow — squared off and hairlined like
+// every other raised surface.
 .task-glance-tooltip {
 	position: absolute;
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	z-index: 9999;
 	max-inline-size: 400px;
-	background: var(--white);
-	border: 1px solid var(--grey-200);
-	border-radius: $radius;
+	background: var(--wm-surface-raised);
+	border: 1px solid var(--wm-line);
+	border-radius: 0;
 	box-shadow: var(--shadow-lg);
 	pointer-events: none;
 }
 
 .task-glance-content {
-	padding: 0.75rem;
+	padding: var(--wm-space-3);
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
-	font-size: 0.875rem;
-	color: var(--text);
+	gap: var(--wm-space-2);
+	font-size: var(--wm-text-sm);
+	color: var(--wm-text);
 }
 
 .task-glance-header {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
-	gap: 1rem;
+	gap: var(--wm-space-4);
 }
 
 .task-glance-title-section {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: var(--wm-space-1);
 	flex: 1;
 	min-inline-size: 0; /* Allow text to wrap */
 }
 
 .task-identifier {
-	font-size: 0.75rem;
-	color: var(--grey-500);
-	font-weight: 600;
+	@include mono-label;
+
+	color: var(--wm-text-tertiary);
 }
 
 .task-title {
 	font-weight: 600;
-	color: var(--text);
+	color: var(--wm-text);
 	word-wrap: break-word;
 }
 
 .task-glance-description {
-	color: var(--grey-700);
-	font-size: 0.875rem;
+	color: var(--wm-text-secondary);
+	font-size: var(--wm-text-sm);
 	line-height: 1.4;
 	word-wrap: break-word;
 	white-space: pre-wrap;
@@ -296,8 +298,9 @@ onUnmounted(hide)
 .task-glance-due {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	color: var(--grey-700);
+	gap: var(--wm-space-2);
+	color: var(--wm-text-secondary);
+	font-size: var(--wm-text-xs);
 
 	.icon {
 		inline-size: 1rem;
@@ -308,17 +311,19 @@ onUnmounted(hide)
 .task-glance-meta {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
-	padding-block-start: 0.25rem;
-	border-block-start: 1px solid var(--grey-200);
-	font-size: 0.8rem;
-	color: var(--grey-600);
+	gap: var(--wm-space-1);
+	padding-block-start: var(--wm-space-2);
+	border-block-start: 1px solid var(--wm-line-faint);
+	font-size: var(--wm-text-2xs);
+	color: var(--wm-text-tertiary);
 }
 
 .task-glance-created {
+	@include mono-data;
+
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--wm-space-2);
 }
 
 .task-glance-indicators {
@@ -336,8 +341,8 @@ onUnmounted(hide)
 }
 
 .task-glance-icon {
-	color: var(--grey-500);
-	font-size: 0.875rem;
+	color: var(--wm-text-tertiary);
+	font-size: var(--wm-text-xs);
 	display: inline-flex;
 	align-items: center;
 	margin-inline-end: 6px;
@@ -348,6 +353,6 @@ onUnmounted(hide)
 }
 
 .task-glance-checklist-summary {
-	margin-block-start: -0.25rem;
+	margin-block-start: calc(var(--wm-space-1) * -1);
 }
 </style>

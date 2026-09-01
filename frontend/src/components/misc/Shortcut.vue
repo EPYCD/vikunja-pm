@@ -31,14 +31,18 @@ withDefaults(defineProps<{
 }
 
 kbd {
-	padding: .1rem .35rem;
-	border: 1px solid var(--grey-300);
-	background: var(--grey-100);
-	border-radius: 3px;
-	font-size: .75rem;
+	@include mono-label(var(--wm-text-2xs));
+
+	padding: .15rem .4rem;
+	border: 1px solid var(--wm-line-strong);
+	background: var(--wm-surface-sunken);
+	border-radius: var(--wm-radius-xs);
+	color: var(--wm-text-secondary);
+	text-transform: none;
 }
 
 span {
-	padding: 0 .25rem;
+	padding-inline: var(--wm-space-1);
+	color: var(--wm-text-tertiary);
 }
 </style>

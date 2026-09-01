@@ -299,7 +299,7 @@ defineExpose({
 .task-add .add-task__field {
 	display: flex;
 	justify-content: flex-start;
-	gap: .75rem;
+	gap: var(--wm-space-3);
 
 	.control {
 		flex-shrink: 0;
@@ -317,21 +317,21 @@ defineExpose({
 	}
 
 	.icon {
-		color: var(--grey-300);
+		color: var(--wm-text-tertiary);
 	}
 
 	.task-icon, 
 	:deep(.quick-add-magic-trigger-btn) {
 		position: absolute;
-		inset-block-start: .75rem;
+		inset-block-start: var(--wm-space-3);
 	}
 
 	:deep(.quick-add-magic-trigger-btn) {
-		inset-inline-end: .75rem;
+		inset-inline-end: var(--wm-space-3);
 	}
 
 	.task-icon {
-		inset-inline-start: 1rem;
+		inset-inline-start: var(--wm-space-4);
 	}
 }
 
@@ -350,7 +350,7 @@ defineExpose({
 }
 
 .add-task-textarea {
-	transition: border-color $transition;
+	transition: border-color var(--wm-duration) var(--wm-ease);
 	resize: none;
 }
 
@@ -361,7 +361,7 @@ defineExpose({
 }
 
 .control .icon {
-	transition: all $transition;
+	transition: color var(--wm-duration) var(--wm-ease);
 	z-index: 4;
 }
 </style>

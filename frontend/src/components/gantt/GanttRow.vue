@@ -29,12 +29,15 @@ const onFocus = () => emit('focus', props.id)
 const onSelect = () => emit('select', props.id)
 </script>
 
-<style scoped>
-.bg-row {
-	background: hsla(var(--white-h), var(--white-s), var(--white-l), .15); 
+<style scoped lang="scss">
+// Rows are separated by a hairline, not a fill; the alternate band is only
+// just visible so the eye can track across the timeline.
+.bg-row,
+.bg-row-alt {
+	border-block-end: 1px solid var(--wm-line-faint);
 }
 
 .bg-row-alt {
-	background: hsla(var(--grey-100-hsl), .5); 
+	background: var(--wm-surface-sunken);
 }
 </style>

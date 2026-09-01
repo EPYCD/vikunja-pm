@@ -27,10 +27,19 @@ import (
 )
 
 func newClaimCmd() *cobra.Command {
+	var force bool
 	cmd := &cobra.Command{
 		Use:   "claim <id>",
 		Short: "Claim a task: assign the bot, move to In Progress, tag with branch",
-		Args:  cobra.ExactArgs(1),
+		Long: `Atomically takes a task. The server refuses with CONFLICT if another user
+already holds it, or if it has left the Todo bucket since you listed it — so
+two agents racing for the same task get exactly one winner. Re-claiming a task
+you already hold is a no-op.
+
+Pass --force to claim a task that is not in Todo (for example one a human
+parked In Review that you have been asked to pick back up). It never
+overrides another user's claim.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rt, err := loadRuntime()
 			if err != nil {
@@ -41,48 +50,57 @@ func newClaimCmd() *cobra.Command {
 				return err
 			}
 
-			// Move to In Progress. Vikunja's task↔bucket relation lives
-			// in a separate table; POST /tasks doesn't move buckets, so
-			// use the dedicated endpoint.
-			bid, err := status.BucketID(status.InProgress, rt.cfg.Buckets)
+			inProgress, err := status.BucketID(status.InProgress, rt.cfg.Buckets)
 			if err != nil {
 				return err
 			}
-			if err := rt.client.MoveTaskToBucket(cmd.Context(),
-				rt.cfg.ProjectID, rt.cfg.ViewID, bid, id); err != nil {
-				return err
+			expected := rt.cfg.Buckets.Todo
+			if force {
+				expected = 0
 			}
 
-			// Assign the bot. Idempotent on repeat — Vikunja returns 409 if
-			// already assigned, which we map to a soft-skip.
-			if err := rt.client.AddAssignee(cmd.Context(), id, rt.cfg.Bot.UserID); err != nil {
+			// One request does the check, the bucket move and the assignment
+			// in a single server-side transaction; a 409 here means we lost
+			// the race and must not touch the task further.
+			if _, err := rt.client.ClaimTask(cmd.Context(), id, rt.cfg.ViewID, inProgress, expected); err != nil {
 				var oe *output.Error
-				if !errors.As(err, &oe) || oe.Code != output.CodeConflict {
-					return err
+				if errors.As(err, &oe) && oe.Code == output.CodeConflict {
+					return output.Wrap(output.CodeConflict, err,
+						"cannot claim task %s: %v — it is held by someone else, left Todo, is blocked, or owns a path another task has leased; run `veans ready` and pick another (use --force to claim from another bucket)",
+						args[0], err)
 				}
-			}
-
-			// Tag with the current branch label, if there is one.
-			if branch := currentGitBranch(cmd.Context()); branch != "" {
-				labelTitle := branchLabel(branch)
-				l, err := getOrCreateLabelByTitle(cmd.Context(), rt.client, labelTitle)
-				if err != nil {
-					return err
-				}
-				if err := rt.client.AddLabelToTask(cmd.Context(), id, l.ID); err != nil {
-					var oe *output.Error
-					if !errors.As(err, &oe) || oe.Code != output.CodeConflict {
-						return err
-					}
-				}
+				return err
 			}
 
 			task, err := rt.client.GetTask(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
+
+			// Tag with the current branch label, if there is one. A label is
+			// bookkeeping, not part of the claim, so it stays outside the
+			// transaction. Checked against the task first: a claim runs on
+			// every start of work, and re-attaching a label the task already
+			// carries is rejected by the server.
+			if branch := currentGitBranch(cmd.Context()); branch != "" {
+				labelTitle := branchLabel(branch)
+				if !taskHasLabel(task, labelTitle) {
+					l, err := getOrCreateLabelByTitle(cmd.Context(), rt.client, labelTitle)
+					if err != nil {
+						return err
+					}
+					if err := rt.client.AddLabelToTask(cmd.Context(), id, l.ID); err != nil {
+						return err
+					}
+					if task, err = rt.client.GetTask(cmd.Context(), id); err != nil {
+						return err
+					}
+				}
+			}
+
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}
+	cmd.Flags().BoolVar(&force, "force", false, "claim even if the task is not in the Todo bucket (never overrides another user's claim)")
 	return cmd
 }

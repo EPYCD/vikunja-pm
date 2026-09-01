@@ -282,14 +282,15 @@ async function clearAll() {
 
 	.unread-indicator {
 		position: absolute;
-		inset-block-start: 1rem;
-		inset-inline-end: .5rem;
-		inline-size: .75rem;
-		block-size: .75rem;
+		// Anchored to the trigger rather than the old, taller navbar height.
+		inset-block-start: .35rem;
+		inset-inline-end: .35rem;
+		inline-size: .5rem;
+		block-size: .5rem;
 
-		background: var(--primary);
-		border-radius: 100%;
-		border: 2px solid var(--white);
+		background: var(--wm-accent);
+		border-radius: var(--wm-radius-full);
+		border: 2px solid var(--wm-surface);
 	}
 
 	.notifications-list {

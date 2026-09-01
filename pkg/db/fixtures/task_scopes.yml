@@ -1,0 +1,40 @@
+# Scopes for the claim / lease / readiness tests.
+#
+# Task 19 (project 10, view 40, bucket 10) owns pkg/models/**: claiming it
+# leases that subtree. Task 20 (project 11) owns the same pattern in a
+# different project and must never conflict with 19 — leases are per project.
+# Task 1 (project 1) owns a concrete file, and task 9 (also project 1, view 4,
+# bucket 1) owns a glob that overlaps it, so once 1 is claimed 9 stops being
+# ready.
+- id: 1
+  task_id: 19
+  paths_owned: '["pkg/models/**"]'
+  paths_affected: '["pkg/routes/api/v2/tasks.go"]'
+  endpoints: '["POST /api/v2/tasks/{id}/claim"]'
+  notes: '<p>Do not touch the frontend.</p>'
+  created: 2026-09-01 12:00:00
+  updated: 2026-09-01 12:00:00
+- id: 2
+  task_id: 20
+  paths_owned: '["pkg/models/**"]'
+  paths_affected: '[]'
+  endpoints: '[]'
+  notes: ''
+  created: 2026-09-01 12:00:00
+  updated: 2026-09-01 12:00:00
+- id: 3
+  task_id: 1
+  paths_owned: '["pkg/models/tasks.go"]'
+  paths_affected: '[]'
+  endpoints: '[]'
+  notes: ''
+  created: 2026-09-01 12:00:00
+  updated: 2026-09-01 12:00:00
+- id: 4
+  task_id: 9
+  paths_owned: '["pkg/models/*.go"]'
+  paths_affected: '[]'
+  endpoints: '[]'
+  notes: ''
+  created: 2026-09-01 12:00:00
+  updated: 2026-09-01 12:00:00

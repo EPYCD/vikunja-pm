@@ -192,26 +192,9 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 			return
 		}
 
-		// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
 		if task.Done {
-			viewsWithDoneBucket := []*ProjectView{}
-			err = s.
-				Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",
-					view.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual, view.ID).
-				Find(&viewsWithDoneBucket)
-			if err != nil {
+			if err = propagateTaskDone(s, a, task, view); err != nil {
 				return
-			}
-			for _, v := range viewsWithDoneBucket {
-				newBucket := &TaskBucket{
-					TaskID:        task.ID,
-					ProjectViewID: v.ID,
-					BucketID:      v.DoneBucketID,
-				}
-				err = newBucket.upsert(s)
-				if err != nil {
-					return
-				}
 			}
 		}
 	}
@@ -228,6 +211,37 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 	b.Bucket = bucket
 
 	return
+}
+
+// propagateTaskDone runs the side effects of a task finishing through a
+// bucket move: its leases are freed, its parents may close, and it lands in
+// the done bucket of every other manual kanban view of the project.
+func propagateTaskDone(s *xorm.Session, a web.Auth, task *Task, view *ProjectView) error {
+	if err := releasePathLeasesForTask(s, task.ID); err != nil {
+		return err
+	}
+	if err := completeParentsIfSubtasksDone(s, a, task); err != nil {
+		return err
+	}
+	viewsWithDoneBucket := []*ProjectView{}
+	err := s.
+		Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ? AND id != ? AND done_bucket_id != 0",
+			view.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual, view.ID).
+		Find(&viewsWithDoneBucket)
+	if err != nil {
+		return err
+	}
+	for _, v := range viewsWithDoneBucket {
+		newBucket := &TaskBucket{
+			TaskID:        task.ID,
+			ProjectViewID: v.ID,
+			BucketID:      v.DoneBucketID,
+		}
+		if err := newBucket.upsert(s); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Update is the handler to update a task bucket

@@ -69,7 +69,7 @@
 			<XButton
 				id="register-submit"
 				:loading="isLoading"
-				class="mie-2"
+				class="is-fullwidth mbs-4"
 				:disabled="!everythingValid"
 				@click="submit"
 			>
@@ -86,7 +86,7 @@
 				<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
 			</Message>
 
-			<p class="mbs-2">
+			<p class="mbs-4 auth-hint">
 				{{ $t('user.auth.alreadyHaveAnAccount') }}
 				<RouterLink
 					:to="{ name: 'user.login' }"
@@ -272,5 +272,11 @@ async function submit() {
 // Underline links sitting inside body text so they're not distinguished by color alone
 .inline-link {
 	text-decoration: underline;
+}
+
+.auth-hint {
+	font-size: var(--wm-text-sm);
+	color: var(--wm-text-secondary);
+	margin-block-end: 0;
 }
 </style>

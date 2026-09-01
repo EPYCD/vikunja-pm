@@ -16,7 +16,7 @@
 	}
 
 	&.noborder {
-		margin: 1rem -0.5rem;
+		margin: var(--wm-space-4) calc(var(--wm-space-2) * -1);
 	}
 }
 

@@ -1,0 +1,64 @@
+name: Workman merge hook
+description: |
+  Closes the Workman tasks a merged pull request references.
+
+  Every commit on the PR is scanned for a `Refs:` trailer (the one the veans
+  agent prompt tells coding agents to write, e.g. `Refs: PROJ-12` or
+  `Refs: #12, #13`). Each referenced task is marked done on the board and gets
+  a comment linking back to the PR. Tasks that are already done are skipped, so
+  re-running is safe.
+
+  The PR merge is the human gate: agents park finished work In Review and never
+  close tasks themselves — this hook is what closes them. Wire it to
+  `pull_request: [closed]` and guard on `merged == true` (see the example
+  workflow in veans/examples/merge-hook.yml).
+
+  Reads `server` and `project_id` from the repo's committed `.veans.yml`; only
+  the token is a secret. Talks to /api/v2 with curl, so it needs no veans
+  binary and works against a self-hosted Workman that GitHub cannot reach
+  inbound — the runner reaches out.
+
+inputs:
+  token:
+    description: |
+      A Workman API token allowed to read tasks, update tasks and create
+      comments on the project — the bot token minted by `veans init` is
+      sufficient. Store it as a repository secret.
+    required: true
+  config:
+    description: Path to the .veans.yml to read server and project_id from.
+    required: false
+    default: .veans.yml
+  server:
+    description: Overrides the server URL from .veans.yml, e.g. for an internal hostname the runner can reach.
+    required: false
+    default: ""
+  dry-run:
+    description: Resolve and report the referenced tasks without changing anything.
+    required: false
+    default: "false"
+
+outputs:
+  closed:
+    description: Space-separated task identifiers this run closed.
+    value: ${{ steps.close.outputs.closed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Close referenced tasks
+      id: close
+      shell: bash
+      env:
+        WORKMAN_TOKEN: ${{ inputs.token }}
+        WORKMAN_CONFIG: ${{ inputs.config }}
+        WORKMAN_SERVER: ${{ inputs.server }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      run: bash "${{ github.action_path }}/close-merged.sh"

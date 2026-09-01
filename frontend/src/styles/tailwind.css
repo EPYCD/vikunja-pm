@@ -1,3 +1,40 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme) prefix(tw);
 @import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+
+/* Expose the Workman token system to the prefixed Tailwind utilities, so
+   `tw:bg-surface`, `tw:text-accent` and `tw:border-line` resolve to the same
+   custom properties the SCSS layer uses. */
+@theme {
+	--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	--font-display: 'Space Grotesk', 'Inter', sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+	--color-canvas: var(--wm-canvas);
+	--color-surface: var(--wm-surface);
+	--color-surface-raised: var(--wm-surface-raised);
+	--color-surface-sunken: var(--wm-surface-sunken);
+	--color-surface-hover: var(--wm-surface-hover);
+
+	--color-line: var(--wm-line);
+	--color-line-strong: var(--wm-line-strong);
+	--color-line-faint: var(--wm-line-faint);
+
+	--color-ink: var(--wm-text);
+	--color-ink-secondary: var(--wm-text-secondary);
+	--color-ink-tertiary: var(--wm-text-tertiary);
+
+	--color-accent: var(--wm-accent);
+	--color-accent-hover: var(--wm-accent-hover);
+	--color-accent-text: var(--wm-accent-text);
+	--color-accent-wash: var(--wm-accent-wash);
+	--color-on-accent: var(--wm-on-accent);
+
+	--radius-xs: var(--wm-radius-xs);
+	--radius-sm: var(--wm-radius-sm);
+	--radius-DEFAULT: var(--wm-radius);
+
+	--tracking-label: var(--wm-tracking-label);
+
+	--ease-workman: cubic-bezier(0.2, 0, 0.13, 1);
+}

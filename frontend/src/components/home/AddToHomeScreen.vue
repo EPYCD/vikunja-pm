@@ -52,20 +52,25 @@ const shouldShowMessage = computed(() => {
 	// at least define it centrally
 	// the highest z-index of a modal is .hint-modal with 4500
 	z-index: 5000;
-	inset-block-end: 1rem;
-	inset-inline: 1rem;
+	inset-block-end: var(--wm-space-4);
+	inset-inline: var(--wm-space-4);
 	max-inline-size: max-content;
 	margin-inline: auto;
 
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
-	padding: .5rem 1rem;
-	background: var(--grey-900);
-	border-radius: $radius;
-	font-size: .9rem;
-	color: var(--grey-200);
+	gap: var(--wm-space-4);
+	padding-block: var(--wm-space-2);
+	padding-inline: var(--wm-space-4);
+	background: var(--wm-surface-raised);
+	color: var(--wm-text);
+	font-size: var(--wm-text-sm);
+
+	// The banner floats, but a chamfered element can't carry a box-shadow —
+	// the outline traces the cut instead.
+	@include chamfer(var(--wm-chamfer-sm), bottom-right);
+	@include chamfer-outline(var(--wm-line-strong));
 
 	@media screen and (min-width: $tablet) {
 		display: none;
@@ -74,18 +79,26 @@ const shouldShowMessage = computed(() => {
 	@media print {
 		display: none;
 	}
-	
+
 	&.has-update-available {
 		inset-block-end: 5rem;
 	}
 }
 
 .add-icon {
-	color: var(--primary-light);
+	color: var(--wm-accent-text);
 }
 
 .hide-button {
-	padding: .25rem .5rem;
+	padding-block: var(--wm-space-1);
+	padding-inline: var(--wm-space-2);
 	cursor: pointer;
+	color: var(--wm-text-tertiary);
+	transition: color var(--wm-duration) var(--wm-ease);
+
+	&:hover,
+	&:focus-visible {
+		color: var(--wm-text);
+	}
 }
 </style>

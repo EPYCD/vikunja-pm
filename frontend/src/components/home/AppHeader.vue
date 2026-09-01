@@ -21,9 +21,15 @@
 			v-if="currentProject?.id"
 			class="project-title-wrapper"
 		>
-			<span class="project-title">
-				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
-			</span>
+			<div class="project-heading">
+				<span
+					v-if="currentViewTitle"
+					class="project-eyebrow"
+				>{{ currentViewTitle }}</span>
+				<span class="project-title">
+					{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
+				</span>
+			</div>
 
 			<BaseButton
 				v-if="!isEditorContentEmpty(currentProject.description)"
@@ -59,7 +65,9 @@
 			v-else-if="pageTitle"
 			class="project-title-wrapper"
 		>
-			<span class="project-title">{{ pageTitle }}</span>
+			<div class="project-heading">
+				<span class="project-title">{{ pageTitle }}</span>
+			</div>
 		</div>
 
 		<div class="navbar-end">
@@ -165,6 +173,15 @@ const background = computed(() => baseStore.background)
 const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
+// The header eyebrow names the view the project is currently shown through.
+const currentViewTitle = computed(() => {
+	const viewId = baseStore.currentProjectViewId
+	if (!viewId) {
+		return ''
+	}
+	return currentProject.value?.views?.find(view => view.id === viewId)?.title ?? ''
+})
+
 // Standalone pages (no project) surface their route's title in the header.
 const route = useRoute()
 const { t } = useI18n()
@@ -182,12 +199,10 @@ const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEA
 </script>
 
 <style lang="scss" scoped>
-$user-dropdown-width-mobile: 5rem;
-
 .navbar {
-	--navbar-button-min-width: 40px;
-	--navbar-gap-width: 1rem;
-	--navbar-icon-size: 1.25rem;
+	--navbar-button-min-width: 2.25rem;
+	--navbar-gap-width: var(--wm-space-3);
+	--navbar-icon-size: 1rem;
 
 	position: fixed;
 	inset-block-start: 0;
@@ -196,15 +211,16 @@ $user-dropdown-width-mobile: 5rem;
 	z-index: 30;
 
 	display: flex;
-	justify-content: space-between;
+	align-items: stretch;
 	gap: var(--navbar-gap-width);
 	min-block-size: $navbar-height;
 
-	background: var(--site-background);
+	// Flat surface with a single hairline rule — the header never casts a shadow.
+	background: var(--wm-surface);
+	border-block-end: 1px solid var(--wm-line);
 
 	@media screen and (min-width: $tablet) {
-		padding-inline-start: 2rem;
-		align-items: stretch;
+		padding-inline: var(--wm-space-5) var(--wm-space-4);
 	}
 
 	&.menu-active {
@@ -216,8 +232,14 @@ $user-dropdown-width-mobile: 5rem;
 	// FIXME: notifications should provide a slot for the icon instead, so that we can style it as we want
 	:deep() {
 		.trigger-button {
-			color: var(--grey-400);
+			color: var(--wm-text-tertiary);
 			font-size: var(--navbar-icon-size);
+			transition: color var(--wm-duration) var(--wm-ease);
+
+			&:hover,
+			&:focus-visible {
+				color: var(--wm-text);
+			}
 		}
 	}
 }
@@ -226,51 +248,79 @@ $user-dropdown-width-mobile: 5rem;
 	display: none;
 
 	@media screen and (min-width: $tablet) {
-		align-self: stretch;
+		align-self: center;
 		display: flex;
 		align-items: center;
-		margin-inline-end: .5rem;
+		margin-inline-end: var(--wm-space-2);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
 	}
 }
 
 .menu-button {
-	margin-inline-end: auto;
-	align-self: stretch;
+	align-self: center;
 	flex: 0 0 auto;
 
 	@media screen and (max-width: $tablet) {
-		margin-inline-start: 1rem;
+		margin-inline-start: var(--wm-space-2);
 	}
 }
 
 .project-title-wrapper {
-	margin-inline: auto;
 	display: flex;
 	align-items: center;
+	gap: var(--wm-space-1);
+	margin-inline-end: auto;
 
 	// this makes the truncated text of the project title work
 	// inside the flexbox parent
 	min-inline-size: 0;
 
 	@media screen and (min-width: $tablet) {
-		padding-inline: var(--navbar-gap-width);
+		padding-inline-start: var(--wm-space-2);
 	}
 }
 
+.project-heading {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--wm-space-1);
+	min-inline-size: 0;
+}
+
+.project-eyebrow {
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
+	line-height: 1;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 .project-title {
-	font-size: 1rem;
+	font-family: $workman-display-font;
+	font-size: var(--wm-text-md);
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: var(--wm-tracking-tight);
+	color: var(--wm-text);
+
 	// We need the following for overflowing ellipsis to work
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
 
 	@media screen and (min-width: $tablet) {
-		font-size: 1.75rem;
+		font-size: var(--wm-text-lg);
 	}
 }
 
 .project-title-dropdown {
-	align-self: stretch;
+	align-self: center;
 
 	.project-title-button {
 		flex-grow: 1;
@@ -278,52 +328,91 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .project-title-button {
-	align-self: stretch;
+	align-self: center;
 	min-inline-size: var(--navbar-button-min-width);
+	block-size: var(--wm-control-height-sm);
 	display: flex;
-	place-items: center;
+	align-items: center;
 	justify-content: center;
 	font-size: var(--navbar-icon-size);
-	color: var(--grey-400);
+	color: var(--wm-text-tertiary);
+	transition:
+		color var(--wm-duration) var(--wm-ease),
+		background-color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-text);
+		background: var(--wm-surface-hover);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+
+		color: var(--wm-text);
+	}
 }
 
 .navbar-end {
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;
+	margin-inline-start: auto;
 
-	>* {
+	> * {
 		min-inline-size: var(--navbar-button-min-width);
 	}
 }
 
 .username-dropdown-trigger {
-	padding-inline-start: .75rem;
+	align-self: center;
 	display: inline-flex;
 	align-items: center;
-	font-size: .85rem;
-	font-weight: 700;
-	gap: .5rem;
-	
+	gap: var(--wm-space-2);
+	block-size: var(--wm-control-height);
+	padding-inline: var(--wm-space-1) var(--wm-space-2);
+	// The outline is the only affordance on this control, so it uses the
+	// contrast-safe control hairline rather than the decorative one.
+	border: 1px solid var(--wm-line-control);
+	background: var(--wm-surface);
+	color: var(--wm-text-secondary);
+	font-size: var(--wm-text-sm);
+	font-weight: 500;
+	transition:
+		color var(--wm-duration) var(--wm-ease),
+		border-color var(--wm-duration) var(--wm-ease),
+		background-color var(--wm-duration) var(--wm-ease);
+
+	&:hover {
+		color: var(--wm-text);
+		border-color: var(--wm-text-tertiary);
+		background: var(--wm-surface-hover);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+
+		border-color: var(--wm-accent);
+		color: var(--wm-text);
+	}
+
 	:deep(.avatar) {
 		margin-inline-end: 0;
 	}
-	
+
 	[dir="rtl"] & {
 		flex-direction: row-reverse;
 	}
 
 	@media screen and (max-width: $tablet) {
-		padding-inline-end: .5rem;
-	}
-
-	@media screen and (min-width: $tablet) {
-		padding-inline-end: .75rem;
+		padding-inline: var(--wm-space-1);
 	}
 }
 
 .username {
-	font-family: $vikunja-font;
+	max-inline-size: 10rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 
 	@media screen and (max-width: $tablet) {
 		display: none;
@@ -331,13 +420,17 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .dropdown-icon {
-	transition: transform $transition;
+	color: var(--wm-text-tertiary);
+	font-size: var(--wm-text-2xs);
+	transition: transform var(--wm-duration) var(--wm-ease);
 }
 
 .avatar {
-	border-radius: 100%;
+	border-radius: var(--wm-radius-full);
 	vertical-align: middle;
-	block-size: 40px;
-	margin-inline-end: .5rem;
+	block-size: 1.375rem;
+	inline-size: 1.375rem;
+	flex-shrink: 0;
+	margin-inline-end: 0;
 }
 </style>

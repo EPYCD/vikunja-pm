@@ -95,18 +95,34 @@
 				class="menu"
 				:aria-label="$t('project.pseudo.favorites.title')"
 			>
+				<h2 class="menu-section">
+					<span class="menu-section__label">{{ $t('project.pseudo.favorites.title') }}</span>
+					<span class="menu-section__count">{{ favoriteProjects.length }}</span>
+					<span
+						class="menu-section__rule"
+						aria-hidden="true"
+					/>
+				</h2>
 				<ProjectsNavigation
 					:model-value="favoriteProjects"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
 			</nav>
-			
+
 			<nav
 				v-if="savedFilterProjects.length"
 				class="menu"
 				:aria-label="$t('navigation.savedFilters')"
 			>
+				<h2 class="menu-section">
+					<span class="menu-section__label">{{ $t('navigation.savedFilters') }}</span>
+					<span class="menu-section__count">{{ savedFilterProjects.length }}</span>
+					<span
+						class="menu-section__rule"
+						aria-hidden="true"
+					/>
+				</h2>
 				<ProjectsNavigation
 					:model-value="savedFilterProjects"
 					:can-edit-order="false"
@@ -118,6 +134,14 @@
 				class="menu"
 				:aria-label="$t('project.projects')"
 			>
+				<h2 class="menu-section">
+					<span class="menu-section__label">{{ $t('project.projects') }}</span>
+					<span class="menu-section__count">{{ projects.length }}</span>
+					<span
+						class="menu-section__rule"
+						aria-hidden="true"
+					/>
+				</h2>
 				<ProjectsNavigation
 					:model-value="projects"
 					:can-edit-order="true"
@@ -127,7 +151,6 @@
 		</template>
 
 		<PoweredByLink
-			class="mbs-auto"
 			utm-medium="navigation"
 		/>
 
@@ -174,9 +197,9 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 .logo {
 	display: block;
 
-	padding-inline-start: 1rem;
-	margin-inline-end: 1rem;
-	margin-block-end: 1rem;
+	padding-inline-start: var(--wm-space-4);
+	margin-inline-end: var(--wm-space-4);
+	margin-block-end: var(--wm-space-4);
 
 	@media screen and (min-width: $tablet) {
 		display: none;
@@ -188,9 +211,12 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 
 	display: flex;
 	flex-direction: column;
-	background: var(--site-background);
+	background: var(--wm-canvas);
+	// The sidebar is separated from the content by a hairline, never a shadow.
+	border-inline-end: 1px solid var(--wm-line);
 	color: $vikunja-nav-color;
-	padding: 1rem 0;
+	padding-block: var(--wm-space-3);
+	padding-inline: 0;
 	transition: transform $transition-duration ease-in;
 	position: fixed;
 	inset-block-start: $navbar-height;
@@ -228,33 +254,41 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 	inline-size: 4px;
 	cursor: ew-resize;
 	background: transparent;
-	transition: background-color $transition-duration ease;
+	transition: background-color var(--wm-duration) var(--wm-ease);
 	touch-action: none;
 
 	&:hover,
 	&:active {
-		background-color: var(--primary);
+		background-color: var(--wm-accent);
 	}
 }
 
 .top-menu .menu-list {
 	li {
-		font-weight: 600;
-		font-family: $vikunja-font;
+		font-weight: 500;
 	}
 
 	.list-menu-link,
 	li > a {
+		display: flex;
+		align-items: center;
+		block-size: 100%;
 		padding-inline-start: 2rem;
-		display: inline-block;
 
 		.icon {
-			padding-block-end: .25rem;
+			padding-block-end: 0;
 		}
 	}
 }
 
 .menu + .menu {
-	padding-block-start: math.div($navbar-padding, 2);
+	padding-block-start: var(--wm-space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.menu-container,
+	.menu-container.is-active {
+		transition: none;
+	}
 }
 </style>

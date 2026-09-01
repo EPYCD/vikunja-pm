@@ -51,22 +51,63 @@ const minimumPriority = computed(() => {
 </script>
 
 <style lang="scss" scoped>
+// A mono status chip: the level color carries the hairline and the wash, while
+// the text stays on a contrast-safe ramp. Only HIGH and above take a colored
+// label — everything below would be two things shouting at once.
+.priority-label {
+	@include mono-label;
+
+	--priority-color: var(--wm-line-strong);
+
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--wm-space-1);
+	min-block-size: 1.375rem;
+	padding-inline: var(--wm-space-2);
+	border: 1px solid var(--priority-color);
+	border-radius: var(--wm-radius-xs);
+	line-height: 1;
+	color: var(--wm-text-secondary);
+	inline-size: auto;
+	white-space: nowrap;
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--priority-color);
+		opacity: 0.12;
+		pointer-events: none;
+	}
+
+	> span {
+		position: relative;
+	}
+}
+
 .high-priority {
+	--priority-color: var(--danger);
+
 	color: var(--danger-text);
 	inline-size: auto !important; // To override the width set in tasks
 }
 
 .not-so-high {
-	color: var(--warning);
+	--priority-color: var(--warning);
+
+	color: var(--wm-text);
 }
 
 .negligible {
-	color: var(--info);
+	--priority-color: var(--wm-line-strong);
+
+	color: var(--wm-text-tertiary);
 }
 
 .icon {
 	vertical-align: top;
 	inline-size: auto !important;
-	padding-inline-end: .5rem;
+	font-size: var(--wm-text-2xs);
 }
 </style>

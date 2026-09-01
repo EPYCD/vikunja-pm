@@ -99,6 +99,7 @@
 								<tr>
 									<th
 										v-if="activeColumns.index"
+										class="is-identifier"
 										:aria-sort="ariaSort(sortBy.index)"
 									>
 										#
@@ -152,6 +153,7 @@
 									</th>
 									<th
 										v-if="activeColumns.dueDate"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.due_date)"
 									>
 										{{ $t('task.attributes.dueDate') }}
@@ -161,11 +163,15 @@
 											@click="sort('due_date', $event)"
 										/>
 									</th>
-									<th v-if="activeColumns.commentCount">
+									<th
+										v-if="activeColumns.commentCount"
+										class="is-numeric"
+									>
 										{{ $t('task.attributes.commentCount') }}
 									</th>
 									<th
 										v-if="activeColumns.startDate"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.start_date)"
 									>
 										{{ $t('task.attributes.startDate') }}
@@ -177,6 +183,7 @@
 									</th>
 									<th
 										v-if="activeColumns.endDate"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.end_date)"
 									>
 										{{ $t('task.attributes.endDate') }}
@@ -188,6 +195,7 @@
 									</th>
 									<th
 										v-if="activeColumns.percentDone"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.percent_done)"
 									>
 										{{ $t('task.attributes.percentDone') }}
@@ -199,6 +207,7 @@
 									</th>
 									<th
 										v-if="activeColumns.doneAt"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.done_at)"
 									>
 										{{ $t('task.attributes.doneAt') }}
@@ -210,6 +219,7 @@
 									</th>
 									<th
 										v-if="activeColumns.created"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.created)"
 									>
 										{{ $t('task.attributes.created') }}
@@ -221,6 +231,7 @@
 									</th>
 									<th
 										v-if="activeColumns.updated"
+										class="is-numeric"
 										:aria-sort="ariaSort(sortBy.updated)"
 									>
 										{{ $t('task.attributes.updated') }}
@@ -240,7 +251,10 @@
 									v-for="t in tasks"
 									:key="t.id"
 								>
-									<td v-if="activeColumns.index">
+									<td
+										v-if="activeColumns.index"
+										class="is-identifier"
+									>
 										<RouterLink :to="taskDetailRoutes[t.id]">
 											{{ getTaskIdentifier(t) }}
 										</RouterLink>
@@ -287,32 +301,44 @@
 									</td>
 									<DateTableCell
 										v-if="activeColumns.dueDate"
+										class="is-numeric"
 										:date="t.dueDate"
 									/>
-									<td v-if="activeColumns.commentCount">
+									<td
+										v-if="activeColumns.commentCount"
+										class="is-numeric"
+									>
 										<CommentCount :task="t" />
 									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
+										class="is-numeric"
 										:date="t.startDate"
 									/>
 									<DateTableCell
 										v-if="activeColumns.endDate"
+										class="is-numeric"
 										:date="t.endDate"
 									/>
-									<td v-if="activeColumns.percentDone">
+									<td
+										v-if="activeColumns.percentDone"
+										class="is-numeric"
+									>
 										{{ t.percentDone * 100 }}%
 									</td>
 									<DateTableCell
 										v-if="activeColumns.doneAt"
+										class="is-numeric"
 										:date="t.doneAt"
 									/>
 									<DateTableCell
 										v-if="activeColumns.created"
+										class="is-numeric"
 										:date="t.created"
 									/>
 									<DateTableCell
 										v-if="activeColumns.updated"
+										class="is-numeric"
 										:date="t.updated"
 									/>
 									<td v-if="activeColumns.createdBy">
@@ -482,13 +508,67 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 </script>
 
 <style lang="scss" scoped>
+// The flagship surface: a mono-label header band, hairline row rules and
+// right-aligned monospace figures so the columns read as an instrument.
 .table {
 	background: transparent;
 	overflow-x: auto;
 	overflow-y: hidden;
+	border-collapse: collapse;
 
-	th {
+	thead th {
+		@include mono-label;
+
 		white-space: nowrap;
+		vertical-align: middle;
+		padding: var(--wm-space-2) var(--wm-space-3);
+		color: var(--wm-text-tertiary);
+		background: var(--wm-surface-sunken);
+		border-block-start: 0;
+		border-block-end: 1px solid var(--wm-line);
+	}
+
+	tbody td {
+		block-size: 36px;
+		padding: 0 var(--wm-space-3);
+		vertical-align: middle;
+		color: var(--wm-text-secondary);
+		border-block-start: 0;
+		border-block-end: 1px solid var(--wm-line-faint);
+		transition: background-color var(--wm-duration-fast) var(--wm-ease);
+	}
+
+	tbody tr:last-child td {
+		border-block-end: 0;
+	}
+
+	tbody tr:hover td {
+		background: var(--wm-surface-hover);
+	}
+
+	// Identifiers, dates, counts and percentages are tabular so the digits stay
+	// in column as rows update.
+	tbody td.is-identifier,
+	tbody td.is-numeric {
+		@include mono-data;
+
+		font-size: var(--wm-text-xs);
+		white-space: nowrap;
+		color: var(--wm-text);
+	}
+
+	thead th.is-numeric,
+	tbody td.is-numeric {
+		text-align: end;
+	}
+
+	:deep(td a) {
+		color: var(--wm-text);
+		text-decoration: none;
+
+		&:hover {
+			color: var(--wm-accent-text);
+		}
 	}
 
 	.user {
@@ -502,10 +582,11 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	:deep(.card-content .content) {
 		display: flex;
 		flex-direction: column;
+		gap: var(--wm-space-2);
 	}
 
 	&.is-open {
-		margin: 2rem 0 1rem;
+		margin: var(--wm-space-6) 0 var(--wm-space-4);
 	}
 }
 
@@ -514,7 +595,12 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	box-shadow: none;
 }
 
-.filter-container :deep(.popup) {
-	inset-block-start: 7rem;
+.filter-container {
+	display: flex;
+	align-items: center;
+
+	:deep(.popup) {
+		inset-block-start: 7rem;
+	}
 }
 </style>

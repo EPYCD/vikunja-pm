@@ -68,17 +68,17 @@ async function createTask() {
 
 <style scoped lang="scss">
 .add-new-task {
-	padding: 1rem .7rem .4rem;
+	padding: var(--wm-space-4) var(--wm-space-3) var(--wm-space-2);
 	display: flex;
 	max-inline-size: 450px;
 
 	.input {
-		margin-inline-end: .7rem;
-		font-size: .8rem;
+		margin-inline-end: var(--wm-space-3);
+		font-size: var(--wm-text-sm);
 	}
 
 	.button {
-		font-size: .68rem;
+		font-size: var(--wm-text-2xs);
 	}
 }
 </style>

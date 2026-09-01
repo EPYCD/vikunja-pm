@@ -77,6 +77,8 @@ const TaskCollectionExpandComments TaskCollectionExpandable = `comments`
 const TaskCollectionExpandCommentCount TaskCollectionExpandable = `comment_count`
 const TaskCollectionExpandTimeEntriesCount TaskCollectionExpandable = `time_entries_count`
 const TaskCollectionExpandIsUnread TaskCollectionExpandable = `is_unread`
+const TaskCollectionExpandScope TaskCollectionExpandable = `scope`
+const TaskCollectionExpandLeases TaskCollectionExpandable = `leases`
 
 // Validate validates if the TaskCollectionExpandable value is valid.
 func (t TaskCollectionExpandable) Validate() error {
@@ -94,6 +96,10 @@ func (t TaskCollectionExpandable) Validate() error {
 	case TaskCollectionExpandTimeEntriesCount:
 		return nil
 	case TaskCollectionExpandIsUnread:
+		return nil
+	case TaskCollectionExpandScope:
+		return nil
+	case TaskCollectionExpandLeases:
 		return nil
 	}
 
