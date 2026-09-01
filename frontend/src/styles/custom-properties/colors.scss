@@ -41,21 +41,25 @@
   --wm-line: hsl(220, 14%, 90%);
   --wm-line-strong: hsl(220, 13%, 82%);
   --wm-line-faint: hsl(220, 16%, 94%);
+  // Border for form controls, where the edge is the only affordance and so has
+  // to clear 3:1 against the surface behind it. Applying that to every hairline
+  // would make the decorative rules shout, hence the separate token.
+  --wm-line-control: hsl(220, 13%, 58%);
 
   // Text ramp.
   --wm-text: hsl(222, 24%, 11%);
   --wm-text-secondary: hsl(220, 10%, 38%);
-  --wm-text-tertiary: hsl(220, 9%, 52%);
+  --wm-text-tertiary: hsl(220, 9%, 46%);
   --wm-text-inverted: hsl(0, 0%, 100%);
 
   // Status. Hues sit far enough from the crimson accent to stay readable
   // next to it; danger is the hotter, brighter red so it never reads as brand.
   --wm-success-h: 158;
   --wm-success-s: 68%;
-  --wm-success-l: 33%;
+  --wm-success-l: 30%;
   --wm-warning-h: 38;
   --wm-warning-s: 92%;
-  --wm-warning-l: 45%;
+  --wm-warning-l: 32%;
   --wm-danger-h: 6;
   --wm-danger-s: 78%;
   --wm-danger-l: 48%;
@@ -236,7 +240,7 @@
   --grey-light: var(--wm-line-strong);
   --grey-lighter: var(--wm-line);
   --grey-lightest: var(--wm-line-faint);
-  --input-border-color: var(--wm-line);
+  --input-border-color: var(--wm-line-control);
 
   --white-h: 0deg;
   --white-s: 0%;
@@ -297,7 +301,7 @@
       // Only layer 1 moves. Everything above re-resolves from these.
 
       // The accent lifts in dark so it keeps its punch against near-black.
-      --wm-accent-l: 58%;
+      --wm-accent-l: 53%;
       --wm-accent-hover: hsl(var(--wm-accent-h), var(--wm-accent-s), 65%);
       --wm-accent-active: hsl(var(--wm-accent-h), var(--wm-accent-s), 50%);
       --wm-accent-text: hsl(var(--wm-accent-h), 84%, 68%);
@@ -318,10 +322,11 @@
       --wm-line: hsl(350, 5%, 16%);
       --wm-line-strong: hsl(350, 4%, 26%);
       --wm-line-faint: hsl(350, 5%, 11%);
+      --wm-line-control: hsl(350, 4%, 40%);
 
       --wm-text: hsl(0, 0%, 97%);
       --wm-text-secondary: hsl(350, 4%, 66%);
-      --wm-text-tertiary: hsl(350, 4%, 48%);
+      --wm-text-tertiary: hsl(350, 4%, 52%);
       --wm-text-inverted: hsl(350, 6%, 5%);
 
       // Status hues brighten so they still read on near-black.

@@ -1,4 +1,29 @@
 // FIXME: should be in TaskDetailView.vue
 .link-share-container:not(.has-background) .task-view {
-  background: transparent;
+	background: transparent;
+}
+
+// Task detail section headers are console eyebrows: a mono label followed by a
+// hairline that runs out to the end of the line. Overrides the h3-sized
+// fallback in theme/content.scss, which this file is imported after.
+.content h2.task-section-title {
+	@include mono-label;
+
+	display: flex;
+	align-items: center;
+	gap: var(--wm-space-3);
+	color: var(--wm-text-tertiary);
+	margin-block-end: var(--wm-space-3);
+
+	&::after {
+		content: '';
+		flex: 1 1 auto;
+		block-size: 1px;
+		background: var(--wm-line);
+	}
+
+	.icon,
+	.is-small {
+		font-size: var(--wm-text-xs);
+	}
 }

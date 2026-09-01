@@ -125,7 +125,9 @@ h1, h2, h3 {
   font-size: var(--wm-text-base);
   color: var(--wm-text);
   background-color: var(--wm-surface);
-  border-color: var(--wm-line);
+  // Control edges use the higher-contrast token: the border is the only thing
+  // marking where the field is, so it has to clear 3:1.
+  border-color: var(--wm-line-control);
   transition:
     border-color var(--wm-duration) var(--wm-ease),
     background-color var(--wm-duration) var(--wm-ease);
@@ -135,7 +137,7 @@ h1, h2, h3 {
   }
 
   &:hover:not(:disabled) {
-    border-color: var(--wm-line-strong);
+    border-color: var(--wm-text-tertiary);
   }
 
   &:focus,

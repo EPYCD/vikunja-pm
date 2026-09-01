@@ -50,6 +50,15 @@ Status colors keep their own hues: `--success`, `--warning`, `--danger`, `--info
 crimson. When you need accent-colored *text*, use `--wm-accent-text`, never
 `--wm-accent` (which fails contrast on light backgrounds).
 
+`--wm-line-control` exists because WCAG wants 3:1 for the edge of a form
+control, where the border is the only thing marking the field. Applying that to
+every hairline would make the decorative rules shout, so control borders use
+this token and separators use `--wm-line` / `--wm-line-faint`.
+
+**Every colour pair is verified.** `python3 scripts/check-contrast.py` reads the
+real values out of `colors.scss` and fails on anything below AA in either theme.
+Run it after touching a colour.
+
 ## 3. Type
 
 | Face | Variable | Job |
