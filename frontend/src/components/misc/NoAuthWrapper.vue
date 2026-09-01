@@ -76,8 +76,9 @@ useTitle(() => title.value)
 </script>
 
 <style lang="scss" scoped>
-// The way in: a full-bleed console ground with the blueprint graticule, one
-// cut panel floating on it, the lockup above. Nothing else.
+// The way in: a full-bleed ASCII landscape — crimson sun, receding ridges,
+// drawn entirely in JetBrains Mono glyphs by scripts/generate-auth-art.py —
+// with one cut panel floating over it.
 .no-auth-wrapper {
 	position: relative;
 	min-block-size: 100vh;
@@ -87,23 +88,43 @@ useTitle(() => title.value)
 	padding-block: var(--wm-space-6);
 	padding-inline: var(--wm-space-4);
 	background-color: var(--wm-canvas);
-
-	@include graticule;
+	background-image: url("@/assets/auth-backdrop-light.webp");
+	background-repeat: no-repeat;
+	background-position: center bottom;
+	background-size: cover;
+	background-attachment: fixed;
+	isolation: isolate;
 }
 
-// The crimson wedge in the corner of the ground — the same 45° cut the panel
-// carries, at page scale.
+html.dark .no-auth-wrapper {
+	background-image: url("@/assets/auth-backdrop.webp");
+}
+
+// A scrim over the artwork so the panel always has quiet ground under it and
+// the legal links stay readable wherever the ridges happen to fall.
 .no-auth-wrapper::before {
 	content: "";
-	position: fixed;
-	inset-block-end: 0;
-	inset-inline-start: 0;
-	inline-size: 520px;
-	block-size: 520px;
-	max-inline-size: 55vw;
-	max-block-size: 55vh;
-	background: url("@/assets/llama.svg?url") no-repeat left bottom / contain;
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background:
+		radial-gradient(
+			ellipse 46rem 34rem at 50% 46%,
+			color-mix(in srgb, var(--wm-canvas) 74%, transparent) 0%,
+			color-mix(in srgb, var(--wm-canvas) 30%, transparent) 55%,
+			transparent 100%
+		);
 	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.no-auth-wrapper {
+		// A fixed backdrop would jitter on mobile browsers that resize the
+		// viewport as the URL bar hides.
+		@media screen and (max-width: $tablet) {
+			background-attachment: scroll;
+		}
+	}
 }
 
 .auth-stack {
@@ -120,7 +141,7 @@ useTitle(() => title.value)
 }
 
 .auth-logo {
-	align-self: flex-start;
+	align-self: center;
 
 	:deep(.logo) {
 		block-size: 40px;
@@ -128,14 +149,17 @@ useTitle(() => title.value)
 }
 
 .auth-panel {
-	background-color: var(--wm-surface);
+	// Translucent so the artwork reads through it, blurred so the text on top
+	// of it never has to fight the character matrix underneath.
+	background-color: color-mix(in srgb, var(--wm-surface) 82%, transparent);
+	backdrop-filter: blur(18px) saturate(120%);
 	color: var(--wm-text);
 	padding: var(--wm-space-6);
 
 	// Panel edge: the outline traces the cut, because a border would be sliced
 	// open along the diagonal.
 	@include chamfer(var(--wm-chamfer-lg));
-	@include chamfer-outline(var(--wm-line));
+	@include chamfer-outline(var(--wm-line-strong));
 
 	// The skip link focuses this panel, and clip-path would swallow the normal
 	// box-shadow ring — so the ring is drawn off the clipped mask instead.
@@ -145,6 +169,14 @@ useTitle(() => title.value)
 
 	@media screen and (max-width: $tablet) {
 		padding: var(--wm-space-5);
+	}
+}
+
+// backdrop-filter is unevenly supported; without it the translucent panel would
+// leave glyphs showing through the form.
+@supports not (backdrop-filter: blur(1px)) {
+	.auth-panel {
+		background-color: var(--wm-surface);
 	}
 }
 
@@ -175,8 +207,8 @@ useTitle(() => title.value)
 .auth-stack .auth-legal {
 	@include mono-label;
 
-	color: var(--wm-text-tertiary);
-	text-align: end;
+	color: var(--wm-text-secondary);
+	text-align: center;
 	margin-block-start: 0;
 
 	// The links inherit the container's colour, so they need the underline to
