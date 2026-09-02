@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/web"
@@ -99,10 +100,13 @@ type PlanResult struct {
 
 // ApplyTaskPlan lints a decomposition as a set — dangling references, cycles,
 // paths that overlap without an ordering — and creates all of it in one go
-// when it is clean: tasks, parent/blocked/follows relations and scopes. The
-// caller has checked write access on the project and holds the transaction.
+// when it is clean: tasks, parent/blocked/follows relations and scopes. A
+// reference to a key the plan does not define is resolved against the tasks
+// already on the board (PROJ-12, #12 or 12), so a plan can hang new work off
+// existing tasks. The caller has checked write access on the project and
+// holds the transaction.
 func ApplyTaskPlan(s *xorm.Session, a web.Auth, projectID int64, plan *TaskPlan) (*PlanResult, error) {
-	findings, err := lintTaskPlan(s, projectID, plan)
+	l, findings, err := lintTaskPlan(s, projectID, plan)
 	if err != nil {
 		return nil, err
 	}
@@ -133,20 +137,26 @@ func ApplyTaskPlan(s *xorm.Session, a web.Auth, projectID int64, plan *TaskPlan)
 		return nil, err
 	}
 
+	idOf := func(key string) int64 {
+		if t, ok := byKey[key]; ok {
+			return t.ID
+		}
+		return l.existing[key]
+	}
 	for _, p := range plan.Tasks {
 		t := byKey[p.Key]
 		if p.ParentKey != "" {
-			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: byKey[p.ParentKey].ID, RelationKind: RelationKindParenttask}).Create(s, a); err != nil {
+			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: idOf(p.ParentKey), RelationKind: RelationKindParenttask}).Create(s, a); err != nil {
 				return nil, err
 			}
 		}
 		for _, k := range p.BlockedBy {
-			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: byKey[k].ID, RelationKind: RelationKindBlocked}).Create(s, a); err != nil {
+			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: idOf(k), RelationKind: RelationKindBlocked}).Create(s, a); err != nil {
 				return nil, err
 			}
 		}
 		for _, k := range p.Follows {
-			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: byKey[k].ID, RelationKind: RelationKindFollows}).Create(s, a); err != nil {
+			if err := (&TaskRelation{TaskID: t.ID, OtherTaskID: idOf(k), RelationKind: RelationKindFollows}).Create(s, a); err != nil {
 				return nil, err
 			}
 		}
@@ -182,25 +192,25 @@ func ApplyTaskPlan(s *xorm.Session, a web.Auth, projectID int64, plan *TaskPlan)
 }
 
 func taskIdentifier(project *Project, t *Task) string {
-	if project.Identifier == "" {
-		return fmt.Sprintf("#%d", t.Index)
-	}
-	return fmt.Sprintf("%s-%d", project.Identifier, t.Index)
+	t.setIdentifier(project)
+	return t.Identifier
 }
 
 // lintTaskPlan checks the plan as a whole. Order of findings is stable so
 // agents can diff two runs.
-func lintTaskPlan(s *xorm.Session, projectID int64, plan *TaskPlan) ([]PlanFinding, error) {
-	l := &planLinter{byKey: map[string]*PlannedTask{}, deps: map[string][]string{}, parents: map[string][]string{}, owned: map[string][]string{}}
+func lintTaskPlan(s *xorm.Session, projectID int64, plan *TaskPlan) (*planLinter, []PlanFinding, error) {
+	l := &planLinter{byKey: map[string]*PlannedTask{}, deps: map[string][]string{}, parents: map[string][]string{}, owned: map[string][]string{}, existing: map[string]int64{}}
 	l.indexKeys(plan)
-	l.checkReferences()
+	if err := l.checkReferences(s, projectID); err != nil {
+		return nil, nil, err
+	}
 	l.checkCycles()
 	l.checkScopes()
 	l.checkOverlapsWithinPlan()
 	if err := l.checkOverlapsWithBoard(s, projectID); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return l.findings, nil
+	return l, l.findings, nil
 }
 
 type planLinter struct {
@@ -210,6 +220,34 @@ type planLinter struct {
 	deps     map[string][]string
 	parents  map[string][]string
 	owned    map[string][]string
+	// existing maps a referenced key that is not in the plan onto the id of
+	// the board task it names.
+	existing map[string]int64
+}
+
+// resolveExisting turns PROJ-12, #12 or 12 into the id of that task in the
+// project, or 0 when there is no such task.
+func (l *planLinter) resolveExisting(s *xorm.Session, projectID int64, key string) (int64, error) {
+	if id, ok := l.existing[key]; ok {
+		return id, nil
+	}
+	raw := strings.TrimPrefix(key, "#")
+	if i := strings.LastIndex(raw, "-"); i >= 0 {
+		raw = raw[i+1:]
+	}
+	index, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || index < 1 {
+		return 0, nil //nolint:nilerr // not a number means "not an identifier", which is an unknown_reference finding, not a failure
+	}
+	task, err := GetTaskByProjectAndIndex(s, projectID, index)
+	if err != nil {
+		if IsErrTaskDoesNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	l.existing[key] = task.ID
+	return task.ID, nil
 }
 
 func (l *planLinter) add(sev, code, msg string, keys ...string) {
@@ -228,9 +266,17 @@ func (l *planLinter) indexKeys(plan *TaskPlan) {
 	}
 }
 
-// checkReferences validates every key a task points at and builds the
-// dependency and parent graphs from the valid ones.
-func (l *planLinter) checkReferences() {
+// checkReferences validates every key a task points at — a plan key or an
+// existing task's identifier — and builds the dependency and parent graphs
+// from the valid ones. Existing tasks enter the graphs as leaves.
+func (l *planLinter) checkReferences(s *xorm.Session, projectID int64) error {
+	known := func(r string) (bool, error) {
+		if l.byKey[r] != nil {
+			return true, nil
+		}
+		id, err := l.resolveExisting(s, projectID, r)
+		return id != 0, err
+	}
 	for _, key := range l.order {
 		p := l.byKey[key]
 		ordering := append(append([]string{}, p.BlockedBy...), p.Follows...)
@@ -239,22 +285,28 @@ func (l *planLinter) checkReferences() {
 			refs = append(refs, p.ParentKey)
 		}
 		for _, r := range refs {
-			switch {
-			case r == key:
+			if r == key {
 				l.add(PlanSeverityError, PlanFindingSelfReference, fmt.Sprintf("%q references itself", key), key)
-			case l.byKey[r] == nil:
-				l.add(PlanSeverityError, PlanFindingUnknownReference, fmt.Sprintf("%q references unknown key %q", key, r), key, r)
+				continue
+			}
+			ok, err := known(r)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				l.add(PlanSeverityError, PlanFindingUnknownReference, fmt.Sprintf("%q references unknown key %q (not in the plan, not a task on the board)", key, r), key, r)
 			}
 		}
 		for _, r := range ordering {
-			if r != key && l.byKey[r] != nil {
+			if ok, _ := known(r); r != key && ok {
 				l.deps[key] = append(l.deps[key], r)
 			}
 		}
-		if p.ParentKey != "" && p.ParentKey != key && l.byKey[p.ParentKey] != nil {
+		if ok, _ := known(p.ParentKey); p.ParentKey != "" && p.ParentKey != key && ok {
 			l.parents[key] = []string{p.ParentKey}
 		}
 	}
+	return nil
 }
 
 func (l *planLinter) checkCycles() {
@@ -327,8 +379,26 @@ func (l *planLinter) checkOverlapsWithBoard(s *xorm.Session, projectID int64) er
 		existingIDs = append(existingIDs, id)
 	}
 	sort.Slice(existingIDs, func(i, j int) bool { return existingIDs[i] < existingIDs[j] })
+	reach := transitiveClosure(l.order, mergeEdges(l.deps, l.parents))
+	// The same board task may be referenced under several spellings
+	// (PROJ-12, #12, 12); any of them reachable means the overlap is planned.
+	keysOf := map[int64][]string{}
+	for k, id := range l.existing {
+		keysOf[id] = append(keysOf[id], k)
+	}
+	ordered := func(key string, id int64) bool {
+		for _, k := range keysOf[id] {
+			if reach[key][k] {
+				return true
+			}
+		}
+		return false
+	}
 	for _, key := range l.order {
 		for _, id := range existingIDs {
+			if ordered(key, id) {
+				continue
+			}
 			if pa, pb, ok := firstOverlap(l.owned[key], scopes[id].PathsOwned); ok {
 				l.findings = append(l.findings, PlanFinding{
 					Severity: PlanSeverityWarning,
@@ -425,4 +495,107 @@ func transitiveClosure(order []string, edges map[string][]string) map[string]map
 		}
 	}
 	return reach
+}
+
+// ExportedTask is one open board task in plan shape, keyed by its identifier
+// so the same file can be edited and fed back to ApplyTaskPlan for the tasks
+// it adds, referencing the exported ones.
+type ExportedTask struct {
+	PlannedTask
+	ID int64 `json:"id" doc:"The task id; informational, plans reference tasks by key."`
+}
+
+// ExportedPlan is the body of GET /projects/{id}/plan.
+type ExportedPlan struct {
+	Tasks []*ExportedTask `json:"tasks" doc:"Every open task of the project with its relations and scope, ordered by index."`
+}
+
+// ExportTaskPlan renders the project's open tasks as a plan: keys are task
+// identifiers, relations point at those keys (or at done tasks' identifiers,
+// which a re-import resolves against the board). The caller has checked read
+// access on the project.
+func ExportTaskPlan(s *xorm.Session, projectID int64) (*ExportedPlan, error) {
+	project, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+	tasks := []*Task{}
+	if err := s.Where("project_id = ? AND done = ?", projectID, false).OrderBy("`index` ASC").Find(&tasks); err != nil {
+		return nil, err
+	}
+	out := &ExportedPlan{Tasks: []*ExportedTask{}}
+	if len(tasks) == 0 {
+		return out, nil
+	}
+	ids := make([]int64, 0, len(tasks))
+	for _, t := range tasks {
+		ids = append(ids, t.ID)
+	}
+	relations := []*TaskRelation{}
+	if err := s.In("task_id", ids).In("relation_kind", []RelationKind{RelationKindParenttask, RelationKindBlocked, RelationKindFollows}).Find(&relations); err != nil {
+		return nil, err
+	}
+	otherIDs := map[int64]bool{}
+	for _, r := range relations {
+		otherIDs[r.OtherTaskID] = true
+	}
+	// Related tasks may be done or in another project; they still need a
+	// key so the relation survives the round trip.
+	keyOf := map[int64]string{}
+	for _, t := range tasks {
+		keyOf[t.ID] = taskIdentifier(project, t)
+	}
+	missing := []int64{}
+	for id := range otherIDs {
+		if _, ok := keyOf[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) > 0 {
+		others := []*Task{}
+		if err := s.In("id", missing).Find(&others); err != nil {
+			return nil, err
+		}
+		for _, t := range others {
+			if t.ProjectID == projectID {
+				keyOf[t.ID] = taskIdentifier(project, t)
+			} else {
+				keyOf[t.ID] = strconv.FormatInt(t.ID, 10)
+			}
+		}
+	}
+	scopes, err := getTaskScopesForTasks(s, ids)
+	if err != nil {
+		return nil, err
+	}
+	byTask := map[int64]*ExportedTask{}
+	for _, t := range tasks {
+		e := &ExportedTask{ID: t.ID, PlannedTask: PlannedTask{
+			Key:         keyOf[t.ID],
+			Title:       t.Title,
+			Description: t.Description,
+			Priority:    t.Priority,
+			BlockedBy:   []string{},
+			Follows:     []string{},
+		}}
+		if sc := scopes[t.ID]; sc != nil {
+			sc.ensureLists()
+			e.Scope = &PlannedScope{PathsOwned: sc.PathsOwned, PathsAffected: sc.PathsAffected, Endpoints: sc.Endpoints, Notes: sc.Notes}
+		}
+		byTask[t.ID] = e
+		out.Tasks = append(out.Tasks, e)
+	}
+	for _, r := range relations {
+		e := byTask[r.TaskID]
+		other := keyOf[r.OtherTaskID]
+		switch r.RelationKind { //nolint:exhaustive // only the three kinds the query fetched can occur
+		case RelationKindParenttask:
+			e.ParentKey = other
+		case RelationKindBlocked:
+			e.BlockedBy = append(e.BlockedBy, other)
+		case RelationKindFollows:
+			e.Follows = append(e.Follows, other)
+		}
+	}
+	return out, nil
 }

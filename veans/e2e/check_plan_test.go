@@ -178,3 +178,78 @@ func TestHeartbeat_RefreshesLeases(t *testing.T) {
 		t.Fatalf("expected one fresh lease: %s", out)
 	}
 }
+
+// TestPlan_ExportRoundTrip: the exported board is a valid plan shape and new
+// tasks can hang off exported keys.
+func TestPlan_ExportRoundTrip(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+	base := createTask(t, h, ws, "base work", "--paths-owned", "pkg/base/**")
+
+	out, errOut, code := h.Run(t, ws, "plan", "--export")
+	if code != 0 {
+		t.Fatalf("export exit %d\n%s", code, errOut)
+	}
+	var exported client.ExportedPlan
+	if err := json.Unmarshal([]byte(out), &exported); err != nil {
+		t.Fatal(err)
+	}
+	var baseKey string
+	for _, e := range exported.Tasks {
+		if e.ID == base.ID {
+			baseKey = e.Key
+			if e.Scope == nil || len(e.Scope.PathsOwned) != 1 || e.Scope.PathsOwned[0] != "pkg/base/**" {
+				t.Fatalf("exported scope wrong: %+v", e.Scope)
+			}
+		}
+	}
+	if baseKey == "" {
+		t.Fatalf("base task missing from export: %s", out)
+	}
+
+	plan := filepath.Join(ws.Dir, "more.json")
+	if err := os.WriteFile(plan, []byte(fmt.Sprintf(`{"tasks":[{"key":"next","title":"next step","blocked_by":[%q],"scope":{"paths_owned":["pkg/next/**"],"paths_affected":[],"endpoints":[],"notes":""}}]}`, baseKey)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, errOut, code = h.Run(t, ws, "plan", plan)
+	if code != 0 {
+		t.Fatalf("plan exit %d\n%s", code, errOut)
+	}
+	var res client.PlanResult
+	if err := json.Unmarshal([]byte(out), &res); err != nil {
+		t.Fatal(err)
+	}
+	if !res.Created || len(res.Tasks) != 1 {
+		t.Fatalf("expected one created task: %+v", res)
+	}
+	server := h.GetTask(t, res.Tasks[0].ID)
+	if blocked := server.RelatedTasks["blocked"]; len(blocked) != 1 || blocked[0].ID != base.ID {
+		t.Fatalf("next must be blocked by the exported base task: %+v", server.RelatedTasks)
+	}
+}
+
+// TestList_ReadyFirstIsQueueHead: --first returns exactly the top of the queue.
+func TestList_ReadyFirstIsQueueHead(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+	createTask(t, h, ws, "one")
+	createTask(t, h, ws, "two")
+
+	out, errOut, code := h.Run(t, ws, "list", "--ready", "--first")
+	if code != 0 {
+		t.Fatalf("list exit %d\n%s", code, errOut)
+	}
+	var tasks []*client.Task
+	if err := json.Unmarshal([]byte(out), &tasks); err != nil {
+		t.Fatal(err)
+	}
+	if len(tasks) != 1 {
+		t.Fatalf("--first must return one task, got %d: %s", len(tasks), out)
+	}
+	out, _, _ = h.Run(t, ws, "list", "--ready")
+	var all []*client.Task
+	if err := json.Unmarshal([]byte(out), &all); err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 || all[0].ID != tasks[0].ID {
+		t.Fatalf("--first must be the head of the ordered queue: first=%d queue=%+v", tasks[0].ID, all)
+	}
+}

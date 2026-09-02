@@ -129,6 +129,17 @@ type PlannedTaskResult struct {
 	Identifier string `json:"identifier"`
 }
 
+// ExportedTask is a board task in plan shape; ExportedPlan is what
+// GET /projects/{id}/plan returns.
+type ExportedTask struct {
+	PlannedTask
+	ID int64 `json:"id"`
+}
+
+type ExportedPlan struct {
+	Tasks []*ExportedTask `json:"tasks"`
+}
+
 // PlanResult mirrors models.PlanResult.
 type PlanResult struct {
 	OK       bool                `json:"ok"`
@@ -237,4 +248,13 @@ func (c *Client) HeartbeatTaskLeases(ctx context.Context, taskID int64) ([]*Task
 		return nil, err
 	}
 	return env.Items, nil
+}
+
+// ExportPlan returns the project's open tasks as a plan keyed by identifier.
+func (c *Client) ExportPlan(ctx context.Context, projectID int64) (*ExportedPlan, error) {
+	var out ExportedPlan
+	if err := c.Do(ctx, "GET", fmt.Sprintf("/projects/%d/plan", projectID), nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }

@@ -87,6 +87,7 @@ veans release <id>             drop a task's leases without changing its status
 veans heartbeat <id>           mark a task's leases active (long silent work)
 veans check [--staged]         changed files vs the referenced tasks' scopes and others' leases
 veans plan [--dry-run] <file>  lint a decomposition and create all of it in one transaction
+veans plan --export            the open board in plan shape, keyed by task identifier
 veans api METHOD PATH          raw REST passthrough — escape hatch for endpoints not wrapped here
 veans login                    re-mint the bot's token (rotation)
 veans version
@@ -241,6 +242,15 @@ paths) stop creation; warnings (missing `paths_owned`, overlapping paths
 without an ordering, overlap with an open task on the board) are reported
 alongside the created tasks. `--dry-run` only lints. See `veans prime` for
 the plan shape.
+
+Re-planning is incremental: `veans plan --export` prints the open board in
+the same shape keyed by identifier (`PROJ-12`, `#12`), and a plan may
+reference those keys in `parent_key`, `blocked_by` and `follows` without
+redefining them — the server resolves them against the board.
+
+The ready queue is ordered: `veans list --ready` returns tasks in the
+board's drag order and `--first` picks the top one, so the owner
+prioritises by dragging cards in the Todo column.
 
 ## Stale leases
 

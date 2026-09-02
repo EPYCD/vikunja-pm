@@ -34,7 +34,10 @@ veans plan plan.json             # tasks + relations + scopes in one transaction
 
 `plan.json` is a `tasks` array with plan-local keys, `parent_key`,
 `blocked_by`, `follows` and a `scope` per task (`veans prime` shows the
-shape). Single tasks still work one at a time:
+shape). To extend a board that already has work on it, `veans plan --export`
+prints the open tasks in the same shape keyed by identifier, and a new plan
+may reference those keys without redefining them. Single tasks still work
+one at a time:
 
 ```
 veans create "atomic task claim" \
@@ -57,10 +60,16 @@ let veans do it.
 ## 4. Agents pick work without stepping on each other
 
 ```
-veans ready              # every queued task, with why it is not ready
-veans list --ready       # only the claimable ones
-veans claim PROJ-12      # atomic: assign, move to In Progress, lease paths_owned
+veans ready                  # every queued task, with why it is not ready
+veans list --ready           # only the claimable ones, in queue order
+veans list --ready --first   # the top of the queue
+veans claim PROJ-12          # atomic: assign, move to In Progress, lease paths_owned
 ```
+
+The queue is the Todo column's drag order: the owner drags cards up to make
+agents pick them first, and each `READY · n` badge shows the rank. The
+**By assignee** toggle regroups every column by who holds the task, with the
+lease count per lane — the "who is doing what" view.
 
 The claim is a single transaction. It is refused with `CONFLICT` when someone
 else holds the task, when a blocker is open, or when one of the task's owned

@@ -514,6 +514,9 @@
       "sortBy": "Sort by {column}"
     },
     "kanban": {
+      "byAssignee": "By assignee",
+      "byAssigneeHint": "Group each column by who holds the task. Read-only while on.",
+      "unassignedLane": "Unassigned",
       "title": "Kanban",
       "limit": "Limit: {limit}",
       "doneBucket": "Done bucket",
@@ -1093,6 +1096,7 @@
       "saved": "The scope was saved successfully.",
       "badges": {
         "ready": "Ready",
+        "readyTooltip": "Claimable now. The number is its place in the queue; drag cards in this column to change what agents pick first.",
         "blocked": "Blocked",
         "blockedTooltip": "Blocked by an unfinished task",
         "leaseConflict": "Path leased",

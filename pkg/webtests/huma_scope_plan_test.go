@@ -120,3 +120,17 @@ func TestTaskLeaseHeartbeatV2(t *testing.T) {
 	rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/18/leases/heartbeat", "", token, "")
 	assert.Equal(t, http.StatusForbidden, rec.Code, "read-only project")
 }
+
+func TestTaskPlanExportV2(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/1/plan", "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"key":"TEST1-1"`)
+	assert.Contains(t, rec.Body.String(), `"paths_owned":["pkg/models/tasks.go"]`)
+
+	rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/20/plan", "", token, "")
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}

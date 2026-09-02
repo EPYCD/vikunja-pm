@@ -76,12 +76,20 @@ export function viewReadinessQuery(projectId: number, viewId: number) {
 	})
 }
 
-export function readinessByTask(rows: TaskReadiness[]): Record<number, TaskReadiness> {
-	const out: Record<number, TaskReadiness> = {}
+export interface TaskReadinessWithRank extends TaskReadiness {
+	// 1-based position among the ready tasks, in the order agents pick them
+	// (the bucket's drag order); undefined when the task is not ready.
+	rank?: number
+}
+
+export function readinessByTask(rows: TaskReadiness[]): Record<number, TaskReadinessWithRank> {
+	const out: Record<number, TaskReadinessWithRank> = {}
+	let rank = 0
 	for (const row of rows) {
-		if (row.task?.id) {
-			out[row.task.id] = row
+		if (!row.task?.id) {
+			continue
 		}
+		out[row.task.id] = row.ready ? {...row, rank: ++rank} : row
 	}
 	return out
 }

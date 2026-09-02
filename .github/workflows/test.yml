@@ -406,10 +406,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-frontend
-      - name: Typecheck
-        continue-on-error: true
+      # vue-tsc carries a legacy backlog, so the gate compares per-file error
+      # counts with frontend/typecheck-baseline.json and fails only on
+      # regressions. `pnpm typecheck:baseline` re-records it after fixes.
+      - name: Typecheck (no regressions against the baseline)
         working-directory: frontend
-        run: pnpm typecheck
+        run: pnpm typecheck:gate
 
   test-frontend-unit:
     runs-on: ubuntu-latest

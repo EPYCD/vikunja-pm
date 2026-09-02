@@ -40,9 +40,46 @@ func RegisterTaskPlanRoutes(api huma.API) {
 		Tags:          []string{"projects"},
 		DefaultStatus: http.StatusOK,
 	}, projectPlan)
+
+	Register(api, huma.Operation{
+		OperationID: "projects-plan-export",
+		Summary:     "Export the open tasks of a project in plan shape",
+		Description: "Returns every open task with its parent, blocked_by and follows relations and its scope, keyed by task identifier (PROJ-12 or #12). " +
+			"Edit the file, add tasks that reference the exported keys, and POST it back: keys the plan does not define are resolved against the board, so incremental re-planning never duplicates what already exists. " +
+			"Requires read access to the project.",
+		Method: http.MethodGet,
+		Path:   "/projects/{project}/plan",
+		Tags:   []string{"projects"},
+	}, projectPlanExport)
 }
 
 func init() { AddRouteRegistrar(RegisterTaskPlanRoutes) }
+
+func projectPlanExport(ctx context.Context, in *struct {
+	ProjectID int64 `path:"project" doc:"The numeric id of the project."`
+}) (*singleBody[models.ExportedPlan], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s := db.NewSession()
+	defer s.Close()
+
+	// Non-CRUD read, so the permission check is the handler's job.
+	project := &models.Project{ID: in.ProjectID}
+	can, _, err := project.CanRead(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	if !can {
+		return nil, huma.Error403Forbidden("forbidden")
+	}
+	plan, err := models.ExportTaskPlan(s, in.ProjectID)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &singleBody[models.ExportedPlan]{Body: plan}, nil
+}
 
 func projectPlan(ctx context.Context, in *struct {
 	ProjectID int64 `path:"project" doc:"The numeric id of the project."`

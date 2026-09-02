@@ -43,6 +43,8 @@
 		"test:e2e:ui": "playwright test --ui-host=0.0.0.0",
 		"test:unit": "vitest --dir ./src",
 		"typecheck": "vue-tsc --build --force",
+		"typecheck:gate": "node scripts/typecheck-gate.mjs",
+		"typecheck:baseline": "node scripts/typecheck-gate.mjs --update",
 		"fonts:update": "pnpm fonts:download",
 		"fonts:download": "./scripts/fonts-download.sh",
 		"generate:api-client": "openapi-ts",
