@@ -19,6 +19,18 @@
 				>
 					{{ $t('task.leasesPanel.readyOnly') }}
 				</XButton>
+				<XButton
+					v-if="!isSavedFilter(project)"
+					v-tooltip="$t('project.kanban.byAssigneeHint')"
+					variant="secondary"
+					icon="users"
+					class="kanban-lanes-toggle"
+					:class="{'is-active': byAssignee}"
+					:aria-pressed="byAssignee"
+					@click="byAssignee = !byAssignee"
+				>
+					{{ $t('project.kanban.byAssignee') }}
+				</XButton>
 				<ProjectLeasesPanel
 					v-if="!isSavedFilter(project)"
 					:project-id="projectIdWithFallback"
@@ -165,7 +177,51 @@
 									</Dropdown>
 								</div>
 
+								<ul
+									v-if="byAssignee"
+									class="tasks kanban-lanes"
+								>
+									<li
+										v-for="lane in lanesFor(bucket)"
+										:key="lane.key"
+										class="kanban-lane"
+									>
+										<div class="kanban-lane__head">
+											<span class="kanban-lane__label">
+												{{ lane.label }}
+												<span
+													v-if="lane.owner"
+													class="kanban-lane__owner"
+												>· {{ $t('project.kanban.laneOwner', {user: lane.owner}) }}</span>
+												/ {{ lane.tasks.length }}
+											</span>
+											<span
+												v-if="lane.leases > 0"
+												class="kanban-lane__leases"
+											><Icon icon="lock" /> {{ lane.leases }}</span>
+										</div>
+										<ul class="kanban-lane__tasks">
+											<li
+												v-for="task in lane.tasks"
+												:key="task.id"
+												class="task-item"
+												:class="{'is-hidden': hiddenByReadiness(bucket, task)}"
+												:data-task-id="task.id"
+											>
+												<KanbanCard
+													class="kanban-card"
+													:task="task"
+													:loading="taskUpdating[task.id] ?? false"
+													:project-id="projectId"
+													:readiness="readinessByTaskId[task.id]"
+													@taskCompletedRecurring="handleRecurringTaskCompletion"
+												/>
+											</li>
+										</ul>
+									</li>
+								</ul>
 								<draggable
+									v-else
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
 									:delay="isTouchDevice ? 300 : 1000"
@@ -348,7 +404,8 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
-import {invalidateReadiness, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
+import {getDisplayName} from '@/models/user'
+import {invalidateReadiness, projectAgentsQuery, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -521,6 +578,61 @@ const readinessByTaskId = computed(() => readinessByTask(readinessQuery.data.val
 // cards stay in the draggable list and are only hidden, so positions and
 // drag targets are unaffected.
 const readyOnly = useStorage('kanbanReadyOnly', false)
+
+// "By assignee" answers "who is doing what" per column: cards grouped under
+// the agent (or human) holding them, unassigned last. Read-only while on,
+// since dragging across lanes has no meaning for positions.
+const byAssignee = useStorage('kanbanByAssignee', false)
+interface AssigneeLane {
+	key: string
+	label: string
+	owner: string | null
+	tasks: ITask[]
+	leases: number
+}
+
+// A bot lane names the human behind it; that answer lives on the agents
+// endpoint, not on the assignee embedded in the task.
+const agentsQuery = useQuery(computed(() => ({
+	...projectAgentsQuery(projectIdWithFallback.value),
+	enabled: byAssignee.value && projectIdWithFallback.value > 0,
+})))
+const ownerByUserId = computed<Record<number, string>>(() => {
+	const out: Record<number, string> = {}
+	for (const agent of agentsQuery.data.value ?? []) {
+		const owner = agent.owner?.name || agent.owner?.username
+		if (agent.user?.id && owner) {
+			out[agent.user.id] = owner
+		}
+	}
+	return out
+})
+function lanesFor(bucket: IBucket): AssigneeLane[] {
+	const lanes = new Map<string, AssigneeLane>()
+	const unassigned: AssigneeLane = {key: 'unassigned', label: t('project.kanban.unassignedLane'), owner: null, tasks: [], leases: 0}
+	for (const task of bucket.tasks) {
+		if (task.assignees.length === 0) {
+			unassigned.tasks.push(task)
+			unassigned.leases += task.leases?.length ?? 0
+			continue
+		}
+		for (const user of task.assignees) {
+			const key = `user-${user.id}`
+			let lane = lanes.get(key)
+			if (!lane) {
+				lane = {key, label: getDisplayName(user), owner: ownerByUserId.value[user.id] ?? null, tasks: [], leases: 0}
+				lanes.set(key, lane)
+			}
+			lane.tasks.push(task)
+			lane.leases += task.leases?.length ?? 0
+		}
+	}
+	const out = [...lanes.values()].sort((a, b) => a.label.localeCompare(b.label))
+	if (unassigned.tasks.length > 0) {
+		out.push(unassigned)
+	}
+	return out
+}
 function hiddenByReadiness(bucket: IBucket, task: ITask): boolean {
 	if (!readyOnly.value || bucket.id !== view.value?.defaultBucketId) {
 		return false
@@ -987,6 +1099,51 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	gap: var(--wm-space-2);
 }
 
+.kanban-lanes {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kanban-lane {
+	margin-block-end: var(--wm-space-3);
+}
+
+.kanban-lane__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--wm-space-2);
+	padding: var(--wm-space-1) 0;
+	margin-block-end: var(--wm-space-1);
+	border-block-end: 1px solid var(--wm-line-faint);
+}
+
+.kanban-lane__label,
+.kanban-lane__leases {
+	@include mono-label;
+
+	color: var(--wm-text-secondary);
+}
+
+.kanban-lane__leases {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--wm-accent-text);
+}
+
+.kanban-lane__owner {
+	color: var(--wm-text-tertiary);
+}
+
+.kanban-lane__tasks {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kanban-lanes-toggle.is-active,
 .kanban-ready-toggle.is-active {
 	background: var(--wm-accent-wash);
 	color: var(--wm-accent-text);

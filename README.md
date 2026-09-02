@@ -79,6 +79,10 @@ The design system is documented in
 See [AGENTS.md](AGENTS.md) for the conventions this repository follows —
 API versioning, permissions, migrations and code style.
 
+The frontend typecheck is a ratchet: `pnpm typecheck:gate` fails only when a
+file gains type errors against `frontend/typecheck-baseline.json`. After
+fixing errors, `pnpm typecheck:baseline` records the lower count.
+
 ## License
 
 Most of this repository is licensed under [AGPL‑3.0‑or‑later](LICENSE).

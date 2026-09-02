@@ -134,4 +134,84 @@ func TestApplyTaskPlan(t *testing.T) {
 		assert.NotContains(t, codesOf(res.Findings), PlanFindingOverlapWithoutOrder)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"title": "First"})
 	})
+
+	t.Run("references to board tasks resolve by identifier", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, s.Begin())
+
+		// Fixture project 1 is TEST1; task 1 has index 1, so TEST1-1, #1 and 1 all name it.
+		res, err := ApplyTaskPlan(s, user1, 1, &TaskPlan{Tasks: []*PlannedTask{
+			{Key: "follow-up", Title: "Follow up", BlockedBy: []string{"TEST1-1"}, Scope: &PlannedScope{PathsOwned: []string{"pkg/models/tasks.go"}}},
+			{Key: "child", Title: "Child", ParentKey: "1"},
+			{Key: "bad", Title: "Bad", BlockedBy: []string{"#99999"}},
+		}})
+		require.NoError(t, err)
+		assert.False(t, res.OK)
+		codes := codesOf(res.Findings)
+		assert.Contains(t, codes, PlanFindingUnknownReference, "#99999 is nobody")
+		for _, f := range res.Findings {
+			if f.Code == PlanFindingOverlapWithExisting {
+				assert.NotContains(t, f.TaskIDs, int64(1), "follow-up depends on task 1, so sharing its file is planned: %s", f.Message)
+			}
+		}
+
+		res, err = ApplyTaskPlan(s, user1, 1, &TaskPlan{Tasks: []*PlannedTask{
+			{Key: "follow-up", Title: "Follow up", BlockedBy: []string{"#1"}, Scope: &PlannedScope{PathsOwned: []string{"pkg/models/tasks.go"}}},
+			{Key: "child", Title: "Child", ParentKey: "1"},
+		}})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		require.True(t, res.OK)
+		require.Len(t, res.Tasks, 2)
+		db.AssertExists(t, "task_relations", map[string]interface{}{"task_id": res.Tasks[0].ID, "other_task_id": 1, "relation_kind": "blocked"}, false)
+		db.AssertExists(t, "task_relations", map[string]interface{}{"task_id": res.Tasks[1].ID, "other_task_id": 1, "relation_kind": "parenttask"}, false)
+	})
+}
+
+// Fixtures in project 1: task 1 is parent of 29 and blocks nothing; task 29
+// is a subtask of 1. Task 1 has a scope (pkg/models/tasks.go).
+func TestExportTaskPlan(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	plan, err := ExportTaskPlan(s, 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, plan.Tasks)
+	byKey := map[string]*ExportedTask{}
+	for _, e := range plan.Tasks {
+		byKey[e.Key] = e
+		assert.NotZero(t, e.ID)
+		assert.NotEmpty(t, e.Title)
+	}
+	one, ok := byKey["TEST1-1"]
+	require.True(t, ok, "task 1 exports under its identifier")
+	require.NotNil(t, one.Scope)
+	assert.Equal(t, []string{"pkg/models/tasks.go"}, one.Scope.PathsOwned)
+	var sub *ExportedTask
+	for _, e := range plan.Tasks {
+		if e.ID == 29 {
+			sub = e
+		}
+	}
+	require.NotNil(t, sub, "task 29 is open in project 1")
+	assert.Equal(t, "TEST1-1", sub.ParentKey)
+	_, done := byKey["TEST1-2"]
+	assert.False(t, done, "done tasks are not part of the plan")
+
+	// The export is a valid plan for a dry run once the keys are new.
+	tasks := make([]*PlannedTask, 0, 2)
+	for _, e := range []*ExportedTask{one, sub} {
+		p := e.PlannedTask
+		p.Key = "new-" + p.Key
+		p.ParentKey = ""
+		tasks = append(tasks, &p)
+	}
+	s2 := db.NewSession()
+	defer s2.Close()
+	res, err := ApplyTaskPlan(s2, &user.User{ID: 1}, 1, &TaskPlan{DryRun: true, Tasks: tasks})
+	require.NoError(t, err)
+	assert.True(t, res.OK)
 }

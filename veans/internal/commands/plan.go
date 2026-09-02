@@ -27,9 +27,12 @@ import (
 )
 
 func newPlanCmd() *cobra.Command {
-	var dryRun bool
+	var (
+		dryRun bool
+		export bool
+	)
 	cmd := &cobra.Command{
-		Use:   "plan <file.json|->",
+		Use:   "plan <file.json|-> | plan --export",
 		Short: "Lint a decomposition and create all of its tasks in one go",
 		Long: `Reads a plan — a JSON object with a "tasks" array — lints it as a set and
 creates every task, relation and scope in one transaction when it is clean.
@@ -43,17 +46,32 @@ creates every task, relation and scope in one transaction when it is clean.
     {"key": "docs", "title": "docs", "parent_key": "epic", "follows": ["ui"]}
   ]}
 
-Keys only exist inside the plan. Errors (duplicate or unknown keys, cycles,
-invalid paths) print the findings and exit CONFLICT without creating
-anything; warnings (missing scope, overlapping paths with no ordering,
-overlap with an open task on the board) are printed and the plan is created
-anyway. Use --dry-run to only lint. Bare scope paths are prefixed with the
-repository from .veans.yml when one is set.`,
-		Args: cobra.ExactArgs(1),
+Keys only exist inside the plan. A key the plan does not define is looked up
+on the board (PROJ-12, #12 or 12), so new tasks can depend on or belong to
+existing ones. Errors (duplicate or unknown keys, cycles, invalid paths)
+print the findings and exit CONFLICT without creating anything; warnings
+(missing scope, overlapping paths with no ordering, overlap with an open
+task on the board) are printed and the plan is created anyway. Use
+--dry-run to only lint. Bare scope paths are prefixed with the repository
+from .veans.yml when one is set.
+
+--export prints the board's open tasks in the same shape, keyed by
+identifier, to re-plan around what already exists.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rt, err := loadRuntime()
 			if err != nil {
 				return err
+			}
+			if export {
+				plan, err := rt.client.ExportPlan(cmd.Context(), rt.cfg.ProjectID)
+				if err != nil {
+					return err
+				}
+				return json.NewEncoder(cmd.OutOrStdout()).Encode(plan)
+			}
+			if len(args) != 1 {
+				return output.New(output.CodeValidation, "pass a plan file (or - for stdin), or --export")
 			}
 			var raw []byte
 			if args[0] == "-" {
@@ -92,5 +110,6 @@ repository from .veans.yml when one is set.`,
 		},
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "lint only, create nothing")
+	cmd.Flags().BoolVar(&export, "export", false, "print the board's open tasks as a plan")
 	return cmd
 }

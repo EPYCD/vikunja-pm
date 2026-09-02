@@ -575,6 +575,56 @@ export type ErrorDetail = {
     value?: unknown;
 };
 
+export type ExportedPlan = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Every open task of the project with its relations and scope, ordered by index.
+     */
+    tasks?: Array<ExportedTask> | null;
+};
+
+export type ExportedTask = {
+    /**
+     * Keys of tasks that must be done before this one can be claimed.
+     */
+    blocked_by?: Array<string> | null;
+    /**
+     * The task description, HTML like any task description.
+     */
+    description?: string;
+    /**
+     * Keys of tasks this one comes after; treated like blocked_by for readiness.
+     */
+    follows?: Array<string> | null;
+    /**
+     * The task id; informational, plans reference tasks by key.
+     */
+    id?: number;
+    /**
+     * A name unique within the plan, used by parent_key, blocked_by and follows. Never stored.
+     */
+    key: string;
+    /**
+     * Key of the task this one is a subtask of.
+     */
+    parent_key?: string;
+    /**
+     * 0 unset up to 5 do-now.
+     */
+    priority?: number;
+    /**
+     * The task's scope. Omit for tasks that do not touch the repository.
+     */
+    scope?: PlannedScope;
+    /**
+     * The task title.
+     */
+    title: string;
+};
+
 export type File = {
     /**
      * A timestamp when this file was uploaded.
@@ -1188,6 +1238,18 @@ export type PaginatedProject = {
     total_pages?: number;
 };
 
+export type PaginatedProjectAgent = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<ProjectAgent> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedProjectView = {
     /**
      * A URL to the JSON Schema for this object.
@@ -1577,6 +1639,25 @@ export type Project = {
      * The views configured for this project. Managed through the project view endpoints.
      */
     readonly views?: Array<ProjectView> | null;
+};
+
+export type ProjectAgent = {
+    /**
+     * Path leases this user holds in the project.
+     */
+    leases?: number;
+    /**
+     * Open tasks in the project assigned to this user.
+     */
+    open_tasks?: number;
+    /**
+     * When the user is a bot, the human who owns it.
+     */
+    owner?: User;
+    /**
+     * The assignee or lease holder.
+     */
+    user?: User;
 };
 
 export type ProjectDuplicate = {
@@ -2484,6 +2565,10 @@ export type TaskPathLease = {
      * When the holding task last showed activity: a claim, an update, a comment or an explicit heartbeat.
      */
     readonly last_active?: string;
+    /**
+     * When the holder is a bot, the user who owns it, embedded when listing a project's leases.
+     */
+    readonly owner?: User;
     /**
      * The normalised, repository-relative glob this lease covers.
      */
@@ -3907,6 +3992,13 @@ export type EmailConfirmWritable = {
     token?: string;
 };
 
+export type ExportedPlanWritable = {
+    /**
+     * Every open task of the project with its relations and scope, ordered by index.
+     */
+    tasks?: Array<ExportedTask> | null;
+};
+
 export type HealthBodyBodyWritable = {
     /**
      * Availability of each configured OpenID Connect provider, from cached state — this endpoint never contacts the providers. Omitted when OpenID Connect authentication is not configured or the providers have not been initialized yet right after startup.
@@ -4155,6 +4247,14 @@ export type PaginatedProjectWritable = {
     total_pages?: number;
 };
 
+export type PaginatedProjectAgentWritable = {
+    items?: Array<ProjectAgentWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedProjectViewWritable = {
     items?: Array<ProjectViewWritable> | null;
     page?: number;
@@ -4336,6 +4436,25 @@ export type ProjectWritable = {
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
+};
+
+export type ProjectAgentWritable = {
+    /**
+     * Path leases this user holds in the project.
+     */
+    leases?: number;
+    /**
+     * Open tasks in the project assigned to this user.
+     */
+    open_tasks?: number;
+    /**
+     * When the user is a bot, the human who owns it.
+     */
+    owner?: UserWritable;
+    /**
+     * The assignee or lease holder.
+     */
+    user?: UserWritable;
 };
 
 export type ProjectDuplicateWritable = {
@@ -7193,6 +7312,36 @@ export type ProjectsDuplicateResponses = {
 
 export type ProjectsDuplicateResponse = ProjectsDuplicateResponses[keyof ProjectsDuplicateResponses];
 
+export type ProjectsAgentsData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/agents';
+};
+
+export type ProjectsAgentsErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsAgentsError = ProjectsAgentsErrors[keyof ProjectsAgentsErrors];
+
+export type ProjectsAgentsResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedProjectAgent;
+};
+
+export type ProjectsAgentsResponse = ProjectsAgentsResponses[keyof ProjectsAgentsResponses];
+
 export type ProjectsBackgroundDeleteData = {
     body?: never;
     path: {
@@ -7341,6 +7490,36 @@ export type ProjectsLeasesListResponses = {
 };
 
 export type ProjectsLeasesListResponse = ProjectsLeasesListResponses[keyof ProjectsLeasesListResponses];
+
+export type ProjectsPlanExportData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        project: number;
+    };
+    query?: never;
+    url: '/projects/{project}/plan';
+};
+
+export type ProjectsPlanExportErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsPlanExportError = ProjectsPlanExportErrors[keyof ProjectsPlanExportErrors];
+
+export type ProjectsPlanExportResponses = {
+    /**
+     * OK
+     */
+    200: ExportedPlan;
+};
+
+export type ProjectsPlanExportResponse = ProjectsPlanExportResponses[keyof ProjectsPlanExportResponses];
 
 export type ProjectsPlanData = {
     body: TaskPlanWritable;

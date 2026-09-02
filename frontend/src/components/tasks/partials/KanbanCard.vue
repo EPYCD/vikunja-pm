@@ -109,8 +109,9 @@
 				/>
 				<span
 					v-if="readiness?.ready"
+					v-tooltip="$t('task.scope.badges.readyTooltip')"
 					class="wm-badge is-ready"
-				>{{ $t('task.scope.badges.ready') }}</span>
+				>{{ $t('task.scope.badges.ready') }}<template v-if="readiness.rank"> · {{ readiness.rank }}</template></span>
 				<span
 					v-else-if="readinessReason === 'blocked'"
 					v-tooltip="$t('task.scope.badges.blockedTooltip')"
@@ -160,8 +161,7 @@ import CommentCount from './CommentCount.vue'
 
 import {getHexColor, getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
-import type {TaskReadiness} from '@/client/generated'
-import {READINESS_REASON} from '@/client/queries/taskScope'
+import {READINESS_REASON, type TaskReadinessWithRank} from '@/client/queries/taskScope'
 import type {IProject} from '@/modelTypes/IProject'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
@@ -179,7 +179,7 @@ const props = withDefaults(defineProps<{
 	task: ITask,
 	projectId: IProject['id'],
 	loading?: boolean,
-	readiness?: TaskReadiness,
+	readiness?: TaskReadinessWithRank,
 }>(), {
 	loading: false,
 	readiness: undefined,

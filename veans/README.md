@@ -87,6 +87,10 @@ veans release <id>             drop a task's leases without changing its status
 veans heartbeat <id>           mark a task's leases active (long silent work)
 veans check [--staged]         changed files vs the referenced tasks' scopes and others' leases
 veans plan [--dry-run] <file>  lint a decomposition and create all of it in one transaction
+veans plan --export            the open board in plan shape, keyed by task identifier
+veans agents                   who is working in the project; bots carry their owner
+veans watch                    follow the ready queue and leases; one JSON line per change (--exec, --once)
+veans hooks install|uninstall  git pre-commit hook that runs `veans check --staged`
 veans api METHOD PATH          raw REST passthrough — escape hatch for endpoints not wrapped here
 veans login                    re-mint the bot's token (rotation)
 veans version
@@ -242,12 +246,57 @@ without an ordering, overlap with an open task on the board) are reported
 alongside the created tasks. `--dry-run` only lints. See `veans prime` for
 the plan shape.
 
+Re-planning is incremental: `veans plan --export` prints the open board in
+the same shape keyed by identifier (`PROJ-12`, `#12`), and a plan may
+reference those keys in `parent_key`, `blocked_by` and `follows` without
+redefining them — the server resolves them against the board.
+
+The ready queue is ordered: `veans list --ready` returns tasks in the
+board's drag order and `--first` picks the top one, so the owner
+prioritises by dragging cards in the Todo column.
+
 ## Stale leases
 
 Leases record the holder's last activity — a claim, task update, comment or
 `veans heartbeat`. After `service.leasestaleafter` (default 4h) without any,
 `veans leases`, `veans ready` and the board flag them `stale`. They still
 block; the flag tells a human they can release safely.
+
+A cron on the server polices them every five minutes. The first time a lease
+crosses the threshold, the holder is notified once — for a bot, the human
+who owns it, since bots receive nothing. With `service.leaseautoreleaseafter`
+set (default `0`, off; e.g. `24h`), leases silent for that long are released
+outright: the task keeps its status and assignee, a comment on it says the
+paths were freed, and the `task.leases.released` webhook fires so an
+orchestrator can hand the work on.
+
+## Who is working here
+
+`veans agents` (`GET /api/v2/projects/{id}/agents`) lists every user assigned
+to an open task or holding a lease, bots first with the `owner` behind each,
+plus their open-task and lease counts. The board's "By assignee" lanes and
+the Leases panel read the same answer to show `bot-alice · for Alice`.
+
+## Orchestrating
+
+`veans watch` polls the ready queue and the leases and prints one JSON line
+per change: `task.ready` when a task becomes claimable (also for everything
+already ready when the watcher starts), `task.unready` when a ready task is
+claimed, blocked or removed, and `lease.stale` when a holder goes quiet.
+`--exec CMD` runs a shell command per event with the JSON on stdin and in
+`$VEANS_EVENT`; `--once` prints the current ready tasks and exits, for cron.
+Transient server errors are emitted as `error` events and polling continues.
+
+## Pre-commit hook
+
+`veans hooks install` writes `.git/hooks/pre-commit` so every commit runs
+`veans check --staged`; a stray or a collision aborts the commit with the
+verdicts on stdout. Until a commit on the branch carries a `Refs:` trailer,
+the check judges the index against the tasks the bot has claimed. `veans init --install-git-hook` does it during setup.
+The hook is a no-op when veans is not on PATH or nothing is staged, and
+`VEANS_SKIP_CHECK=1 git commit` bypasses it once. A pre-commit hook veans
+did not write is never touched (`--force` replaces it); `veans hooks
+uninstall` removes only the veans one.
 
 `veans ready` is the server's ready queue (`GET
 /projects/{id}/views/{view}/readiness`): every Todo task with `ready` and

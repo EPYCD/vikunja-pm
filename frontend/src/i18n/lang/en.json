@@ -514,6 +514,10 @@
       "sortBy": "Sort by {column}"
     },
     "kanban": {
+      "byAssignee": "By assignee",
+      "byAssigneeHint": "Group each column by who holds the task. Read-only while on.",
+      "unassignedLane": "Unassigned",
+      "laneOwner": "for {user}",
       "title": "Kanban",
       "limit": "Limit: {limit}",
       "doneBucket": "Done bucket",
@@ -1093,6 +1097,7 @@
       "saved": "The scope was saved successfully.",
       "badges": {
         "ready": "Ready",
+        "readyTooltip": "Claimable now. The number is its place in the queue; drag cards in this column to change what agents pick first.",
         "blocked": "Blocked",
         "blockedTooltip": "Blocked by an unfinished task",
         "leaseConflict": "Path leased",
@@ -1106,6 +1111,7 @@
       "subtitle": "Paths leased by in-progress tasks in this project. A lease blocks every other task that owns an overlapping path until the holder finishes or releases it.",
       "empty": "No paths are leased right now.",
       "holder": "held by {user}",
+      "forOwner": "for {user}",
       "since": "since {date}",
       "lastActive": "active {date}",
       "stale": "Stale",

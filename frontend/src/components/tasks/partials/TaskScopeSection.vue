@@ -119,6 +119,9 @@
 							user: holderName(lease),
 							date: formatDateSince(lease.created ? new Date(lease.created) : null),
 						}) }}
+						<template v-if="ownerName(lease)">
+							· {{ $t('task.leasesPanel.forOwner', {user: ownerName(lease)}) }}
+						</template>
 						<template v-if="lease.last_active">
 							· {{ $t('task.leasesPanel.lastActive', {date: formatDateSince(new Date(lease.last_active))}) }}
 						</template>
@@ -276,6 +279,10 @@ async function saveNotes() {
 
 function holderName(lease: TaskPathLease): string {
 	return lease.user?.name || lease.user?.username || `#${lease.user_id}`
+}
+
+function ownerName(lease: TaskPathLease): string | null {
+	return lease.owner ? (lease.owner.name || lease.owner.username || null) : null
 }
 
 async function release() {

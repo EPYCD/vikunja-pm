@@ -60,7 +60,11 @@ Server: {{ .Server }}
   file. The PR's scope check runs the same query and will fail otherwise.
 - Working for a long time without touching the board? `veans heartbeat {{ .TaskIDExample }}`
   keeps your leases from being flagged stale (every update, comment and
-  claim already counts as activity).
+  claim already counts as activity). A stale lease notifies your owner;
+  if the server is configured to auto-release, silent leases are dropped
+  and the task gets a comment saying so — claim again before continuing.
+- `veans hooks install` (once per checkout) makes git run `veans check
+  --staged` before every commit, so a stray never reaches a branch.
 
 ## AFTER you finish work
 - Move to `in-review` and post a summary comment. **Never close tasks
@@ -180,7 +184,8 @@ Trust your JSON parser; we won't add new fields without notice.
 
 ```
 veans list                         # all tasks, tree view
-veans list --ready                 # ready to start (Todo + not blocked)
+veans list --ready                 # ready to start, in queue order (board drag order)
+veans list --ready --first         # the one task at the top of the queue — claim this
 veans list --mine                  # tasks assigned to you
 veans list --branch                # tasks tagged with the current git branch
 veans list --filter "priority > 3"  # raw Vikunja filter expression
@@ -210,6 +215,10 @@ veans check                        # changed files vs your tasks' scopes + other
 veans check --staged               # same, for the index (pre-commit)
 veans plan --dry-run plan.json     # lint a decomposition (keys, cycles, overlapping paths)
 veans plan plan.json               # create every task, relation and scope of a plan in one go
+veans plan --export > board.json   # the open board in plan shape; new tasks may reference its keys
+veans agents                       # who is working here: bots with the human behind each, and humans
+veans watch [--exec CMD] [--once]  # orchestrator: one JSON line per task.ready / task.unready / lease.stale
+veans hooks install                # git pre-commit hook running 'veans check --staged'
 veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
 ```
 
@@ -230,6 +239,10 @@ anything is created:
    "scope": {"paths_owned": ["docs/**"], "paths_affected": [], "endpoints": [], "notes": ""}}
 ]}
 ```
+
+To extend an existing board, `veans plan --export` prints the open tasks
+in this shape keyed by identifier; a new plan may use those keys in
+`parent_key`, `blocked_by` and `follows` without redefining them.
 
 `veans plan --dry-run plan.json` reports errors (duplicate/unknown keys,
 cycles, invalid paths — nothing is created) and warnings (a task without

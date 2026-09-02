@@ -39,6 +39,7 @@ func newCheckCmd() *cobra.Command {
 main branch, or the index with --staged), reads the task references from the
 commit messages' Refs: trailers (or --task), and asks the server whether every
 file is inside those tasks' paths_owned and outside every other task's lease.
+With --staged and no trailer yet, the tasks the bot has claimed stand in.
 
 Exit 0 when the change is clean. Exit non-zero with CONFLICT when a file is
 leased by another task or, if your tasks declare paths_owned, when a file is
@@ -71,6 +72,18 @@ task, or hand the file back. The PR check runs the same query.`,
 					return err
 				}
 				ids = append(ids, id)
+			}
+			if len(ids) == 0 {
+				if !staged {
+					return output.New(output.CodeValidation, "no Refs: trailers in the commits to check — pass --task")
+				}
+				// A pre-commit hook runs before the first commit carries a
+				// trailer; what the bot has claimed is the truest statement
+				// of what it is working on.
+				ids, err = claimedTaskIDs(cmd.Context(), rt)
+				if err != nil {
+					return err
+				}
 			}
 			res, err := rt.client.CheckScope(cmd.Context(), rt.cfg.ProjectID, &client.ScopeCheckRequest{
 				TaskIDs:    ids,
@@ -153,10 +166,22 @@ func refsFromCommits(ctx context.Context, base string) ([]string, error) {
 			}
 		}
 	}
-	if len(refs) == 0 {
-		return nil, output.New(output.CodeValidation, "no Refs: trailers in the commits since %s — pass --task", b)
-	}
 	return refs, nil
+}
+
+// claimedTaskIDs lists the open tasks assigned to the bot.
+func claimedTaskIDs(ctx context.Context, rt *runtime) ([]int64, error) {
+	tasks, err := rt.client.ListProjectTasks(ctx, rt.cfg.ProjectID, &client.TaskListOptions{Filter: "done = false"})
+	if err != nil {
+		return nil, err
+	}
+	ids := []int64{}
+	for _, t := range tasks {
+		if !t.Done && taskAssignedTo(t, rt.cfg.Bot.UserID) {
+			ids = append(ids, t.ID)
+		}
+	}
+	return ids, nil
 }
 
 func splitLines(s string) []string {

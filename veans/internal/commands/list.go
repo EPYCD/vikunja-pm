@@ -30,6 +30,7 @@ import (
 
 type listFlags struct {
 	ready    bool
+	first    bool
 	mine     bool
 	branch   string
 	filter   string
@@ -64,10 +65,14 @@ Filters can be combined; they're AND-ed together:
 			if err != nil {
 				return err
 			}
+			if f.first && len(tasks) > 1 {
+				tasks = tasks[:1]
+			}
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(tasks)
 		},
 	}
-	cmd.Flags().BoolVar(&f.ready, "ready", false, "only tasks the server reports as claimable right now")
+	cmd.Flags().BoolVar(&f.ready, "ready", false, "only tasks the server reports as claimable right now, in queue order (the board's drag order)")
+	cmd.Flags().BoolVar(&f.first, "first", false, "only the first match — with --ready, the task at the top of the queue")
 	cmd.Flags().BoolVar(&f.mine, "mine", false, "only tasks assigned to the veans bot")
 	cmd.Flags().StringVar(&f.branch, "branch", "", "only tasks tagged 'veans:branch:<name>' (omit value for current branch)")
 	cmd.Flags().Lookup("branch").NoOptDefVal = "__auto__"

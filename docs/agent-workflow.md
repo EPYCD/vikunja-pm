@@ -19,7 +19,13 @@ owned by that person, shares the project with it, mints an API token with
 exactly the permissions the server offers, writes `.veans.yml` and installs a
 `veans prime` hook so their agent starts every session with the board
 instructions. Bots set up before an upgrade run `veans login` to pick up new
-permissions.
+permissions. Add `--install-git-hook` (or run `veans hooks install` later) and
+git refuses commits that stray outside the agent's tasks before they exist.
+
+The board never shows a bare bot. The Leases panel, the task's scope section
+and the kanban's "By assignee" lanes all say `bot-alice · for Alice`, and
+`veans agents` lists the same: who is working, which human is behind each
+bot, and how many tasks and leases each holds.
 
 ## 3. The owner's agent decomposes the PRD
 
@@ -34,7 +40,10 @@ veans plan plan.json             # tasks + relations + scopes in one transaction
 
 `plan.json` is a `tasks` array with plan-local keys, `parent_key`,
 `blocked_by`, `follows` and a `scope` per task (`veans prime` shows the
-shape). Single tasks still work one at a time:
+shape). To extend a board that already has work on it, `veans plan --export`
+prints the open tasks in the same shape keyed by identifier, and a new plan
+may reference those keys without redefining them. Single tasks still work
+one at a time:
 
 ```
 veans create "atomic task claim" \
@@ -57,10 +66,16 @@ let veans do it.
 ## 4. Agents pick work without stepping on each other
 
 ```
-veans ready              # every queued task, with why it is not ready
-veans list --ready       # only the claimable ones
-veans claim PROJ-12      # atomic: assign, move to In Progress, lease paths_owned
+veans ready                  # every queued task, with why it is not ready
+veans list --ready           # only the claimable ones, in queue order
+veans list --ready --first   # the top of the queue
+veans claim PROJ-12          # atomic: assign, move to In Progress, lease paths_owned
 ```
+
+The queue is the Todo column's drag order: the owner drags cards up to make
+agents pick them first, and each `READY · n` badge shows the rank. The
+**By assignee** toggle regroups every column by who holds the task, with the
+lease count per lane — the "who is doing what" view.
 
 The claim is a single transaction. It is refused with `CONFLICT` when someone
 else holds the task, when a blocker is open, or when one of the task's owned
@@ -96,10 +111,23 @@ Leases remember the holder's last activity. After `service.leasestaleafter`
 board and `veans ready` flag the lease `stale`. It still blocks; a human
 releases it from the Leases panel when nobody is working on the task.
 
+A server cron checks every five minutes and notifies the bot's owner once
+per stale lease (in-app and by mail, like any notification), so a crashed
+agent does not go unnoticed. Set `service.leaseautoreleaseafter` (for
+example `24h`; default off) and leases silent for that long are released
+automatically: the task keeps its status, gets a comment saying why its
+paths were freed, and the `task.leases.released` webhook fires.
+
 ## 6. Watch it
 
 Webhooks fire `task.claimed` and `task.leases.released` alongside the usual
 task events, so an orchestrator can wake idle agents instead of polling.
+
+Without a webhook receiver, `veans watch` is the orchestrator loop: it
+prints one JSON line per change — `task.ready`, `task.unready`,
+`lease.stale` — and `--exec CMD` runs a command per event with the JSON on
+stdin, which is enough to start an agent on a freshly ready task or ping a
+human about a stale lease. `--once` fits a cron.
 
 ## Reference
 
@@ -107,3 +135,5 @@ task events, so an orchestrator can wake idle agents instead of polling.
 * `GET /api/v2/projects/{id}/views/{view}/readiness` — the ready queue.
 * `GET /api/v2/projects/{id}/leases`, `PUT /api/v2/tasks/{id}/scope` — the
   data behind the board.
+* `GET /api/v2/projects/{id}/agents` — who is working, with bot owners.
+* `service.leasestaleafter`, `service.leaseautoreleaseafter` — stale policy.
