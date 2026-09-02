@@ -18,6 +18,9 @@ concurrency:
 jobs:
   classify:
     runs-on: ubuntu-latest
+    # Upstream-only: needs secrets.LLM_API_KEY and the upstream repo's
+    # managed label namespaces (area/, integration/, db/, concern/).
+    if: github.repository == 'go-vikunja/vikunja'
     steps:
       - name: Checkout (for prompt template)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

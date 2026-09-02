@@ -26,10 +26,15 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
 
-  release:
-    name: Release
-    if: ${{ github.ref_type == 'tag' || github.ref_name == 'main' }}
-    uses: ./.github/workflows/release.yml
-    needs:
-      - test
-    secrets: inherit
+  # The upstream release pipeline (.github/workflows/release.yml) is NOT wired
+  # up here. Its create-release job requests `contents: write`, and a called
+  # workflow's permission request is validated when the run starts, before any
+  # job `if:` is evaluated — so merely referencing it failed every run on this
+  # fork, pull requests included, with:
+  #   The nested job 'create-release' is requesting 'contents: write',
+  #   but is only allowed 'contents: read'.
+  # The pipeline is upstream-only regardless: it pushes to
+  # ghcr.io/go-vikunja/vikunja and needs SSH_PRIVATE_KEY, DOCKER_HUB_*,
+  # RELEASE_GPG_* and APK_SIGNING_KEY, none of which exist here. The file is
+  # kept as-is so upstream merges stay clean; rewire it once this fork has its
+  # own release targets and secrets.
