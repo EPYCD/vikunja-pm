@@ -55,3 +55,10 @@ PLAN.md
 plans/
 /.crush/
 /.playwright-mcp
+
+# Deploy stack + Marshal runtime state. deploy/.env.example is the tracked
+# template; the real .env holds the tunnel token, JWT secret and bot tokens.
+# .marshal/ is per-checkout state (webhook-secret, ledger, dedupe flags) —
+# the trailing slash keeps the committed .marshal.yml config tracked.
+deploy/.env
+.marshal/
