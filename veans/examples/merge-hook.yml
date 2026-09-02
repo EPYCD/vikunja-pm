@@ -7,7 +7,8 @@
 #
 # Agents put `Refs: PROJ-12` in their commit messages (the veans prompt tells
 # them to); merging the PR is what closes the task. Nobody has to touch the
-# board.
+# board. See pr-hooks.yml for the open-PR side (link + scope check) and
+# ci-failed-hook.yml for failed runs.
 
 name: Workman merge hook
 

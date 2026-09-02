@@ -143,6 +143,10 @@ func ClaimTask(s *xorm.Session, a web.Auth, c *TaskClaim) (*Task, error) {
 			return nil, err
 		}
 	}
+	// Agents re-claim on every start of work; that is activity too.
+	if err := touchLeasesHeldBy(s, task.ID, claimant.ID); err != nil {
+		return nil, err
+	}
 
 	full := &Task{ID: c.TaskID}
 	if err := full.ReadOne(s, a); err != nil {

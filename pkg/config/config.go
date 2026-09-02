@@ -61,6 +61,7 @@ const (
 	ServiceTimeZone                       Key = `service.timezone`
 	ServiceEnableTaskComments             Key = `service.enabletaskcomments`
 	ServiceAutoCompleteParentTasks        Key = `service.autocompleteparenttasks`
+	ServiceLeaseStaleAfter                Key = `service.leasestaleafter`
 	ServiceEnableTotp                     Key = `service.enabletotp`
 	ServiceTestingtoken                   Key = `service.testingtoken`
 	ServiceEnableEmailReminders           Key = `service.enableemailreminders`
@@ -380,6 +381,7 @@ func initDefaultConfig() {
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
 	ServiceAutoCompleteParentTasks.setDefault(false)
+	ServiceLeaseStaleAfter.setDefault("4h")
 	ServiceEnableTotp.setDefault(true)
 	ServiceEnableEmailReminders.setDefault(true)
 	ServiceEnableUserDeletion.setDefault(true)

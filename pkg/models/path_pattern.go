@@ -177,6 +177,23 @@ func coversSubtree(segs []string) bool {
 	return true
 }
 
+// PathCoveredBy reports whether a concrete, normalised file path falls under
+// a scope pattern: the pattern names the file, names a directory above it,
+// or is a glob it matches. Patterns and files in different repositories
+// (repo: prefix) never cover each other.
+func PathCoveredBy(pattern, file string) bool {
+	repoP, pattern := splitRepoPrefix(pattern)
+	repoF, file := splitRepoPrefix(file)
+	if repoP != repoF {
+		return false
+	}
+	ps, fs := strings.Split(pattern, "/"), strings.Split(file, "/")
+	if !hasWildcard(ps) {
+		return isPrefixOf(ps, fs)
+	}
+	return matchGlob(ps, fs)
+}
+
 // PathPatternsOverlap reports whether two normalised scope patterns can name
 // the same file. It is exact for the common shapes — concrete paths, a
 // directory subtree, single-segment wildcards — and conservative for the rest:

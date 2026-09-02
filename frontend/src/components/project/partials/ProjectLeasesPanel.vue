@@ -54,7 +54,15 @@
 						<span class="project-leases-row__meta">
 							{{ $t('task.leasesPanel.holder', {user: group.holder}) }}
 							· {{ $t('task.leasesPanel.since', {date: formatDateSince(group.since)}) }}
+							<template v-if="group.lastActive">
+								· {{ $t('task.leasesPanel.lastActive', {date: formatDateSince(group.lastActive)}) }}
+							</template>
 						</span>
+						<span
+							v-if="group.stale"
+							v-tooltip="$t('task.leasesPanel.staleTooltip')"
+							class="project-leases-row__stale"
+						>{{ $t('task.leasesPanel.stale') }}</span>
 						<XButton
 							v-if="canWrite"
 							variant="tertiary"
@@ -115,6 +123,8 @@ interface LeaseGroup {
 	title: string
 	holder: string
 	since: Date | null
+	lastActive: Date | null
+	stale: boolean
 	patterns: string[]
 }
 
@@ -134,10 +144,13 @@ const groups = computed<LeaseGroup[]>(() => {
 				title: lease.task?.title ?? '',
 				holder: lease.user?.name || lease.user?.username || `#${lease.user_id}`,
 				since: lease.created ? new Date(lease.created) : null,
+				lastActive: lease.last_active ? new Date(lease.last_active) : null,
+				stale: false,
 				patterns: [],
 			}
 			byTask.set(lease.task_id, group)
 		}
+		group.stale = group.stale || Boolean(lease.stale)
 		if (lease.pattern) {
 			group.patterns.push(lease.pattern)
 		}
@@ -221,6 +234,14 @@ async function release(taskId: number) {
 .project-leases-row__meta {
 	font-size: var(--wm-text-xs);
 	color: var(--wm-text-tertiary);
+}
+
+.project-leases-row__stale {
+	@include mono-label;
+
+	padding: 1px var(--wm-space-1);
+	color: var(--wm-text);
+	border: 1px solid var(--warning);
 }
 
 .project-leases-row__patterns {

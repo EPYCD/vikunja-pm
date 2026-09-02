@@ -59,7 +59,7 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 			"read_one", "read_all", "create", "update", "position",
 			"read", "update_bulk", "claim",
 			"scope", "scope_get", "scope_put", "scope_delete",
-			"leases", "leases_delete",
+			"leases", "leases_delete", "leases_heartbeat",
 		},
 		// Project access: read project metadata, manage buckets & move
 		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.
@@ -73,7 +73,7 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 			"read_one", "read_all", "tasks_by-index",
 			"views_buckets", "views_buckets_put", "views_buckets_post",
 			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
-			"leases", "views_readiness",
+			"leases", "views_readiness", "scope_check", "plan",
 		},
 		"projects_views":  {"read_one", "read_all"},
 		"labels":          {"read_one", "read_all", "create", "update", "delete"},

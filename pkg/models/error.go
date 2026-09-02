@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web"
@@ -1455,6 +1456,10 @@ type ErrPathLeaseConflict struct {
 	HeldByTaskID int64  `json:"held_by_task_id" doc:"The task holding the conflicting lease."`
 	HeldByUserID int64  `json:"held_by_user_id" doc:"The user who claimed the holding task."`
 	HeldPattern  string `json:"held_pattern" doc:"The leased pattern that overlaps."`
+	// Activity of the holding lease, so a queue can tell a live agent from
+	// one that crashed and never released.
+	LastActive time.Time `json:"last_active" doc:"When the holding task last showed activity."`
+	Stale      bool      `json:"stale" doc:"True when the holder has been inactive longer than service.leasestaleafter; a human may release it."`
 }
 
 // IsErrPathLeaseConflict checks if an error is ErrPathLeaseConflict.

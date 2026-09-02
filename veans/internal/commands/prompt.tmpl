@@ -51,6 +51,17 @@ Server: {{ .Server }}
   via `--parent`. For incremental check-off lists, use task-list items
   in the description instead.
 
+## BEFORE you open a PR
+- Run `veans check`. It diffs your branch against main, reads the `Refs:`
+  trailers from your commits and asks the server whether every changed
+  file is inside your tasks' `paths_owned` and outside every other task's
+  lease. `CONFLICT` means a stray or a collision: widen your scope
+  (`veans scope`), split the extra work into a new task, or revert the
+  file. The PR's scope check runs the same query and will fail otherwise.
+- Working for a long time without touching the board? `veans heartbeat {{ .TaskIDExample }}`
+  keeps your leases from being flagged stale (every update, comment and
+  claim already counts as activity).
+
 ## AFTER you finish work
 - Move to `in-review` and post a summary comment. **Never close tasks
   yourself** — merging the PR closes them: the Workman merge hook reads the
@@ -192,10 +203,39 @@ veans ready                        # ready queue with reasons (assigned / blocke
 veans scope {{ .TaskIDExample }}                 # show the task's scope
 veans scope {{ .TaskIDExample }} --paths-owned pkg/models/** --paths-affected docs/** --endpoint "GET /api/v2/x"
 veans scope {{ .TaskIDExample }} --clear         # drop the scope and its leases
-veans leases                       # who is editing what right now
+veans leases                       # who is editing what right now (stale: true = holder inactive)
 veans release {{ .TaskIDExample }}               # give up this task's leases without changing its status
+veans heartbeat {{ .TaskIDExample }}             # mark your leases active during long silent work
+veans check                        # changed files vs your tasks' scopes + others' leases; CONFLICT on strays
+veans check --staged               # same, for the index (pre-commit)
+veans plan --dry-run plan.json     # lint a decomposition (keys, cycles, overlapping paths)
+veans plan plan.json               # create every task, relation and scope of a plan in one go
 veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
 ```
+
+# Decomposing work (owner's agent)
+
+Write the whole breakdown as one plan and let the server lint it before
+anything is created:
+
+```json
+{"tasks": [
+  {"key": "claim", "title": "atomic claim endpoint", "priority": 3,
+   "scope": {"paths_owned": ["pkg/models/task_claim.go"], "paths_affected": ["pkg/models/tasks.go"],
+             "endpoints": ["POST /api/v2/tasks/{id}/claim"], "notes": "<p>No frontend.</p>"}},
+  {"key": "badges", "title": "board badges", "blocked_by": ["claim"],
+   "scope": {"paths_owned": ["frontend/src/components/tasks/**"], "paths_affected": [], "endpoints": [], "notes": ""}},
+  {"key": "epic", "title": "claiming", "description": "<p>Umbrella.</p>"},
+  {"key": "docs", "title": "docs", "parent_key": "epic", "follows": ["badges"],
+   "scope": {"paths_owned": ["docs/**"], "paths_affected": [], "endpoints": [], "notes": ""}}
+]}
+```
+
+`veans plan --dry-run plan.json` reports errors (duplicate/unknown keys,
+cycles, invalid paths — nothing is created) and warnings (a task without
+`paths_owned`, two tasks owning overlapping paths with no dependency
+between them, overlap with an open task already on the board). Fix the
+errors, decide on the warnings, then `veans plan plan.json`.
 
 # Project quick reference
 
