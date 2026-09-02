@@ -2,19 +2,21 @@ import {toValue, type MaybeRefOrGetter} from 'vue'
 import {queryOptions, useMutation} from '@tanstack/vue-query'
 
 import {
+	projectsAgents,
 	projectsLeasesList,
 	projectsViewsReadiness,
 	tasksLeasesRelease,
 	tasksScopeUpdate,
 	tasksScopeRead,
 } from '@/client/generated'
-import type {TaskPathLease, TaskReadiness, TaskScope, TaskScopeWritable} from '@/client/generated'
+import type {ProjectAgent, TaskPathLease, TaskReadiness, TaskScope, TaskScopeWritable} from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 
 export const scopeKeys = {
 	all: ['task-scope'] as const,
 	task: (taskId: number) => ['task-scope', 'task', taskId] as const,
 	projectLeases: (projectId: number) => ['task-scope', 'leases', projectId] as const,
+	projectAgents: (projectId: number) => ['task-scope', 'agents', projectId] as const,
 	readiness: (projectId: number, viewId: number) => ['task-scope', 'readiness', projectId, viewId] as const,
 }
 
@@ -65,6 +67,19 @@ export function projectLeasesQuery(projectId: number) {
 	})
 }
 
+// Who is working in the project; bots carry the human behind them so the
+// board can say "bot-alice · for Alice" instead of an opaque bot name.
+export function projectAgentsQuery(projectId: number) {
+	return queryOptions({
+		queryKey: scopeKeys.projectAgents(projectId),
+		queryFn: async (): Promise<ProjectAgent[]> => {
+			const {data} = await projectsAgents({path: {project: projectId}})
+			return data.items ?? []
+		},
+		staleTime: 30 * 1000,
+	})
+}
+
 export function viewReadinessQuery(projectId: number, viewId: number) {
 	return queryOptions({
 		queryKey: scopeKeys.readiness(projectId, viewId),
@@ -103,6 +118,7 @@ export function invalidateReadiness(projectId: number, viewId?: number) {
 function invalidateLeaseViews(projectId: number) {
 	return Promise.all([
 		queryClient.invalidateQueries({queryKey: scopeKeys.projectLeases(projectId)}),
+		queryClient.invalidateQueries({queryKey: scopeKeys.projectAgents(projectId)}),
 		invalidateReadiness(projectId),
 	])
 }

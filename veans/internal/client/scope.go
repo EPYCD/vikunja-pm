@@ -50,6 +50,16 @@ type TaskPathLease struct {
 	Created    time.Time `json:"created,omitempty"`
 	LastActive time.Time `json:"last_active,omitempty"`
 	Stale      bool      `json:"stale,omitempty"`
+	// Owner is the human behind a bot holder.
+	Owner *User `json:"owner,omitempty"`
+}
+
+// ProjectAgent is one user working in the project; bots carry their owner.
+type ProjectAgent struct {
+	User      *User `json:"user"`
+	Owner     *User `json:"owner,omitempty"`
+	OpenTasks int   `json:"open_tasks"`
+	Leases    int   `json:"leases"`
 }
 
 // LeaseConflict is one owned path that overlaps another task's lease.
@@ -257,4 +267,13 @@ func (c *Client) ExportPlan(ctx context.Context, projectID int64) (*ExportedPlan
 		return nil, err
 	}
 	return &out, nil
+}
+
+// ProjectAgents lists who is assigned to open tasks or holds leases.
+func (c *Client) ProjectAgents(ctx context.Context, projectID int64) ([]*ProjectAgent, error) {
+	items, _, err := doList[*ProjectAgent](ctx, c, fmt.Sprintf("/projects/%d/agents", projectID), nil)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }

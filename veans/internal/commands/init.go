@@ -30,6 +30,7 @@ import (
 )
 
 type initFlags struct {
+	installGitHook  bool
 	server          string
 	token           string
 	username        string
@@ -95,6 +96,14 @@ revoke it at any time without affecting your own session.`,
 			if err != nil {
 				return err
 			}
+			if f.installGitHook {
+				root := filepath.Dir(res.Config.Path())
+				if path, action, err := bootstrap.InstallGitPreCommitHook(root, false); err != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "pre-commit hook not installed: %v\n", err)
+				} else {
+					fmt.Fprintf(cmd.ErrOrStderr(), "%s pre-commit hook in %s\n", action, path)
+				}
+			}
 			printPostInitSummary(cmd.OutOrStdout(), res)
 			return nil
 		},
@@ -115,6 +124,7 @@ revoke it at any time without affecting your own session.`,
 	cmd.Flags().BoolVar(&f.installClaude, "install-claude", false, "wire `veans prime` into .claude/settings.json (skip prompt)")
 	cmd.Flags().BoolVar(&f.installOpenCode, "install-opencode", false, "wire `veans prime` into .opencode/plugin/veans-prime.ts (skip prompt)")
 	cmd.Flags().BoolVar(&f.noHooks, "no-hooks", false, "don't offer to install agent hooks; just print the snippets")
+	cmd.Flags().BoolVar(&f.installGitHook, "install-git-hook", false, "also write .git/hooks/pre-commit running `veans check --staged`")
 
 	return cmd
 }

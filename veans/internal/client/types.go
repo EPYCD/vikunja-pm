@@ -27,6 +27,8 @@ type User struct {
 	Username string `json:"username"`
 	Name     string `json:"name,omitempty"`
 	Email    string `json:"email,omitempty"`
+	// BotOwnerID is set on bot users: the human who owns them.
+	BotOwnerID int64 `json:"bot_owner_id,omitempty"`
 }
 
 // BotUser is what `POST /user/bots` returns.

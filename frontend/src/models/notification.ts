@@ -6,7 +6,7 @@ import TaskCommentModel from '@/models/taskComment'
 import ProjectModel from '@/models/project'
 import TeamModel from '@/models/team'
 
-import {NOTIFICATION_NAMES, type INotification} from '@/modelTypes/INotification'
+import {NOTIFICATION_NAMES, type INotification, type NotificationTask} from '@/modelTypes/INotification'
 import type { IUser } from '@/modelTypes/IUser'
 
 export default class NotificationModel extends AbstractModel<INotification> implements INotification {
@@ -75,6 +75,14 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 					task: new TaskModel(this.notification.task),
 				}
 				break
+			case NOTIFICATION_NAMES.TASK_LEASE_STALE: {
+				const raw = this.notification as NotificationTask
+				this.notification = {
+					doer: new UserModel(raw.doer),
+					task: new TaskModel(raw.task),
+				}
+				break
+			}
 		}
 
 		this.created = new Date(this.created)
@@ -113,6 +121,8 @@ export default class NotificationModel extends AbstractModel<INotification> impl
 				return `Reminder for ${this.notification.task.getTextIdentifier()} ${this.notification.task.title} (${this.notification.project.title})`
 			case NOTIFICATION_NAMES.TASK_MENTIONED:
 				return `${getDisplayName(this.notification.doer)} mentioned you on ${this.notification.task.getTextIdentifier()}`
+			case NOTIFICATION_NAMES.TASK_LEASE_STALE:
+				return `went quiet on ${((this.notification as NotificationTask).task as TaskModel).getTextIdentifier()}: its path leases are stale`
 		}
 
 		return ''

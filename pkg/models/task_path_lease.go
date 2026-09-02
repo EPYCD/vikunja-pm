@@ -42,12 +42,18 @@ type TaskPathLease struct {
 
 	Task *Task      `xorm:"-" json:"task,omitempty" readOnly:"true" doc:"The holding task, embedded when listing a project's leases."`
 	User *user.User `xorm:"-" json:"user,omitempty" readOnly:"true" doc:"The holding user, embedded when listing a project's leases."`
+	// Owner is the human behind a bot holder — the person to ask about the
+	// lease. Empty when the holder is a human.
+	Owner *user.User `xorm:"-" json:"owner,omitempty" readOnly:"true" doc:"When the holder is a bot, the user who owns it, embedded when listing a project's leases."`
 
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When the lease was taken."`
 	// LastActive moves whenever the holder touches the task (claim, update,
 	// comment, heartbeat); it is what tells a live agent from a dead one.
 	LastActive time.Time `xorm:"datetime null" json:"last_active" readOnly:"true" doc:"When the holding task last showed activity: a claim, an update, a comment or an explicit heartbeat."`
 	Stale      bool      `xorm:"-" json:"stale" readOnly:"true" doc:"True when last_active is older than service.leasestaleafter. Stale leases still block; they are a hint to release."`
+	// StaleNotifiedAt records the one stale notification per lease so the
+	// cron never nags.
+	StaleNotifiedAt time.Time `xorm:"datetime null" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -111,7 +117,33 @@ func embedLeaseHolders(s *xorm.Session, leases []*TaskPathLease) error {
 		l.Task = taskMap[l.TaskID]
 		l.User = users[l.UserID]
 	}
+	if err := embedBotOwners(s, leases); err != nil {
+		return err
+	}
 	markStaleLeases(leases)
+	return nil
+}
+
+// embedBotOwners attaches the owning human to every lease whose holder is a bot.
+func embedBotOwners(s *xorm.Session, leases []*TaskPathLease) error {
+	ownerIDs := []int64{}
+	for _, l := range leases {
+		if l.User != nil && l.User.IsBot() {
+			ownerIDs = append(ownerIDs, l.User.BotOwnerID)
+		}
+	}
+	if len(ownerIDs) == 0 {
+		return nil
+	}
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return err
+	}
+	for _, l := range leases {
+		if l.User != nil && l.User.IsBot() {
+			l.Owner = owners[l.User.BotOwnerID]
+		}
+	}
 	return nil
 }
 

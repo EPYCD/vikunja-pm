@@ -53,6 +53,9 @@
 						</RouterLink>
 						<span class="project-leases-row__meta">
 							{{ $t('task.leasesPanel.holder', {user: group.holder}) }}
+							<template v-if="group.owner">
+								· {{ $t('task.leasesPanel.forOwner', {user: group.owner}) }}
+							</template>
 							· {{ $t('task.leasesPanel.since', {date: formatDateSince(group.since)}) }}
 							<template v-if="group.lastActive">
 								· {{ $t('task.leasesPanel.lastActive', {date: formatDateSince(group.lastActive)}) }}
@@ -122,6 +125,7 @@ interface LeaseGroup {
 	identifier: string
 	title: string
 	holder: string
+	owner: string | null
 	since: Date | null
 	lastActive: Date | null
 	stale: boolean
@@ -143,6 +147,7 @@ const groups = computed<LeaseGroup[]>(() => {
 				identifier: lease.task?.identifier || `#${lease.task?.index ?? lease.task_id}`,
 				title: lease.task?.title ?? '',
 				holder: lease.user?.name || lease.user?.username || `#${lease.user_id}`,
+				owner: lease.owner ? (lease.owner.name || lease.owner.username || null) : null,
 				since: lease.created ? new Date(lease.created) : null,
 				lastActive: lease.last_active ? new Date(lease.last_active) : null,
 				stale: false,

@@ -187,7 +187,14 @@
 										class="kanban-lane"
 									>
 										<div class="kanban-lane__head">
-											<span class="kanban-lane__label">{{ lane.label }} / {{ lane.tasks.length }}</span>
+											<span class="kanban-lane__label">
+												{{ lane.label }}
+												<span
+													v-if="lane.owner"
+													class="kanban-lane__owner"
+												>· {{ $t('project.kanban.laneOwner', {user: lane.owner}) }}</span>
+												/ {{ lane.tasks.length }}
+											</span>
 											<span
 												v-if="lane.leases > 0"
 												class="kanban-lane__leases"
@@ -398,7 +405,7 @@ import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import {getDisplayName} from '@/models/user'
-import {invalidateReadiness, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
+import {invalidateReadiness, projectAgentsQuery, readinessByTask, viewReadinessQuery} from '@/client/queries/taskScope'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
@@ -579,12 +586,30 @@ const byAssignee = useStorage('kanbanByAssignee', false)
 interface AssigneeLane {
 	key: string
 	label: string
+	owner: string | null
 	tasks: ITask[]
 	leases: number
 }
+
+// A bot lane names the human behind it; that answer lives on the agents
+// endpoint, not on the assignee embedded in the task.
+const agentsQuery = useQuery(computed(() => ({
+	...projectAgentsQuery(projectIdWithFallback.value),
+	enabled: byAssignee.value && projectIdWithFallback.value > 0,
+})))
+const ownerByUserId = computed<Record<number, string>>(() => {
+	const out: Record<number, string> = {}
+	for (const agent of agentsQuery.data.value ?? []) {
+		const owner = agent.owner?.name || agent.owner?.username
+		if (agent.user?.id && owner) {
+			out[agent.user.id] = owner
+		}
+	}
+	return out
+})
 function lanesFor(bucket: IBucket): AssigneeLane[] {
 	const lanes = new Map<string, AssigneeLane>()
-	const unassigned: AssigneeLane = {key: 'unassigned', label: t('project.kanban.unassignedLane'), tasks: [], leases: 0}
+	const unassigned: AssigneeLane = {key: 'unassigned', label: t('project.kanban.unassignedLane'), owner: null, tasks: [], leases: 0}
 	for (const task of bucket.tasks) {
 		if (task.assignees.length === 0) {
 			unassigned.tasks.push(task)
@@ -595,7 +620,7 @@ function lanesFor(bucket: IBucket): AssigneeLane[] {
 			const key = `user-${user.id}`
 			let lane = lanes.get(key)
 			if (!lane) {
-				lane = {key, label: getDisplayName(user), tasks: [], leases: 0}
+				lane = {key, label: getDisplayName(user), owner: ownerByUserId.value[user.id] ?? null, tasks: [], leases: 0}
 				lanes.set(key, lane)
 			}
 			lane.tasks.push(task)
@@ -1106,6 +1131,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	align-items: center;
 	gap: 4px;
 	color: var(--wm-accent-text);
+}
+
+.kanban-lane__owner {
+	color: var(--wm-text-tertiary);
 }
 
 .kanban-lane__tasks {

@@ -140,6 +140,15 @@
                 "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
             }
         },
+        "task": {
+            "lease_stale": {
+                "subject": "%[1]s has gone quiet on \"%[2]s\" (%[3]s)",
+                "message": "%[1]s still holds the files for \"%[2]s\" (%[3]s) but has shown no activity for %[4]s. If nobody is working on it, release the leases so other tasks can proceed."
+            },
+            "lease_released": {
+                "comment": "Path leases released automatically after %[1]s without activity."
+            }
+        },
         "api_token": {
             "expiring": {
                 "week": {

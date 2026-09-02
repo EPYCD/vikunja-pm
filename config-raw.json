@@ -99,6 +99,11 @@
                     "comment": "How long a task's path leases may go without activity from their holder (a claim, an update, a comment or a heartbeat) before the board and the ready queue flag them as stale. Stale leases still block; the flag tells a human they can safely release them. Set to 0 to never flag."
                 },
                 {
+                    "key": "leaseautoreleaseafter",
+                    "default_value": "0",
+                    "comment": "When set (e.g. 24h), a task's path leases are released automatically once their holder has been inactive for that long, with a comment on the task. 0 disables it: stale leases are only flagged and notified, never released without a human."
+                },
+                {
                     "key": "autocompleteparenttasks",
                     "default_value": "false",
                     "comment": "When enabled, a parent task is marked done automatically as soon as its last open subtask is done. Meant for agent-driven boards where an epic is only a container for its subtasks; repeating parents are never auto-completed."

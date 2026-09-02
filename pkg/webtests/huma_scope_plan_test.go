@@ -134,3 +134,16 @@ func TestTaskPlanExportV2(t *testing.T) {
 	rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/20/plan", "", token, "")
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
+
+func TestProjectAgentsV2(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/1/agents", "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"leases":1`, "fixture user 1 holds one lease in project 1")
+
+	rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/20/agents", "", token, "")
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}

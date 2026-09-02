@@ -14,6 +14,7 @@ export const NOTIFICATION_NAMES = {
 	'PROJECT_CREATED': 'project.created',
 	'TEAM_MEMBER_ADDED': 'team.member.added',
 	'TASK_MENTIONED': 'task.mentioned',
+	'TASK_LEASE_STALE': 'task.lease.stale',
 } as const
 
 interface Notification {
@@ -25,7 +26,7 @@ interface NotificationTaskComment extends Notification {
 	comment: ITaskComment
 }
 
-interface NotificationTask extends Notification {
+export interface NotificationTask extends Notification {
 	task: ITask
 }
 

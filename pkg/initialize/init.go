@@ -148,6 +148,7 @@ func FullInit() {
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 	openid.RegisterProviderAvailabilityCron()
 	models.RegisterAPITokenExpiryCheckCron()
+	models.RegisterLeaseStaleCron()
 
 	// Initialize WebSocket hub
 	ws.InitHub()
