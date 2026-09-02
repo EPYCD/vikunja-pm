@@ -54,7 +54,7 @@ mage lint:fix
 cd frontend && pnpm lint:fix && pnpm lint:styles:fix
 ```
 
-Fix any errors the lint commands report, then try comitting again.
+Fix any errors the lint commands report, then try committing again.
 
 You only need to run the lint for the backend when changing backend code, and the lint for the frontend only when changing frontend code. Similarly, only run style linting when modifying CSS/SCSS files or Vue component styles.
 
