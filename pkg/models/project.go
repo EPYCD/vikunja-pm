@@ -58,6 +58,9 @@ type Project struct {
 
 	// Whether a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived" doc:"Whether the project is archived. Archived projects are read-only."`
+	// The CI identity. While set, "done" needs a merged, passing receipt from
+	// it, and the user who submitted a task for review may not close it.
+	ReceiptBotID int64 `xorm:"bigint null" json:"receipt_bot_id" doc:"The bot user whose token alone may post gate receipts. While set, a task cannot be marked done without a merged, passing receipt, and the user who moved it to review cannot close it. 0 disables both guards. Admins only."`
 
 	// The id of the file this project has set as background
 	BackgroundFileID int64 `xorm:"null" json:"-"`
@@ -1115,6 +1118,32 @@ func checkProjectParentBeforeUpdate(s *xorm.Session, project, storedProject *Pro
 	return nil
 }
 
+// checkReceiptBotChange gates the receipt bot to admins and to real bots: a
+// human as "CI" would let that human forge receipts for their own work.
+func checkReceiptBotChange(s *xorm.Session, project *Project, auth web.Auth) error {
+	isAdmin, err := project.IsAdmin(s, auth)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return ErrGenericForbidden{}
+	}
+	if project.ReceiptBotID == 0 {
+		return nil
+	}
+	bot, err := user.GetUserByID(s, project.ReceiptBotID)
+	if err != nil {
+		if user.IsErrUserDoesNotExist(err) {
+			return ErrReceiptBotInvalid{UserID: project.ReceiptBotID}
+		}
+		return err
+	}
+	if !bot.IsBot() {
+		return ErrReceiptBotInvalid{UserID: project.ReceiptBotID}
+	}
+	return nil
+}
+
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {
 	err = checkProjectBeforeUpdateOrDelete(s, project)
 	if err != nil {
@@ -1129,6 +1158,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	err = checkProjectParentBeforeUpdate(s, project, storedProject, auth)
 	if err != nil {
 		return err
+	}
+
+	receiptBotChanged := project.ReceiptBotID != storedProject.ReceiptBotID
+	if receiptBotChanged {
+		if err := checkReceiptBotChange(s, project, auth); err != nil {
+			return err
+		}
 	}
 
 	if project.IsArchived {
@@ -1166,6 +1202,9 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	}
 	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
+	}
+	if receiptBotChanged {
+		colsToUpdate = append(colsToUpdate, "receipt_bot_id")
 	}
 
 	if updateProjectBackground {

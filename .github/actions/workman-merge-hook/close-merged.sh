@@ -25,6 +25,15 @@ fi
 log "Referenced tasks: ${refs[*]}"
 require_server
 
+# A project with a receipt bot refuses "done" without a merged, passing
+# receipt, so the merge posts one first when the workflow ran the gates on
+# the merge commit and handed us their results.
+if [[ -n "${GATES:-}" ]]; then
+	# shellcheck source=receipt.sh
+	source "$(dirname "${BASH_SOURCE[0]}")/receipt.sh"
+	post_receipts true
+fi
+
 pr_label="PR"
 [[ -n "$PR_NUMBER" ]] && pr_label="PR #$PR_NUMBER"
 comment="<p>Closed by merged <a href=\"$(html_escape "$PR_URL")\">$(html_escape "$pr_label")</a>"
@@ -60,6 +69,9 @@ for ref in "${refs[@]}"; do
 	# every kanban view's done bucket as a side effect, matching what a human
 	# dragging it there would get.
 	status="$(api PATCH "/tasks/$task_id" application/merge-patch+json --data '{"done":true}')"
+	if [[ "$status" == "409" ]] && grep -q '"code":4039' "$API_BODY"; then
+		fail "$ref: the project requires a merged, passing gate receipt before a task closes — pass the gates input (see veans/examples/capyard-gates.yml)"
+	fi
 	[[ "$status" =~ ^2 ]] || fail "$ref: marking task $task_id done failed (HTTP $status): $(<"$API_BODY")"
 	status="$(api POST "/tasks/$task_id/comments" application/json --data "$(jq -cn --arg c "$comment" '{comment:$c}')")"
 	[[ "$status" =~ ^2 ]] || warn "$ref: closed, but posting the PR comment failed (HTTP $status)"

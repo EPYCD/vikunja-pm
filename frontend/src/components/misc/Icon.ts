@@ -14,6 +14,7 @@ import {
 	faItalic,
 	faStrikethrough,
 	faCode,
+	faCodeMerge,
 	faBars,
 	faBell,
 	faBolt,
@@ -44,6 +45,7 @@ import {
 	faForward,
 	faGripLines,
 	faHeader,
+	faHeartPulse,
 	faHistory,
 	faImage,
 	faKeyboard,
@@ -121,6 +123,7 @@ library.add(faFilePdf)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
 library.add(faCode)
+library.add(faCodeMerge)
 library.add(faQuoteRight)
 library.add(faListUl)
 library.add(faAlignLeft)
@@ -158,6 +161,7 @@ library.add(faFilter)
 library.add(faForward)
 library.add(faGripLines)
 library.add(faHeader)
+library.add(faHeartPulse)
 library.add(faHistory)
 library.add(faImage)
 library.add(faKeyboard)

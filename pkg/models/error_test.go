@@ -85,6 +85,16 @@ func TestI18nParamsContract(t *testing.T) {
 			err:          user.ErrInvalidTimezone{Name: "x"},
 			expectedCode: user.ErrorCodeInvalidTimezone,
 		},
+		{
+			name:         "ErrPathLeaseConflict",
+			err:          ErrPathLeaseConflict{TaskID: 1, Pattern: "a/**", HeldByTaskID: 2, HeldByUserID: 3, HeldPattern: "a/b.go", HeldByUsername: "u"},
+			expectedCode: ErrCodePathLeaseConflict,
+		},
+		{
+			name:         "ErrReceiptInvalid",
+			err:          ErrReceiptInvalid{Reason: "r"},
+			expectedCode: ErrCodeReceiptInvalid,
+		},
 	}
 
 	for _, tt := range tests {

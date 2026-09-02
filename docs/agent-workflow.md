@@ -129,6 +129,15 @@ prints one JSON line per change — `task.ready`, `task.unready`,
 stdin, which is enough to start an agent on a freshly ready task or ping a
 human about a stale lease. `--once` fits a cron.
 
+## 7. Marshal
+
+For a board that coordinates a repository with a written spec, `marshal`
+adds the checks a human otherwise re-runs by hand: references resolve from
+the spec at read time and drift is announced, the In Progress column is the
+ownership lock, "done" needs CI's receipt, CODEOWNERS files get a queue,
+every worker gets a worktree with its own database and port, and Discord
+gets a card per event. See `docs/marshal.md`.
+
 ## Reference
 
 * `veans/README.md` — every command and flag.

@@ -531,6 +531,10 @@ export type EmailConfirm = {
 
 export type ErrPathLeaseConflict = {
     /**
+     * The branch the holding task is being worked on, from its veans:branch label; empty when none.
+     */
+    held_by_branch?: string;
+    /**
      * The task holding the conflicting lease.
      */
     held_by_task_id?: number;
@@ -539,9 +543,17 @@ export type ErrPathLeaseConflict = {
      */
     held_by_user_id?: number;
     /**
+     * Username of the user holding the lease.
+     */
+    held_by_username?: string;
+    /**
      * The leased pattern that overlaps.
      */
     held_pattern?: string;
+    /**
+     * When the holding lease was taken.
+     */
+    held_since?: string;
     /**
      * When the holding task last showed activity.
      */
@@ -646,6 +658,21 @@ export type File = {
      * The size of the file in bytes.
      */
     readonly size?: number;
+};
+
+export type GateResult = {
+    /**
+     * How long the gate ran, in milliseconds.
+     */
+    duration_ms?: number;
+    /**
+     * The gate, e.g. typecheck, lint, test, build, docs:api.
+     */
+    name?: string;
+    /**
+     * passed, failed or skipped.
+     */
+    status?: 'passed' | 'failed' | 'skipped';
 };
 
 export type HealthBodyBody = {
@@ -1334,6 +1361,18 @@ export type PaginatedTaskReadiness = {
     total_pages?: number;
 };
 
+export type PaginatedTaskReceipt = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<TaskReceipt> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedTeam = {
     /**
      * A URL to the JSON Schema for this object.
@@ -1624,6 +1663,10 @@ export type Project = {
      */
     position?: number;
     /**
+     * The bot user whose token alone may post gate receipts. While set, a task cannot be marked done without a merged, passing receipt, and the user who moved it to review cannot close it. 0 disables both guards. Admins only.
+     */
+    receipt_bot_id?: number;
+    /**
      * The requesting user's subscription status for this project. Read-only here; use the subscription endpoints to change it. Only returned when retrieving a single project.
      */
     readonly subscription?: Subscription;
@@ -1737,6 +1780,10 @@ export type ProjectReadBody = {
      */
     position?: number;
     /**
+     * The bot user whose token alone may post gate receipts. While set, a task cannot be marked done without a merged, passing receipt, and the user who moved it to review cannot close it. 0 disables both guards. Admins only.
+     */
+    receipt_bot_id?: number;
+    /**
      * The requesting user's subscription status for this project. Read-only here; use the subscription endpoints to change it. Only returned when retrieving a single project.
      */
     readonly subscription?: Subscription;
@@ -1794,6 +1841,10 @@ export type ProjectView = {
      * The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter.
      */
     bucket_configuration_mode?: 'none' | 'manual' | 'filter';
+    /**
+     * The id of the in-progress bucket. Moving a task here runs the same checks as claiming it: refused while a blocker is open or an owned path is leased by another task; on success the task's paths_owned are leased. 0 leaves drags unguarded.
+     */
+    claim_bucket_id?: number;
     /**
      * A timestamp when this view was created. You cannot change this value.
      */
@@ -1860,6 +1911,10 @@ export type ProjectViewReadBody = {
      * The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter.
      */
     bucket_configuration_mode?: 'none' | 'manual' | 'filter';
+    /**
+     * The id of the in-progress bucket. Moving a task here runs the same checks as claiming it: refused while a blocker is open or an owned path is leased by another task; on success the task's paths_owned are leased. 0 leaves drags unguarded.
+     */
+    claim_bucket_id?: number;
     /**
      * A timestamp when this view was created. You cannot change this value.
      */
@@ -2416,6 +2471,14 @@ export type TaskBucket = {
      */
     bucket_id?: number;
     /**
+     * When the task was last moved into this bucket. Set by the server.
+     */
+    readonly moved_at?: string;
+    /**
+     * The user who last moved the task into this bucket. Set by the server.
+     */
+    readonly moved_by_id?: number;
+    /**
      * The view the bucket belongs to. On /api/v2 this is taken from the URL; a value in the body is ignored.
      */
     project_view_id?: number;
@@ -2811,6 +2874,69 @@ export type TaskReadiness = {
      * The task, with assignees, labels and related tasks populated.
      */
     task?: Task;
+};
+
+export type TaskReceipt = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The branch the commit was on.
+     */
+    branch?: string;
+    /**
+     * Link to the CI run.
+     */
+    ci_run_url?: string;
+    /**
+     * The commit the gates ran on.
+     */
+    commit_sha: string;
+    /**
+     * When the receipt was posted.
+     */
+    readonly created?: string;
+    /**
+     * True when the API docs were regenerated in the change.
+     */
+    docs_api_regenerated?: boolean;
+    /**
+     * True when the diff touched files that require regenerating the API docs.
+     */
+    docs_api_required?: boolean;
+    /**
+     * One entry per gate, with status and duration.
+     */
+    gates: Array<GateResult> | null;
+    /**
+     * The unique, numeric id of this receipt.
+     */
+    readonly id?: number;
+    /**
+     * The merge commit, when merged.
+     */
+    merge_sha?: string;
+    /**
+     * True when the commit is on the merged branch. Only a merged, passing receipt lets a task be marked done.
+     */
+    merged?: boolean;
+    /**
+     * True when every gate passed and, if required, the API docs were regenerated. Computed by the server.
+     */
+    readonly passed?: boolean;
+    /**
+     * The receipt bot that posted it.
+     */
+    readonly posted_by?: User;
+    /**
+     * The task's project. Set by the server.
+     */
+    readonly project_id?: number;
+    /**
+     * The task the receipt belongs to. On /api/v2 this is taken from the URL.
+     */
+    task_id?: number;
 };
 
 export type TaskRelation = {
@@ -4311,6 +4437,14 @@ export type PaginatedTaskReadinessWritable = {
     total_pages?: number;
 };
 
+export type PaginatedTaskReceiptWritable = {
+    items?: Array<TaskReceiptWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedTeamWritable = {
     items?: Array<TeamWritable> | null;
     page?: number;
@@ -4433,6 +4567,10 @@ export type ProjectWritable = {
      */
     position?: number;
     /**
+     * The bot user whose token alone may post gate receipts. While set, a task cannot be marked done without a merged, passing receipt, and the user who moved it to review cannot close it. 0 disables both guards. Admins only.
+     */
+    receipt_bot_id?: number;
+    /**
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
@@ -4498,6 +4636,10 @@ export type ProjectReadBodyWritable = {
      */
     position?: number;
     /**
+     * The bot user whose token alone may post gate receipts. While set, a task cannot be marked done without a merged, passing receipt, and the user who moved it to review cannot close it. 0 disables both guards. Admins only.
+     */
+    receipt_bot_id?: number;
+    /**
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
@@ -4523,6 +4665,10 @@ export type ProjectViewWritable = {
      * The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter.
      */
     bucket_configuration_mode?: 'none' | 'manual' | 'filter';
+    /**
+     * The id of the in-progress bucket. Moving a task here runs the same checks as claiming it: refused while a blocker is open or an owned path is leased by another task; on success the task's paths_owned are leased. 0 leaves drags unguarded.
+     */
+    claim_bucket_id?: number;
     /**
      * The id of the bucket new tasks without a bucket are added to. Defaults to the leftmost bucket.
      */
@@ -4558,6 +4704,10 @@ export type ProjectViewReadBodyWritable = {
      * The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter.
      */
     bucket_configuration_mode?: 'none' | 'manual' | 'filter';
+    /**
+     * The id of the in-progress bucket. Moving a task here runs the same checks as claiming it: refused while a blocker is open or an owned path is leased by another task; on success the task's paths_owned are leased. 0 leaves drags unguarded.
+     */
+    claim_bucket_id?: number;
     /**
      * The id of the bucket new tasks without a bucket are added to. Defaults to the leftmost bucket.
      */
@@ -4869,6 +5019,45 @@ export type TaskReadinessWritable = {
      * The task, with assignees, labels and related tasks populated.
      */
     task?: TaskWritable;
+};
+
+export type TaskReceiptWritable = {
+    /**
+     * The branch the commit was on.
+     */
+    branch?: string;
+    /**
+     * Link to the CI run.
+     */
+    ci_run_url?: string;
+    /**
+     * The commit the gates ran on.
+     */
+    commit_sha: string;
+    /**
+     * True when the API docs were regenerated in the change.
+     */
+    docs_api_regenerated?: boolean;
+    /**
+     * True when the diff touched files that require regenerating the API docs.
+     */
+    docs_api_required?: boolean;
+    /**
+     * One entry per gate, with status and duration.
+     */
+    gates: Array<GateResult> | null;
+    /**
+     * The merge commit, when merged.
+     */
+    merge_sha?: string;
+    /**
+     * True when the commit is on the merged branch. Only a merged, passing receipt lets a task be marked done.
+     */
+    merged?: boolean;
+    /**
+     * The task the receipt belongs to. On /api/v2 this is taken from the URL.
+     */
+    task_id?: number;
 };
 
 export type TaskRelationWritable = {
@@ -9654,6 +9843,73 @@ export type TasksMarkReadResponses = {
 };
 
 export type TasksMarkReadResponse = TasksMarkReadResponses[keyof TasksMarkReadResponses];
+
+export type TasksReceiptsListData = {
+    body?: never;
+    path: {
+        projecttask: number;
+    };
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page (max 1000).
+         */
+        per_page?: number;
+        /**
+         * Search query; filters the list to items matching this string.
+         */
+        q?: string;
+    };
+    url: '/tasks/{projecttask}/receipts';
+};
+
+export type TasksReceiptsListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksReceiptsListError = TasksReceiptsListErrors[keyof TasksReceiptsListErrors];
+
+export type TasksReceiptsListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTaskReceipt;
+};
+
+export type TasksReceiptsListResponse = TasksReceiptsListResponses[keyof TasksReceiptsListResponses];
+
+export type TasksReceiptsCreateData = {
+    body: TaskReceiptWritable;
+    path: {
+        projecttask: number;
+    };
+    query?: never;
+    url: '/tasks/{projecttask}/receipts';
+};
+
+export type TasksReceiptsCreateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksReceiptsCreateError = TasksReceiptsCreateErrors[keyof TasksReceiptsCreateErrors];
+
+export type TasksReceiptsCreateResponses = {
+    /**
+     * Created
+     */
+    201: TaskReceipt;
+};
+
+export type TasksReceiptsCreateResponse = TasksReceiptsCreateResponses[keyof TasksReceiptsCreateResponses];
 
 export type TasksScopeDeleteData = {
     body?: never;

@@ -15,6 +15,22 @@ this file is veans-specific.
   `veans/code-header-template.txt` (a copy of the parent's, kept local
   so the linter resolves the path relative to this module).
 
+## Marshal lives here too
+
+- `cmd/marshal` + `internal/marshal/*` is the repo-aware layer (see
+  `docs/marshal.md`). Same module on purpose: it reuses `internal/client`,
+  `internal/config` (.veans.yml) and `internal/credentials`. `mage build`
+  builds both binaries; `deploy/Dockerfile.marshal` builds the image.
+- `internal/marshal/pathpattern` is a port of the server's
+  `pkg/models/path_pattern.go`; change them together.
+- Identity: `board.Open` picks `MARSHAL_TOKEN`, then the credential-store
+  account `bot-marshal-<repo>`, then the repo's veans bot. `marshal setup`
+  is the only command that needs a human's token, passed via `--token`
+  and never stored. The CI token it prints goes to GitHub as
+  `WORKMAN_TOKEN`; nothing else may post receipts.
+- The e2e for the whole layer is `e2e/marshal_test.go`; it builds the
+  marshal binary itself and runs under the same `VEANS_E2E_*` harness.
+
 ## Building and testing
 
 - `mage build` → `./veans` binary. The `Aliases` map in `magefile.go`

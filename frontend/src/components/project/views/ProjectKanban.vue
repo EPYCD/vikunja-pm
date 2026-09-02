@@ -36,6 +36,7 @@
 					:project-id="projectIdWithFallback"
 					:can-write="canWrite"
 				/>
+				<ProjectMarshalPanel v-if="!isSavedFilter(project) && marshalUrl" />
 				<FilterPopup
 					v-if="!isSavedFilter(project)"
 					v-model="params"
@@ -80,6 +81,13 @@
 										@click.stop="() => collapseBucket(bucket)"
 									>
 										<Icon icon="check-double" />
+									</span>
+									<span
+										v-if="bucket.id !== 0 && view?.claimBucketId === bucket.id"
+										v-tooltip="$t('project.kanban.claimBucketHint')"
+										class="icon is-small kanban-claim-badge mie-2"
+									>
+										<Icon icon="lock" />
 									</span>
 									<h2
 										class="title input"
@@ -149,6 +157,14 @@
 											@click.stop="toggleDoneBucket(bucket)"
 										>
 											{{ $t('project.kanban.doneBucket') }}
+										</DropdownItem>
+										<DropdownItem
+											v-tooltip="$t('project.kanban.claimBucketHintExtended')"
+											:icon-class="{'has-text-primary': bucket.id === view?.claimBucketId}"
+											icon="lock"
+											@click.stop="toggleClaimBucket(bucket)"
+										>
+											{{ bucket.id === view?.claimBucketId ? $t('project.kanban.claimBucketUnset') : $t('project.kanban.claimBucket') }}
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
@@ -385,10 +401,12 @@ import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import ProjectLeasesPanel from '@/components/project/partials/ProjectLeasesPanel.vue'
+import ProjectMarshalPanel from '@/components/project/partials/ProjectMarshalPanel.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -442,8 +460,10 @@ const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 
 const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
+const marshalUrl = computed(() => configStore.marshalUrl)
 const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
@@ -1012,48 +1032,41 @@ function handleTaskDragStart(e) {
 	dragstart(bucket)
 }
 
-async function toggleDefaultBucket(bucket: IBucket) {
-	const defaultBucketId = view.value?.defaultBucketId === bucket.id
-		? 0
-		: bucket.id
-
+async function saveViewBucketRole(patch: Partial<IProjectView>, message: string) {
 	const projectViewService = new ProjectViewService()
 	const updatedView = await projectViewService.update(new ProjectViewModel({
 		...view.value,
-		defaultBucketId,
+		...patch,
 	}))
 
 	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
+	projectStore.setProject({
 		...project.value,
 		views,
-	}
+	})
 
-	projectStore.setProject(updatedProject)
+	success({message})
+}
 
-	success({message: t('project.kanban.defaultBucketSavedSuccess')})
+async function toggleDefaultBucket(bucket: IBucket) {
+	await saveViewBucketRole(
+		{defaultBucketId: view.value?.defaultBucketId === bucket.id ? 0 : bucket.id},
+		t('project.kanban.defaultBucketSavedSuccess'),
+	)
 }
 
 async function toggleDoneBucket(bucket: IBucket) {
-	const doneBucketId = view.value?.doneBucketId === bucket.id
-		? 0
-		: bucket.id
-	
-	const projectViewService = new ProjectViewService()
-	const updatedView = await projectViewService.update(new ProjectViewModel({
-		...view.value,
-		doneBucketId,
-	}))
+	await saveViewBucketRole(
+		{doneBucketId: view.value?.doneBucketId === bucket.id ? 0 : bucket.id},
+		t('project.kanban.doneBucketSavedSuccess'),
+	)
+}
 
-	const views = project.value.views.map(v => v.id === view.value?.id ? updatedView : v)
-	const updatedProject = {
-		...project.value,
-		views,
-	}
-	
-	projectStore.setProject(updatedProject)
-	
-	success({message: t('project.kanban.doneBucketSavedSuccess')})
+async function toggleClaimBucket(bucket: IBucket) {
+	await saveViewBucketRole(
+		{claimBucketId: view.value?.claimBucketId === bucket.id ? 0 : bucket.id},
+		t('project.kanban.claimBucketSavedSuccess'),
+	)
 }
 
 function collapseBucket(bucket: IBucket) {
@@ -1292,6 +1305,10 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 		.icon.has-text-success {
 			cursor: pointer;
+		}
+
+		.kanban-claim-badge {
+			color: var(--wm-accent-text);
 		}
 
 		.limit {

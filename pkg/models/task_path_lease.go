@@ -17,14 +17,15 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -230,12 +231,75 @@ func findConflictingLeases(s *xorm.Session, projectID, excludeTaskID int64, patt
 					HeldPattern:  l.Pattern,
 					LastActive:   l.LastActive,
 					Stale:        leaseIsStale(l.LastActive),
+					HeldSince:    l.Created,
 				})
 				break
 			}
 		}
 	}
+	if err := describeLeaseHolders(s, conflicts); err != nil {
+		return nil, err
+	}
 	return conflicts, nil
+}
+
+// describeLeaseHolders fills in the holder's username and branch so a refusal
+// names who to talk to rather than an id to look up.
+func describeLeaseHolders(s *xorm.Session, conflicts []ErrPathLeaseConflict) error {
+	if len(conflicts) == 0 {
+		return nil
+	}
+	userIDs := make([]int64, 0, len(conflicts))
+	taskIDs := make([]int64, 0, len(conflicts))
+	for _, c := range conflicts {
+		userIDs = append(userIDs, c.HeldByUserID)
+		taskIDs = append(taskIDs, c.HeldByTaskID)
+	}
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return err
+	}
+	branches, err := branchLabelsForTasks(s, taskIDs)
+	if err != nil {
+		return err
+	}
+	for i := range conflicts {
+		if u := users[conflicts[i].HeldByUserID]; u != nil {
+			conflicts[i].HeldByUsername = u.Username
+		}
+		conflicts[i].HeldByBranch = branches[conflicts[i].HeldByTaskID]
+	}
+	return nil
+}
+
+// branchLabelPrefix is the label veans attaches on claim to say which branch
+// carries the work.
+const branchLabelPrefix = "veans:branch:"
+
+func branchLabelsForTasks(s *xorm.Session, taskIDs []int64) (map[int64]string, error) {
+	out := map[int64]string{}
+	if len(taskIDs) == 0 {
+		return out, nil
+	}
+	rows := []struct {
+		TaskID int64  `xorm:"task_id"`
+		Title  string `xorm:"title"`
+	}{}
+	err := s.Table("labels").
+		Join("INNER", "label_tasks", "label_tasks.label_id = labels.id").
+		In("label_tasks.task_id", taskIDs).
+		Where(builder.Like{"labels.title", branchLabelPrefix + "%"}).
+		Cols("label_tasks.task_id", "labels.title").
+		Find(&rows)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range rows {
+		if _, seen := out[r.TaskID]; !seen {
+			out[r.TaskID] = strings.TrimPrefix(r.Title, branchLabelPrefix)
+		}
+	}
+	return out, nil
 }
 
 // acquirePathLeasesForTask replaces the task's leases with one per pattern,

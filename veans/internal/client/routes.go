@@ -59,7 +59,7 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 			"read_one", "read_all", "create", "update", "position",
 			"read", "update_bulk", "claim",
 			"scope", "scope_get", "scope_put", "scope_delete",
-			"leases", "leases_delete", "leases_heartbeat",
+			"leases", "leases_delete", "leases_heartbeat", "receipts",
 		},
 		// Project access: read project metadata, manage buckets & move
 		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.
@@ -70,7 +70,7 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 		// request BOTH and let the runtime intersection drop whichever the
 		// server didn't register.
 		"projects": {
-			"read_one", "read_all", "tasks_by-index",
+			"read_one", "read_all", "tasks_by-index", "tasks_by_index",
 			"views_buckets", "views_buckets_put", "views_buckets_post",
 			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
 			"leases", "views_readiness", "scope_check", "plan", "plan_get", "agents",
@@ -82,6 +82,22 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 		"tasks_assignees": {"read_all", "create", "delete", "update_bulk"},
 		"tasks_labels":    {"create", "delete", "read_all", "update_bulk"},
 	}
+	return pickPermissions(routes, wanted)
+}
+
+// PermissionsForCI is the receipt bot's grant: post receipts, close and
+// comment on tasks, park them in review, and nothing a worker needs.
+func PermissionsForCI(routes map[string]RouteGroup) map[string][]string {
+	wanted := map[string][]string{
+		"tasks":          {"read_one", "update", "read", "receipts", "receipts_post"},
+		"tasks_comments": {"create", "read_all"},
+		"projects":       {"read_one", "tasks_by-index", "tasks_by_index", "views_buckets_tasks", "views_buckets_tasks_put", "leases", "webhooks", "webhooks_get"},
+		"projects_views": {"read_one", "read_all"},
+	}
+	return pickPermissions(routes, wanted)
+}
+
+func pickPermissions(routes map[string]RouteGroup, wanted map[string][]string) map[string][]string {
 	out := map[string][]string{}
 	for group, actions := range wanted {
 		avail, ok := routes[group]

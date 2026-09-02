@@ -100,10 +100,11 @@ func ClaimTask(s *xorm.Session, a web.Auth, c *TaskClaim) (*Task, error) {
 
 	if !alreadyThere {
 		tb := &TaskBucket{
-			TaskID:        c.TaskID,
-			ProjectViewID: c.ProjectViewID,
-			BucketID:      c.BucketID,
-			ProjectID:     task.ProjectID,
+			TaskID:         c.TaskID,
+			ProjectViewID:  c.ProjectViewID,
+			BucketID:       c.BucketID,
+			ProjectID:      task.ProjectID,
+			skipClaimGuard: true,
 		}
 		if err := updateTaskBucket(s, a, tb); err != nil {
 			return nil, err

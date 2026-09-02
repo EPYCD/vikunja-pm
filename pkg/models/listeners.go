@@ -74,6 +74,7 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskRelationDeletedEvent{})
 		RegisterEventForWebhook(&TaskClaimedEvent{})
 		RegisterEventForWebhook(&TaskLeasesReleasedEvent{})
+		RegisterEventForWebhook(&TaskReceiptCreatedEvent{})
 		RegisterEventForWebhook(&ProjectUpdatedEvent{})
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})

@@ -318,6 +318,32 @@ Copy `examples/merge-hook.yml` to `.github/workflows/` in a repo with a
 committed `.veans.yml` and add the bot token as the `WORKMAN_TOKEN` secret.
 The PR merge is the human gate: nobody has to touch the board.
 
+## Marshal
+
+`marshal` (built from `cmd/marshal`, same module) is the repo-aware layer over
+the board: spec references that resolve from the repository at read time,
+CODEOWNERS chokepoint queues, branch-vs-claim reconciliation, the ownership
+lock on the board's In Progress column, CI gate receipts that gate "done",
+per-worker worktrees with a database and port from a pool, a hash-chained
+ledger, Discord cards for every pipeline event, and an MCP server for agents.
+See `docs/marshal.md` for the design and `deploy/README.md` for running it
+next to Workman behind a Cloudflare tunnel.
+
+```
+marshal init                   write .marshal.yml (spec files, CODEOWNERS, pool, service, Discord)
+marshal setup --token <admin>  create the Marshal + CI bots, set receipt bot and claim bucket, register the webhook
+marshal refs resolve|check     references with provenance; broken refs, pastes, unlinked tasks
+marshal health                 the graph invariants
+marshal chokepoints            CODEOWNERS queues
+marshal open <path>            is anything open on this path
+marshal reconcile              branches vs claims, stale branches
+marshal worktree <task>        worktree command + database + port
+marshal claims import          owns: labels → paths_owned
+marshal receipt <task> ...     post a gate receipt as CI
+marshal serve                  webhook receiver, panels API, watcher
+marshal mcp                    agent tools over stdio
+```
+
 ## Out of scope (for now)
 
 - OAuth 2.0 device flow (RFC 8628) — would let SSH'd / headless setups

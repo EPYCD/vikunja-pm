@@ -13,6 +13,7 @@ import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 export interface ConfigState {
 	version: string,
 	frontendUrl: string,
+	marshalUrl: string,
 	motd: string,
 	linkSharingEnabled: boolean,
 	maxFileSize: string,
@@ -55,6 +56,7 @@ export const useConfigStore = defineStore('config', () => {
 		// These are the api defaults.
 		version: '',
 		frontendUrl: '',
+		marshalUrl: '',
 		motd: '',
 		linkSharingEnabled: true,
 		maxFileSize: '20MB',

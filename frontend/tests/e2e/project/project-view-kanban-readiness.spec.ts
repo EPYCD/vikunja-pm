@@ -37,7 +37,7 @@ async function seedBoard() {
 	await TaskScopeFactory.create(1, {id: 2, task_id: holder.id, paths_owned: '["pkg/models/**"]'}, false)
 	await TaskPathLeaseFactory.create(1, {task_id: holder.id, project_id: projects[0].id, pattern: 'pkg/models/**'})
 
-	return {projects, views, tasks: {ready, blocked, conflicted, holder}}
+	return {projects, views, buckets, tasks: {ready, blocked, conflicted, holder}}
 }
 
 function card(page, taskId: number) {
@@ -115,6 +115,28 @@ test.describe('Kanban readiness', () => {
 		await page.locator('.project-leases-button').click()
 		await expect(page.locator('.project-leases-panel .project-leases-row__meta'))
 			.toContainText(`held by bot-lane · for ${currentUser.username}`)
+	})
+
+	test('a bucket can be set as the claim bucket', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const {projects, views, buckets} = await seedBoard()
+		await page.goto(`/projects/${projects[0].id}/${views[0].id}`)
+
+		const dropdown = page.locator('.kanban .bucket .bucket-header .dropdown.options').nth(1)
+		await dropdown.locator('.dropdown-trigger').click()
+		await dropdown.locator('.dropdown-menu .dropdown-item').filter({hasText: 'Use as claim bucket'}).click()
+
+		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.locator('.kanban .bucket').nth(1).locator('.kanban-claim-badge')).toBeVisible()
+		await expect(page.locator('.kanban .bucket').first().locator('.kanban-claim-badge')).toHaveCount(0)
+
+		const response = await apiContext.get(`projects/${projects[0].id}/views/${views[0].id}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(response.ok()).toBeTruthy()
+		expect((await response.json()).claim_bucket_id).toBe(buckets[1].id)
+
+		await page.reload()
+		await expect(page.locator('.kanban .bucket').nth(1).locator('.kanban-claim-badge')).toBeVisible()
 	})
 
 	test('the leases panel lists holders and can release', async ({authenticatedPage: page}) => {

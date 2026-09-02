@@ -20,6 +20,7 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode = 'manual'
 	defaultBucketId = 0
 	doneBucketId = 0
+	claimBucketId = 0
 
 	created: Date = new Date()
 	updated: Date = new Date()

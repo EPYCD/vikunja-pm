@@ -422,6 +422,26 @@
 						/>
 					</div>
 
+					<!-- Gate receipts -->
+					<div
+						v-show="hasReceipts"
+						class="content details"
+					>
+						<TaskReceiptsSection
+							v-if="task.id"
+							:task-id="task.id"
+							@loaded="has => hasReceipts = has"
+						/>
+					</div>
+
+					<!-- Spec references -->
+					<div
+						v-if="task.id && configStore.marshalUrl"
+						class="content details"
+					>
+						<TaskReferencesSection :task-id="task.id" />
+					</div>
+
 					<!-- Move Task -->
 					<div
 						v-if="activeFields.moveProject"
@@ -717,6 +737,8 @@ import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
 import TaskScopeSection from '@/components/tasks/partials/TaskScopeSection.vue'
+import TaskReceiptsSection from '@/components/tasks/partials/TaskReceiptsSection.vue'
+import TaskReferencesSection from '@/components/tasks/partials/TaskReferencesSection.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
@@ -762,6 +784,7 @@ const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
+const hasReceipts = ref(false)
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()

@@ -55,6 +55,9 @@ type Project struct {
 	IsArchived      bool    `json:"is_archived,omitempty"`
 	ParentProjectID int64   `json:"parent_project_id,omitempty"`
 	Position        float64 `json:"position,omitempty"`
+	// ReceiptBotID is the CI identity; while set, done needs a merged,
+	// passing receipt from it.
+	ReceiptBotID int64 `json:"receipt_bot_id,omitempty"`
 }
 
 // ProjectView is a saved view (Kanban/List/Gantt/Table) on a project.
@@ -69,6 +72,12 @@ type ProjectView struct {
 	// the wire (custom MarshalJSON on the parent enums), not ints.
 	ViewKind       string `json:"view_kind"`
 	BucketConfMode string `json:"bucket_configuration_mode,omitempty"`
+	// The three buckets the server treats specially: new tasks land in
+	// default, done syncs with done, and entering claim runs the ownership
+	// lock.
+	DefaultBucketID int64 `json:"default_bucket_id,omitempty"`
+	DoneBucketID    int64 `json:"done_bucket_id,omitempty"`
+	ClaimBucketID   int64 `json:"claim_bucket_id,omitempty"`
 }
 
 const (

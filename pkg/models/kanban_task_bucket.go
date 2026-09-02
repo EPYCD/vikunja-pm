@@ -41,6 +41,13 @@ type TaskBucket struct {
 	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" param:"view" doc:"The view the bucket belongs to. On /api/v2 this is taken from the URL; a value in the body is ignored."`
 	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
 	Task          *Task `xorm:"-" json:"task" readOnly:"true" doc:"The task as it stands after the move, reflecting any done-state change."`
+	// Who last moved the task into this bucket, so "the one who submitted for
+	// review is not the one who closes" can be checked.
+	MovedByID int64     `xorm:"bigint null" json:"moved_by_id" readOnly:"true" doc:"The user who last moved the task into this bucket. Set by the server."`
+	MovedAt   time.Time `xorm:"datetime null" json:"moved_at" readOnly:"true" doc:"When the task was last moved into this bucket. Set by the server."`
+
+	// ClaimTask enforces the lock itself, before and after the move.
+	skipClaimGuard bool `xorm:"-" json:"-"`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -67,20 +74,20 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return task.CanWrite(s, a)
 }
 
-func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
+func (b *TaskBucket) upsert(s *xorm.Session, movedByID int64) (err error) {
 	// A native upsert moves the task in one atomic statement, without
 	// depending on the affected-row count (MySQL/MariaDB report 0 affected
 	// rows for an unchanged value).
-	onConflict := "ON CONFLICT (task_id, project_view_id) DO UPDATE SET bucket_id = excluded.bucket_id"
+	onConflict := "ON CONFLICT (task_id, project_view_id) DO UPDATE SET bucket_id = excluded.bucket_id, moved_by_id = excluded.moved_by_id, moved_at = excluded.moved_at"
 	if db.Type() == schemas.MYSQL {
-		onConflict = "ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id)"
+		onConflict = "ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id), moved_by_id = VALUES(moved_by_id), moved_at = VALUES(moved_at)"
 	}
 
 	// Raw SQL bypasses xorm's bean-based table-name handling, so qualify the
 	// table ourselves to honor a configured postgres schema (database.schema).
 	table := s.Engine().TableName(b, true)
-	query := "INSERT INTO " + table + " (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " + onConflict
-	_, err = s.Exec(query, b.TaskID, b.ProjectViewID, b.BucketID)
+	query := "INSERT INTO " + table + " (task_id, project_view_id, bucket_id, moved_by_id, moved_at) VALUES (?, ?, ?, ?, ?) " + onConflict
+	_, err = s.Exec(query, b.TaskID, b.ProjectViewID, b.BucketID, movedByID, time.Now())
 	return
 }
 
@@ -133,39 +140,15 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 		bucket.Count = taskCount
 	}
 
-	var updateBucket = true
-
-	// mark task done if moved into or out of the done bucket
-	// Only change the done state if the task's done value actually changes
-	var doneChanged bool
-	if view.DoneBucketID != 0 {
-		if view.DoneBucketID == b.BucketID && !task.Done {
-			doneChanged = true
-			task.Done = true
-			if task.isRepeating() {
-				oldTask := *task
-				oldTask.Done = false
-				updateDone(&oldTask, task)
-				// A repeating task doesn't stay in the done bucket; route
-				// it back to the view's default bucket so the user sees
-				// the next iteration waiting in the "To-Do" column.
-				if view.DefaultBucketID != 0 {
-					b.BucketID = view.DefaultBucketID
-				} else {
-					b.BucketID = oldTaskBucket.BucketID
-				}
-				// The task is already in the correct bucket, so there is
-				// nothing to move and no count to bump.
-				if b.BucketID == oldTaskBucket.BucketID {
-					updateBucket = false
-				}
-			}
+	if view.ClaimBucketID != 0 && view.ClaimBucketID == b.BucketID && !b.skipClaimGuard {
+		if err := claimOnBucketEntry(s, a, task); err != nil {
+			return err
 		}
+	}
 
-		if oldTaskBucket.BucketID == view.DoneBucketID && task.Done && b.BucketID != view.DoneBucketID {
-			doneChanged = true
-			task.Done = false
-		}
+	doneChanged, updateBucket, err := applyDoneBucketTransition(s, a, b, oldTaskBucket, view, task)
+	if err != nil {
+		return err
 	}
 
 	if doneChanged {
@@ -200,7 +183,7 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 	}
 
 	if updateBucket {
-		err = b.upsert(s)
+		err = b.upsert(s, a.GetID())
 		if err != nil {
 			return
 		}
@@ -211,6 +194,42 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 	b.Bucket = bucket
 
 	return
+}
+
+// applyDoneBucketTransition flips the task's done flag when it enters or
+// leaves the view's done bucket. A repeating task never rests in the done
+// bucket: it is routed back to the default bucket, in which case there may
+// be nothing left to move (updateBucket false).
+func applyDoneBucketTransition(s *xorm.Session, a web.Auth, b, oldTaskBucket *TaskBucket, view *ProjectView, task *Task) (doneChanged, updateBucket bool, err error) {
+	updateBucket = true
+	if view.DoneBucketID == 0 {
+		return false, true, nil
+	}
+	if view.DoneBucketID == b.BucketID && !task.Done {
+		if err := checkDoneAllowed(s, a, task, oldTaskBucket); err != nil {
+			return false, true, err
+		}
+		doneChanged = true
+		task.Done = true
+		if task.isRepeating() {
+			oldTask := *task
+			oldTask.Done = false
+			updateDone(&oldTask, task)
+			if view.DefaultBucketID != 0 {
+				b.BucketID = view.DefaultBucketID
+			} else {
+				b.BucketID = oldTaskBucket.BucketID
+			}
+			if b.BucketID == oldTaskBucket.BucketID {
+				updateBucket = false
+			}
+		}
+	}
+	if oldTaskBucket.BucketID == view.DoneBucketID && task.Done && b.BucketID != view.DoneBucketID {
+		doneChanged = true
+		task.Done = false
+	}
+	return doneChanged, updateBucket, nil
 }
 
 // propagateTaskDone runs the side effects of a task finishing through a
@@ -237,7 +256,7 @@ func propagateTaskDone(s *xorm.Session, a web.Auth, task *Task, view *ProjectVie
 			ProjectViewID: v.ID,
 			BucketID:      v.DoneBucketID,
 		}
-		if err := newBucket.upsert(s); err != nil {
+		if err := newBucket.upsert(s, a.GetID()); err != nil {
 			return err
 		}
 	}

@@ -219,6 +219,7 @@ veans plan --export > board.json   # the open board in plan shape; new tasks may
 veans agents                       # who is working here: bots with the human behind each, and humans
 veans watch [--exec CMD] [--once]  # orchestrator: one JSON line per task.ready / task.unready / lease.stale
 veans hooks install                # git pre-commit hook running 'veans check --staged'
+marshal mcp                        # the same tools over MCP, plus resolve_references / worktree_plan / board_health (when marshal is installed)
 veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
 ```
 

@@ -1,0 +1,37 @@
+# CODEOWNERS — the chokepoint files
+#
+# Purpose: several files in this repository are touched by almost EVERY feature.
+# With multiple workers (human and agent) on parallel branches, those files are where
+# merges collide, and a bad automated resolution in one of them breaks the client, the
+# generated types and the API reference at the same time.
+#
+# Listing them here makes GitHub request a review automatically whenever they change.
+# That is advisory unless branch protection also requires code-owner review — see
+# docs/PARALLEL-WORK.md for why that is deliberately NOT switched on yet.
+
+# ── The contract: one 7,000+ line object literal that every new endpoint edits ──
+# Everything downstream is generated from it — the RTK Query client, the request and
+# response types, docs/API.md, and the cache invalidation map. A conflict resolved
+# carelessly here is a build that fails in three places at once.
+/captain-yard-web/src/lib/contract.ts          @subinsayzz
+/captain-yard-web/src/lib/contract-routes.ts   @subinsayzz
+
+# ── The document model ──
+# Every new field lands here. Fields cluster by domain more naturally than the contract
+# does, so collisions are rarer — but a wrong merge silently changes what a document is.
+/captain-yard-web/src/server/db/schema.ts      @subinsayzz
+
+# ── Tenant isolation ──
+# The scoped repository is the only thing standing between one account's data and
+# another's. isolation.test.ts greps the tree to keep it that way. Any change here is a
+# change to the security model, whatever it looks like in the diff.
+/captain-yard-web/src/server/db/repo.ts        @subinsayzz
+/captain-yard-web/src/server/db/indexes.ts     @subinsayzz
+/captain-yard-web/src/server/auth/             @subinsayzz
+
+# ── The pure domain engine ──
+# No IO, no dependencies, and a purity test that fails the build if that changes.
+/captain-yard-web/packages/engine/             @subinsayzz
+
+# ── The gates themselves ──
+/.github/                                      @subinsayzz
