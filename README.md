@@ -2,9 +2,8 @@
 
 <p align="center"><strong>The work console you actually own.</strong></p>
 
-[![Build Status](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml/badge.svg)](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml)
+[![Build Status](https://github.com/EPYCD/workman/actions/workflows/ci.yml/badge.svg)](https://github.com/EPYCD/workman/actions/workflows/ci.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![OpenAPI Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v2/docs)
 
 Workman is a self-hosted work management console: projects, tasks, time and
 teams, in a dense, keyboard-first interface built for people who live in it all
@@ -12,10 +11,11 @@ day. It runs as a single Go binary with a Vue 3 web client, a desktop app,
 CalDAV sync and a full REST API.
 
 > [!NOTE]
-> Workman is built on [Vikunja](https://vikunja.io), which is free software
-> licensed under AGPL-3.0-or-later. The upstream project does the heavy lifting;
-> Workman is a rebranded, redesigned distribution of it. Please consider
-> [supporting Vikunja](https://vikunja.io/support/) if you find this useful.
+> Workman powers [KAOXHQ](https://kaoxhq.com).
+>
+> Workman is a derivative work of Vikunja, free software licensed under
+> AGPL-3.0-or-later, and is distributed under that same licence. Upstream
+> copyright notices are retained throughout the source, as the licence requires.
 
 > [!NOTE]
 > For the development of this project, we're using LLM-assisted coding tools in
@@ -34,7 +34,8 @@ CalDAV sync and a full REST API.
 ## Security Reports
 
 If you find any security-related issues you don't want to disclose publicly,
-please use [the contact information on the upstream website](https://vikunja.io/contact/#security).
+please open a private security advisory on
+[this repository](https://github.com/EPYCD/workman/security/advisories/new).
 
 ## Features
 
@@ -68,11 +69,14 @@ The design system is documented in
 ## Docs
 
 * [Running your team's agents on a board](docs/agent-workflow.md)
-* [Installing](https://vikunja.io/docs/installing/)
-* [Build from source](https://vikunja.io/docs/build-from-sources/)
-* [Development setup](https://vikunja.io/docs/development/)
-* [Magefile](https://vikunja.io/docs/magefile/)
-* [Testing](https://vikunja.io/docs/testing/)
+* [Marshal, the repo-aware layer](docs/marshal.md)
+* [Deploying behind a Cloudflare tunnel](deploy/README.md)
+
+The build and deployment mechanics are unchanged from upstream, so its
+documentation still applies until ours replaces it: [installing](https://vikunja.io/docs/installing/),
+[building from source](https://vikunja.io/docs/build-from-sources/),
+[development setup](https://vikunja.io/docs/development/),
+[magefile](https://vikunja.io/docs/magefile/) and [testing](https://vikunja.io/docs/testing/).
 
 ## Contributing
 

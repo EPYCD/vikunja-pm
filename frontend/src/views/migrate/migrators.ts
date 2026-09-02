@@ -45,7 +45,7 @@ export const MIGRATORS = {
 	},
 	'vikunja-file': {
 		id: 'vikunja-file',
-		name: 'Workman / Vikunja Export',
+		name: 'Workman Export',
 		icon: vikunjaFileIcon,
 		isFileMigrator: true,
 	},
