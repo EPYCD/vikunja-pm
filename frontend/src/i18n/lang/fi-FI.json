@@ -15,8 +15,8 @@
 		"addToHomeScreen": "Lisää tämä sovellus aloitusnäyttöösi saadaksesi nopeamman pääsyn ja paremman kokemuksen.",
 		"goToOverview": "Siirry yleisnäkymään",
 		"project": {
-			"importText": "Tuo projektisi ja tehtäväsi muista palveluista Vikunjaan:",
-			"import": "Tuo tietosi Vikunjaan"
+			"importText": "Tuo projektisi ja tehtäväsi muista palveluista Workmanan:",
+			"import": "Tuo tietosi Workmanan"
 		}
 	},
 	"demo": {
@@ -25,7 +25,7 @@
 		"accountWillBeDeleted": "Tilisi poistetaan, mukaan lukien kaikki projektit, tehtävät ja liitteet, joita saatat luoda."
 	},
 	"ready": {
-		"loading": "Ladataan Vikunjaa…",
+		"loading": "Ladataan Workmana…",
 		"errorOccured": "Tapahtui virhe:",
 		"checkApiUrl": "Ole hyvä ja tarkista, onko api url oikein.",
 		"noApiUrlConfigured": "API url-osoitetta ei ole määritelty. Aseta sellainen alla:"
@@ -140,7 +140,7 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"more": "Lisätietoja CalDAVista Vikunjassa",
+				"more": "Lisätietoja CalDAVista Workmanssa",
 				"tokens": "CalDAV Tokenit"
 			},
 			"avatar": {
@@ -157,7 +157,7 @@
 				"title": "Nopean Lisäyksen Tyyli",
 				"disabled": "Pois käytöstä",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Workman"
 			},
 			"appearance": {
 				"title": "Väriteema",
@@ -204,7 +204,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Poista Vikunja-tilisi",
+			"title": "Poista Workman-tilisi",
 			"text1": "Tilisi poistaminen on pysyvä eikä sitä voi peruuttaa. Poistamme kaikki projektisi, tehtäväsi ja kaiken siihen liittyvän.",
 			"text2": "Jatkaaksesi, ole hyvä ja syötä salasanasi. Saat sähköpostin, jossa on lisäohjeita.",
 			"text3": "Jatkaaksesi, ole hyvä ja paina alla olevaa painiketta. Saat sähköpostin, jossa on lisäohjeita.",
@@ -212,7 +212,7 @@
 			"requestSuccess": "Pyyntö onnistui. Saat sähköpostin, jossa on lisäohjeita.",
 			"passwordRequired": "Ole hyvä ja syötä salasanasi.",
 			"confirmSuccess": "Olet onnistuneesti vahvistanut tilisi poistamisen. Poistamme tilisi kolmen päivän kuluessa.",
-			"scheduled": "Poistamme Vikunja-tilisi {date} ({dateSince}).",
+			"scheduled": "Poistamme Workman-tilisi {date} ({dateSince}).",
 			"scheduledCancel": "Peruaksesi tilisi poistamisen, paina tästä.",
 			"scheduledCancelText": "Peruaksesi tilisi poistamisen, ole hyvä ja syötä salasanasi alle:",
 			"scheduledCancelButton": "Peruaksesi tilisi poistamisen, ole hyvä ja paina alla olevaa painiketta:",
@@ -220,12 +220,12 @@
 			"scheduledCancelSuccess": "Emme poista tiliäsi."
 		},
 		"export": {
-			"title": "Vie Vikunja tiedot",
-			"description": "Voit pyytää kopion kaikista Vikunja tiedoistasi. Tämä sisältää Projektisi, Tehtäväsi ja kaiken niihin liittyvän. Voit tuoda tietosi mihin tahansa Vikunja instanssiin migraatio ominaisuuden kautta.",
+			"title": "Vie Workman tiedot",
+			"description": "Voit pyytää kopion kaikista Workman tiedoistasi. Tämä sisältää Projektisi, Tehtäväsi ja kaiken niihin liittyvän. Voit tuoda tietosi mihin tahansa Workman instanssiin migraatio ominaisuuden kautta.",
 			"descriptionPasswordRequired": "Syötä salasanasi jatkaaksesi:",
-			"request": "Pyydä kopio Vikunja Tiedoistani",
-			"success": "Olet onnistuneesti pyytänyt Vikunja Tietosi! Lähetämme sinulle sähköpostiviestin, kun ne ovat valmiit ladattavaksi.",
-			"downloadTitle": "Lataa viedyt Vikunja tietosi",
+			"request": "Pyydä kopio Workman Tiedoistani",
+			"success": "Olet onnistuneesti pyytänyt Workman Tietosi! Lähetämme sinulle sähköpostiviestin, kun ne ovat valmiit ladattavaksi.",
+			"downloadTitle": "Lataa viedyt Workman tietosi",
 			"ready": "Tietosi ovat ladattavissa. Voi ladata ne {0} asti."
 		}
 	},
@@ -305,7 +305,7 @@
 			"links": {
 				"title": "Jako Linkki",
 				"what": "Mikä on jako linkki?",
-				"explanation": "Jako Linkit mahdollistavat projektin jakamisen käyttäjien kanssa, joilla ei ole Vikunja-tiliä.",
+				"explanation": "Jako Linkit mahdollistavat projektin jakamisen käyttäjien kanssa, joilla ei ole Workman-tiliä.",
 				"create": "Luo jako linkki",
 				"name": "Nimi (valinnainen)",
 				"namePlaceholder": "esim. Lorem Ipsum",
@@ -477,7 +477,7 @@
 	},
 	"migrate": {
 		"title": "Tuo muista palveluista",
-		"titleService": "Tuo {name} tietosi Vikunjaan",
+		"titleService": "Tuo {name} tietosi Workmanan",
 		"description": "Kilkkaa kolmannen osapuolen logoa alta aloittaaksesi.",
 		"getStarted": "Aloitetaan",
 		"inProgress": "Tuonti käynnissä…",
@@ -531,7 +531,7 @@
 		"searchPlaceholder": "Kirjoita hakeaksesi…",
 		"previous": "Edellinen",
 		"next": "Seuraava",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powering KAOXHQ",
 		"create": "Luo",
 		"doit": "Tee se!",
 		"saving": "Tallennetaan…",
@@ -632,7 +632,7 @@
 			"canuse": "Voit käyttää päivämäärä laskentaa suodattaaksesi suhteellisia päivämääriä.",
 			"learnhow": "Katso kuinka se toimii",
 			"title": "Päivämäärä Laskenta",
-			"intro": "Määrittele suhteellisia päivämääriä, jotka Vikunja laskee suodatinta käyttäessä.",
+			"intro": "Määrittele suhteellisia päivämääriä, jotka Workman laskee suodatinta käyttäessä.",
 			"similar": "Nämä lausekkeet ovat samankaltaisia kuin {0} ja {1} käyttävät.",
 			"add1Day": "Lisää yksi päivä",
 			"minus1Day": "Vähennä yksi päivä",

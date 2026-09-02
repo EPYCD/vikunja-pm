@@ -15,7 +15,7 @@ test.describe('Project View List', () => {
 		await expect(page).toHaveURL(/\/projects\/1\/1/)
 		await expect(page.locator('.project-title')).toContainText('First Project')
 		await expect(page.locator('.project-title-dropdown')).toBeVisible()
-		await expect(page.locator('.has-text-centered.has-text-grey.is-italic').filter({hasText: 'This project is currently empty.'})).toBeVisible()
+		await expect(page.locator('.nothing').filter({hasText: 'This project is currently empty.'})).toBeVisible()
 	})
 
 	test('Should create a new task', async ({authenticatedPage: page}) => {

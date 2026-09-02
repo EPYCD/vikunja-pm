@@ -12,6 +12,11 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    # Upstream-only: deploys to pr-N.preview.vikunja.dev, pushes to the
+    # go-vikunja GHCR namespace, and needs the preview-trusted /
+    # preview-fork environments. On this fork it also fails at `git
+    # describe`, which needs a tag the fork does not have.
+    if: github.repository == 'go-vikunja/vikunja'
     # Fork pull_request_target runs skip the usual outside-contributor approval prompt.
     # `preview-fork` carries required reviewers to put that gate back; `preview-trusted`
     # has no protection rules so same-repo PRs still build without a click.

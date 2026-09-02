@@ -239,7 +239,7 @@ test.describe('Project View Kanban', () => {
 	test('Shows a button to filter the kanban board', async ({authenticatedPage: page}) => {
 		await page.goto('/projects/1/4')
 
-		await expect(page.locator('.project-kanban .filter-container .base-button')).toBeVisible()
+		await expect(page.locator('.project-kanban .filter-container button').filter({hasText: 'Filters'})).toBeVisible()
 	})
 
 	test('Should remove a task from the board when deleting it', async ({authenticatedPage: page}) => {

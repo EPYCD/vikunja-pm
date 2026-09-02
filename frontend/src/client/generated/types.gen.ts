@@ -3786,6 +3786,10 @@ export type VikunjaInfos = {
      */
     link_sharing_enabled?: boolean;
     /**
+     * Public URL of the Marshal service paired with this instance, or empty. When set, the frontend shows spec references, board health and worker panels fetched from it.
+     */
+    marshal_url?: string;
+    /**
      * The maximum allowed upload size, as a human-readable string (e.g. 20MB).
      */
     max_file_size?: string;
@@ -5468,6 +5472,10 @@ export type VikunjaInfosWritable = {
      * Whether sharing projects via public links is enabled.
      */
     link_sharing_enabled?: boolean;
+    /**
+     * Public URL of the Marshal service paired with this instance, or empty. When set, the frontend shows spec references, board health and worker panels fetched from it.
+     */
+    marshal_url?: string;
     /**
      * The maximum allowed upload size, as a human-readable string (e.g. 20MB).
      */

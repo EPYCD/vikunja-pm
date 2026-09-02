@@ -43,21 +43,6 @@
 		</template>
 		<template v-else>
 			<XButton
-				:loading="waitingForAuth"
-				class="is-fullwidth mbe-2"
-				@click="loginWithServer('https://app.vikunja.cloud')"
-			>
-				Vikunja Cloud
-			</XButton>
-			<XButton
-				:loading="waitingForAuth"
-				variant="secondary"
-				class="is-fullwidth mbe-2"
-				@click="loginWithServer('https://try.vikunja.io')"
-			>
-				{{ $t('user.auth.desktopTryDemo') }}
-			</XButton>
-			<XButton
 				variant="secondary"
 				class="is-fullwidth"
 				@click="showCustomServerInput = true"
