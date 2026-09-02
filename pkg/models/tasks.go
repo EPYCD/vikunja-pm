@@ -1401,6 +1401,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	if t.Done && !ot.Done {
+		if err := checkDoneAllowed(s, a, &ot, nil); err != nil {
+			return err
+		}
+	}
+
 	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
 		return err
 	}

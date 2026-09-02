@@ -599,3 +599,15 @@ type TaskLeasesReleasedEvent struct {
 func (e *TaskLeasesReleasedEvent) Name() string {
 	return "task.leases.released"
 }
+
+// TaskReceiptCreatedEvent fires when CI posts a gate receipt on a task.
+type TaskReceiptCreatedEvent struct {
+	Task    *Task        `json:"task"`
+	Receipt *TaskReceipt `json:"receipt"`
+	Doer    *user.User   `json:"doer"`
+}
+
+// Name defines the name for TaskReceiptCreatedEvent
+func (t *TaskReceiptCreatedEvent) Name() string {
+	return "task.receipt.created"
+}

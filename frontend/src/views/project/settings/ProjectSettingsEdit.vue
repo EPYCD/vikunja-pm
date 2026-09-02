@@ -52,6 +52,43 @@
 				</FormField>
 			</div>
 		</div>
+
+		<FormField
+			v-if="isAdmin"
+			:label="$t('project.receiptBot.label')"
+		>
+			<template #default="{id}">
+				<div class="select is-fullwidth">
+					<select
+						:id="id"
+						v-model="project.receiptBotId"
+						class="project-receipt-bot"
+						:disabled="isLoading || botsLoading"
+					>
+						<option :value="0">
+							{{ $t('project.receiptBot.none') }}
+						</option>
+						<option
+							v-if="foreignBotId"
+							:value="foreignBotId"
+							disabled
+						>
+							{{ $t('project.receiptBot.unknownBot', {id: foreignBotId}) }}
+						</option>
+						<option
+							v-for="bot in bots"
+							:key="bot.id"
+							:value="bot.id"
+						>
+							{{ botLabel(bot) }}
+						</option>
+					</select>
+				</div>
+				<p class="help">
+					{{ $t('project.receiptBot.help') }}
+				</p>
+			</template>
+		</FormField>
 	</CreateEdit>
 </template>
 
@@ -59,6 +96,7 @@
 import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
+import {useQuery} from '@tanstack/vue-query'
 
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
@@ -67,6 +105,8 @@ import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import type {IProject} from '@/modelTypes/IProject'
+import type {BotUser} from '@/client/generated'
+import {myBotsQuery} from '@/client/queries/bots'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
@@ -108,6 +148,25 @@ watch(
 )
 
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
+
+const isAdmin = computed(() => project.maxPermission === PERMISSIONS.ADMIN)
+const botsQuery = useQuery(computed(() => ({
+	...myBotsQuery(),
+	enabled: isAdmin.value,
+})))
+const bots = computed<BotUser[]>(() => botsQuery.data.value ?? [])
+const botsLoading = computed(() => isAdmin.value && botsQuery.isPending.value)
+
+// Another admin may have picked a bot this user does not own; keep it in the
+// list so saving the form does not silently clear it.
+const foreignBotId = computed(() => {
+	const id = project.receiptBotId
+	return botsQuery.isSuccess.value && id && !bots.value.some(bot => bot.id === id) ? id : 0
+})
+
+function botLabel(bot: BotUser): string {
+	return bot.name ? `${bot.name} (${bot.username})` : (bot.username ?? `#${bot.id}`)
+}
 
 async function save() {
 	if (isSaving.value) {

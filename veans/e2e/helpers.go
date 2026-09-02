@@ -315,7 +315,7 @@ func envSlice(overrides map[string]string) []string {
 }
 
 // filterEnv returns env entries whose keys do NOT start with prefix.
-func filterEnv(env []string, prefix string) []string {
+func filterEnv(env []string, prefix string) []string { //nolint:unparam // the prefix is the contract, not an accident
 	out := make([]string, 0, len(env))
 	for _, kv := range env {
 		if !strings.HasPrefix(kv, prefix) {

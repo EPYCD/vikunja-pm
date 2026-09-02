@@ -82,6 +82,7 @@ func SetupTests() {
 		"notifications",
 		"task_scopes",
 		"task_path_leases",
+		"task_receipts",
 	)
 	if err != nil {
 		log.Fatal(err)

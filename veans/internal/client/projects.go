@@ -83,3 +83,22 @@ func (c *Client) ListProjectViews(ctx context.Context, projectID int64) ([]*Proj
 	}
 	return items, nil
 }
+
+// PatchProject merges the given fields into the project (JSON merge patch),
+// leaving everything else untouched.
+func (c *Client) PatchProject(ctx context.Context, projectID int64, fields map[string]any) (*Project, error) {
+	var out Project
+	if err := c.DoMerge(ctx, "PATCH", fmt.Sprintf("/projects/%d", projectID), nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// PatchProjectView merges the given fields into a view, e.g. claim_bucket_id.
+func (c *Client) PatchProjectView(ctx context.Context, projectID, viewID int64, fields map[string]any) (*ProjectView, error) {
+	var out ProjectView
+	if err := c.DoMerge(ctx, "PATCH", fmt.Sprintf("/projects/%d/views/%d", projectID, viewID), nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

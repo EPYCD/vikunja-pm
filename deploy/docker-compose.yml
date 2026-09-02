@@ -1,0 +1,108 @@
+# Workman + Marshal on one always-on machine, published through a Cloudflare
+# tunnel. Copy .env.example to .env, fill it in, then `docker compose up -d`.
+#
+#   board.<domain>   -> workman:3456   (the API and the web app)
+#   marshal.<domain> -> marshal:8090   (webhook receiver, panels API)
+#
+# Both hostnames are ingress rules of the same tunnel, configured in the
+# Cloudflare dashboard (Zero Trust -> Networks -> Tunnels -> Public hostnames)
+# or in cloudflared/config.yml when the tunnel is locally managed.
+#
+# Workman's webhooks target Marshal through the PUBLIC hostname on purpose:
+# the API refuses private addresses (SSRF guard), and a public target is what
+# `marshal setup` registers. GitHub Actions reach the board the same way.
+
+services:
+  workman:
+    image: ${WORKMAN_IMAGE:-ghcr.io/epycd/workman:latest}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: https://${BOARD_HOST}/
+      VIKUNJA_SERVICE_JWTSECRET: ${WORKMAN_JWT_SECRET}
+      VIKUNJA_SERVICE_ENABLEREGISTRATION: ${WORKMAN_ENABLE_REGISTRATION:-false}
+      VIKUNJA_SERVICE_TIMEZONE: ${TZ:-UTC}
+      VIKUNJA_SERVICE_MARSHALURL: https://${MARSHAL_HOST}
+      VIKUNJA_SERVICE_LEASESTALEAFTER: ${WORKMAN_LEASE_STALE_AFTER:-4h}
+      VIKUNJA_SERVICE_LEASEAUTORELEASEAFTER: ${WORKMAN_LEASE_AUTO_RELEASE_AFTER:-0}
+      VIKUNJA_WEBHOOKS_ENABLED: "true"
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_USER: workman
+      VIKUNJA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      VIKUNJA_DATABASE_DATABASE: workman
+      VIKUNJA_DATABASE_SSLMODE: disable
+      VIKUNJA_CORS_ENABLE: "true"
+      VIKUNJA_CORS_ORIGINS: https://${BOARD_HOST}
+      VIKUNJA_MAILER_ENABLED: ${WORKMAN_MAILER_ENABLED:-false}
+    volumes:
+      - workman-files:/app/vikunja/files
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/app/vikunja/vikunja", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: workman
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: workman
+    volumes:
+      - workman-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workman"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  marshal:
+    image: ${MARSHAL_IMAGE:-ghcr.io/epycd/marshal:latest}
+    build:
+      context: ../veans
+      dockerfile: ../deploy/Dockerfile.marshal
+    restart: unless-stopped
+    command: ["serve", "--base", "${MARSHAL_BASE_BRANCH:-origin/main}", "--spec-rev", "${MARSHAL_SPEC_REV:-origin/main}"]
+    working_dir: /repo
+    environment:
+      # A clone of the coordinated repository, with .veans.yml and .marshal.yml
+      # committed. Marshal only reads it (git fetch, git log, file reads).
+      MARSHAL_TOKEN: ${MARSHAL_TOKEN}
+      MARSHAL_PUBLIC_URL: https://${MARSHAL_HOST}
+      MARSHAL_WEBHOOK_SECRET: ${MARSHAL_WEBHOOK_SECRET}
+      MARSHAL_DISCORD_WEBHOOK: ${DISCORD_WEBHOOK_URL:-}
+      MARSHAL_LISTEN: 0.0.0.0:8090
+      GIT_TERMINAL_PROMPT: "0"
+    volumes:
+      - ${REPO_PATH}:/repo
+      - marshal-state:/repo/.marshal
+    depends_on:
+      workman:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - workman
+      - marshal
+
+volumes:
+  workman-files:
+  workman-db:
+  marshal-state:

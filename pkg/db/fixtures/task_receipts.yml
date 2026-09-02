@@ -1,0 +1,3 @@
+# Receipts are posted by tests themselves; the file exists so the table is
+# truncated with every fixture load.
+[]

@@ -138,6 +138,13 @@ func getInverseRelation(kind RelationKind) RelationKind {
 	return RelationKindUnknown
 }
 
+// acyclicRelationKinds are the kinds a cycle would deadlock.
+var acyclicRelationKinds = map[RelationKind]bool{
+	RelationKindSubtask: true, RelationKindParenttask: true,
+	RelationKindBlocked: true, RelationKindBlocking: true,
+	RelationKindFollows: true, RelationKindPreceeds: true,
+}
+
 func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskIDToCheck int64, visited map[int64]bool, currentPath map[int64]bool) (err error) {
 	if visited == nil {
 		visited = make(map[int64]bool)
@@ -240,8 +247,10 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		RelationKind: getInverseRelation(rel.RelationKind),
 	}
 
-	// If we're creating a subtask relation, check if we're about to create a cycle
-	if rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask {
+	// A cycle in the hierarchy or in the dependency graph would make a task
+	// wait on itself: no parent could ever roll up, no blocked task could
+	// ever become claimable.
+	if acyclicRelationKinds[rel.RelationKind] {
 		err = checkTaskRelationCycle(s, rel, rel.OtherTaskID, nil, nil)
 		if err != nil {
 			return err

@@ -420,6 +420,42 @@
       "color": "Color",
       "success": "The project was successfully updated."
     },
+    "receiptBot": {
+      "label": "CI receipt bot",
+      "none": "None",
+      "help": "While a receipt bot is set, tasks cannot be marked done without a merged, passing receipt posted by it, and the user who moved a task to review cannot close it.",
+      "unknownBot": "Bot #{id} (owned by another user)"
+    },
+    "marshal": {
+      "button": "Health",
+      "title": "Board health",
+      "subtitle": "Invariants, workers and chokepoint queues as Marshal sees them.",
+      "unreachable": "Marshal could not be reached.",
+      "checkedAt": "checked {date}",
+      "ok": "OK",
+      "violated": "Violated",
+      "invariants": "Invariants",
+      "openStories": "Open stories",
+      "collisions": "Collisions",
+      "cycles": "Cycles",
+      "unblockedRoots": "Unblocked roots",
+      "leases": "Leases",
+      "findings": "Findings",
+      "noFindings": "No findings.",
+      "workers": "Workers",
+      "forOwner": "for {user}",
+      "openTasks": "{n} open",
+      "heldLeases": "{n} leased",
+      "allocations": "Allocations",
+      "conflicts": "Conflicts",
+      "missing": "missing {paths}",
+      "noWorkers": "No workers registered.",
+      "chokepoints": "Chokepoints",
+      "noChokepoints": "No chokepoint queues.",
+      "active": "Active",
+      "declared": "Declared",
+      "waitingOn": "waiting on {ids}"
+    },
     "share": {
       "header": "Share this project",
       "title": "Share \"{project}\"",
@@ -541,7 +577,12 @@
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
       "collapse": "Collapse this bucket",
       "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
-      "bucketOptions": "Bucket options"
+      "bucketOptions": "Bucket options",
+      "claimBucket": "Use as claim bucket",
+      "claimBucketUnset": "Unset claim bucket",
+      "claimBucketHint": "Claim bucket: entering it acquires the task's file leases.",
+      "claimBucketHintExtended": "Moving a task into this bucket claims it: entering it acquires the task's file leases, and is refused while a blocker is open or an owned path is leased by another task.",
+      "claimBucketSavedSuccess": "The claim bucket has been saved successfully."
     },
     "pseudo": {
       "favorites": {
@@ -1121,6 +1162,32 @@
       "readyOnly": "Ready only",
       "readyOnlyHint": "Hide tasks in the queue that cannot be claimed right now"
     },
+    "receipts": {
+      "title": "Gate receipts",
+      "passed": "Passed",
+      "failed": "Failed",
+      "gatePassed": "passed",
+      "gateFailed": "failed",
+      "gateSkipped": "skipped",
+      "docsNotNeeded": "docs:api not needed",
+      "docsRegenerated": "docs:api required, regenerated",
+      "docsMissing": "docs:api required, missing",
+      "merged": "merged",
+      "notMerged": "not merged",
+      "ciRun": "CI run",
+      "postedBy": "posted by {user} · {date}"
+    },
+    "references": {
+      "title": "Spec references",
+      "broken": "{ref} no longer exists in the spec",
+      "empty": "No spec references. Link the requirement instead of describing it.",
+      "unreachable": "Marshal could not be reached; spec references are unavailable.",
+      "pastes": "Pasted spec text / {n}",
+      "pastesHint": "Spec text was copied into the task instead of referenced. Replace it with the requirement's id.",
+      "pasteLine": "{file}:{line} · {words} words",
+      "expand": "Show all",
+      "collapse": "Show less"
+    },
     "attributes": {
       "assignees": "Assignees",
       "color": "Color",
@@ -1573,8 +1640,12 @@
     "4034": "This task is already claimed by another user.",
     "4035": "This task is no longer in the bucket it was expected in.",
     "4036": "This task is blocked by tasks that are not done yet.",
-    "4037": "The path {pattern} is already leased by task #{heldByTaskId} ({heldPattern}).",
+    "4037": "The path {pattern} is already leased by task #{heldByTaskId} ({heldPattern}), held by {heldByUsername}.",
     "4038": "This scope path is invalid.",
+    "4039": "This task cannot be marked done: CI has not posted a merged, passing gate receipt for it.",
+    "4040": "The user who submitted this task for review cannot mark it done.",
+    "4041": "The receipt bot must be an existing bot user.",
+    "4042": "The receipt is invalid: {reason}",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",

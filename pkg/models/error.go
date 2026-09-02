@@ -1460,6 +1460,11 @@ type ErrPathLeaseConflict struct {
 	// one that crashed and never released.
 	LastActive time.Time `json:"last_active" doc:"When the holding task last showed activity."`
 	Stale      bool      `json:"stale" doc:"True when the holder has been inactive longer than service.leasestaleafter; a human may release it."`
+	// Who to talk to: a refusal that only names ids sends the caller on a
+	// second round trip before it can act.
+	HeldByUsername string    `json:"held_by_username" doc:"Username of the user holding the lease."`
+	HeldByBranch   string    `json:"held_by_branch" doc:"The branch the holding task is being worked on, from its veans:branch label; empty when none."`
+	HeldSince      time.Time `json:"held_since" doc:"When the holding lease was taken."`
 }
 
 // IsErrPathLeaseConflict checks if an error is ErrPathLeaseConflict.
@@ -1469,7 +1474,7 @@ func IsErrPathLeaseConflict(err error) bool {
 }
 
 func (err ErrPathLeaseConflict) Error() string {
-	return fmt.Sprintf("Path %q of task %d overlaps lease %q held by task %d (user %d)", err.Pattern, err.TaskID, err.HeldPattern, err.HeldByTaskID, err.HeldByUserID)
+	return fmt.Sprintf("Path %q of task %d overlaps lease %q held by task %d (user %d %s, branch %q, since %s)", err.Pattern, err.TaskID, err.HeldPattern, err.HeldByTaskID, err.HeldByUserID, err.HeldByUsername, err.HeldByBranch, err.HeldSince.Format(time.RFC3339))
 }
 
 // ErrCodePathLeaseConflict holds the unique world-error code of this error
@@ -1480,11 +1485,12 @@ func (err ErrPathLeaseConflict) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusConflict,
 		Code:     ErrCodePathLeaseConflict,
-		Message:  fmt.Sprintf("Path %q is already leased by task %d.", err.Pattern, err.HeldByTaskID),
+		Message:  fmt.Sprintf("Path %q is already leased by task %d (%s).", err.Pattern, err.HeldByTaskID, err.HeldByUsername),
 		I18nParams: map[string]string{
-			"pattern":      err.Pattern,
-			"heldByTaskId": fmt.Sprintf("%d", err.HeldByTaskID),
-			"heldPattern":  err.HeldPattern,
+			"pattern":        err.Pattern,
+			"heldByTaskId":   fmt.Sprintf("%d", err.HeldByTaskID),
+			"heldPattern":    err.HeldPattern,
+			"heldByUsername": err.HeldByUsername,
 		},
 	}
 }
@@ -3009,5 +3015,118 @@ func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusNotFound,
 		Code:     ErrCodeUserDataExportDoesNotExist,
 		Message:  "No user data export found.",
+	}
+}
+
+// ErrTaskDoneRequiresReceipt represents an error where a task in a project
+// with a receipt bot is marked done without a merged, passing receipt.
+type ErrTaskDoneRequiresReceipt struct {
+	TaskID int64
+}
+
+// IsErrTaskDoneRequiresReceipt checks if an error is ErrTaskDoneRequiresReceipt.
+func IsErrTaskDoneRequiresReceipt(err error) bool {
+	_, ok := err.(ErrTaskDoneRequiresReceipt)
+	return ok
+}
+
+func (err ErrTaskDoneRequiresReceipt) Error() string {
+	return fmt.Sprintf("Task %d cannot be marked done without a merged, passing gate receipt", err.TaskID)
+}
+
+// ErrCodeTaskDoneRequiresReceipt holds the unique world-error code of this error
+const ErrCodeTaskDoneRequiresReceipt = 4039
+
+// HTTPError holds the http error description
+func (err ErrTaskDoneRequiresReceipt) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskDoneRequiresReceipt,
+		Message:  "This task cannot be marked done: CI has not posted a merged, passing gate receipt for it.",
+	}
+}
+
+// ErrTaskDoneBySubmitter represents an error where the user who moved a task
+// into review tries to mark it done.
+type ErrTaskDoneBySubmitter struct {
+	TaskID int64
+	UserID int64
+}
+
+// IsErrTaskDoneBySubmitter checks if an error is ErrTaskDoneBySubmitter.
+func IsErrTaskDoneBySubmitter(err error) bool {
+	_, ok := err.(ErrTaskDoneBySubmitter)
+	return ok
+}
+
+func (err ErrTaskDoneBySubmitter) Error() string {
+	return fmt.Sprintf("User %d submitted task %d for review and cannot mark it done", err.UserID, err.TaskID)
+}
+
+// ErrCodeTaskDoneBySubmitter holds the unique world-error code of this error
+const ErrCodeTaskDoneBySubmitter = 4040
+
+// HTTPError holds the http error description
+func (err ErrTaskDoneBySubmitter) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskDoneBySubmitter,
+		Message:  "The user who submitted this task for review cannot mark it done.",
+	}
+}
+
+// ErrReceiptBotInvalid represents an error where a project's receipt bot is
+// not an existing bot user.
+type ErrReceiptBotInvalid struct {
+	UserID int64
+}
+
+// IsErrReceiptBotInvalid checks if an error is ErrReceiptBotInvalid.
+func IsErrReceiptBotInvalid(err error) bool {
+	_, ok := err.(ErrReceiptBotInvalid)
+	return ok
+}
+
+func (err ErrReceiptBotInvalid) Error() string {
+	return fmt.Sprintf("User %d cannot be a receipt bot: it does not exist or is not a bot", err.UserID)
+}
+
+// ErrCodeReceiptBotInvalid holds the unique world-error code of this error
+const ErrCodeReceiptBotInvalid = 4041
+
+// HTTPError holds the http error description
+func (err ErrReceiptBotInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeReceiptBotInvalid,
+		Message:  "The receipt bot must be an existing bot user.",
+	}
+}
+
+// ErrReceiptInvalid represents a malformed gate receipt.
+type ErrReceiptInvalid struct {
+	Reason string
+}
+
+// IsErrReceiptInvalid checks if an error is ErrReceiptInvalid.
+func IsErrReceiptInvalid(err error) bool {
+	_, ok := err.(ErrReceiptInvalid)
+	return ok
+}
+
+func (err ErrReceiptInvalid) Error() string {
+	return "Invalid receipt: " + err.Reason
+}
+
+// ErrCodeReceiptInvalid holds the unique world-error code of this error
+const ErrCodeReceiptInvalid = 4042
+
+// HTTPError holds the http error description
+func (err ErrReceiptInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode:   http.StatusBadRequest,
+		Code:       ErrCodeReceiptInvalid,
+		Message:    "The receipt is invalid: " + err.Reason,
+		I18nParams: map[string]string{"reason": err.Reason},
 	}
 }

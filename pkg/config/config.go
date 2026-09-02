@@ -63,6 +63,7 @@ const (
 	ServiceAutoCompleteParentTasks        Key = `service.autocompleteparenttasks`
 	ServiceLeaseStaleAfter                Key = `service.leasestaleafter`
 	ServiceLeaseAutoReleaseAfter          Key = `service.leaseautoreleaseafter`
+	ServiceMarshalURL                     Key = `service.marshalurl`
 	ServiceEnableTotp                     Key = `service.enabletotp`
 	ServiceTestingtoken                   Key = `service.testingtoken`
 	ServiceEnableEmailReminders           Key = `service.enableemailreminders`
@@ -384,6 +385,7 @@ func initDefaultConfig() {
 	ServiceAutoCompleteParentTasks.setDefault(false)
 	ServiceLeaseStaleAfter.setDefault("4h")
 	ServiceLeaseAutoReleaseAfter.setDefault("0")
+	ServiceMarshalURL.setDefault("")
 	ServiceEnableTotp.setDefault(true)
 	ServiceEnableEmailReminders.setDefault(true)
 	ServiceEnableUserDeletion.setDefault(true)

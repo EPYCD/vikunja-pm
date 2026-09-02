@@ -25,6 +25,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	position = 0
 	backgroundBlurHash = ''
 	parentProjectId = 0
+	receiptBotId = 0
 	views: IProjectView[] = []
 	
 	created: Date = null

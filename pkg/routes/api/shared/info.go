@@ -46,6 +46,7 @@ type VikunjaInfos struct {
 	TotpEnabled                bool              `json:"totp_enabled" doc:"Whether TOTP two-factor authentication is enabled."`
 	Legal                      LegalInfo         `json:"legal" doc:"Links to the instance's legal documents."`
 	CaldavEnabled              bool              `json:"caldav_enabled" doc:"Whether the CalDAV interface is enabled."`
+	MarshalURL                 string            `json:"marshal_url" doc:"Public URL of the Marshal service paired with this instance, or empty. When set, the frontend shows spec references, board health and worker panels fetched from it."`
 	AuthInfo                   AuthInfo          `json:"auth" doc:"The authentication methods enabled on this instance."`
 	EmailRemindersEnabled      bool              `json:"email_reminders_enabled" doc:"Whether email reminders are enabled."`
 	UserDeletionEnabled        bool              `json:"user_deletion_enabled" doc:"Whether users may delete their own account."`
@@ -102,6 +103,7 @@ func BuildInfo() VikunjaInfos {
 		TaskAttachmentsEnabled: config.ServiceEnableTaskAttachments.GetBool(),
 		TotpEnabled:            config.ServiceEnableTotp.GetBool(),
 		CaldavEnabled:          config.ServiceEnableCaldav.GetBool(),
+		MarshalURL:             config.ServiceMarshalURL.GetString(),
 		EmailRemindersEnabled:  config.ServiceEnableEmailReminders.GetBool(),
 		UserDeletionEnabled:    config.ServiceEnableUserDeletion.GetBool(),
 		TaskCommentsEnabled:    config.ServiceEnableTaskComments.GetBool(),

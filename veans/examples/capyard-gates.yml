@@ -1,0 +1,103 @@
+# The four gates, timed, posted to the board as receipts — and the merge
+# closes the tasks only after a merged, passing receipt exists.
+#
+# Copy to .github/workflows/gates.yml in a repository with a committed
+# .veans.yml. Secrets: WORKMAN_TOKEN is the CI token `marshal setup` printed
+# (the project's receipt bot; a worker's token is refused with 403).
+#
+# Every run posts a receipt, red or green: failures belong on the record.
+# docs:api is derived from the diff by the action (did the change touch the
+# contract?), never from a checkbox in the PR body.
+
+name: Gates
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+defaults:
+  run:
+    working-directory: captain-yard-web
+
+jobs:
+  gates:
+    name: typecheck · lint · test · build → receipt
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the Refs: trailers and the diff need base..head
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: captain-yard-web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: captain-yard-web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: captain-yard-web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+
+      # Each gate runs even when an earlier one failed, so the receipt lists
+      # all four with their real status and duration.
+      - name: Run the gates
+        id: gates
+        shell: bash
+        run: |
+          set +e
+          results=()
+          gate() {
+            local name="$1"; shift
+            local start=$(date +%s%3N)
+            if "$@"; then status=passed; else status=failed; fi
+            local ms=$(( $(date +%s%3N) - start ))
+            results+=("$(jq -cn --arg n "$name" --arg s "$status" --argjson d "$ms" '{name:$n,status:$s,duration_ms:$d}')")
+            echo "::notice::$name $status in ${ms}ms"
+          }
+          gate typecheck pnpm typecheck
+          gate lint      pnpm lint
+          gate test      pnpm test
+          gate build     pnpm build
+          # docs:api only when the contract changed; the action records whether it was required.
+          if git diff --name-only "${{ github.event.pull_request.base.sha || github.event.before }}" "${{ github.sha }}" | grep -qE '^captain-yard-web/src/lib/contract(\.ts|/|-routes\.ts)'; then
+            gate docs:api bash -c 'pnpm docs:api && git diff --exit-code -- docs/API.md'
+          fi
+          printf 'gates=[%s]\n' "$(IFS=,; echo "${results[*]}")" >> "$GITHUB_OUTPUT"
+          for r in "${results[@]}"; do
+            [[ "$(jq -r .status <<<"$r")" == passed ]] || exit 1
+          done
+        continue-on-error: true
+
+      - name: Post the receipt (pull request)
+        if: github.event_name == 'pull_request'
+        uses: EPYCD/workman/.github/actions/workman-merge-hook@main
+        with:
+          token: ${{ secrets.WORKMAN_TOKEN }}
+          mode: receipt
+          gates: ${{ steps.gates.outputs.gates }}
+          app-root: captain-yard-web
+
+      - name: Post the merged receipt and close the tasks (main)
+        if: github.event_name == 'push'
+        uses: EPYCD/workman/.github/actions/workman-merge-hook@main
+        env:
+          # A push has no pull_request payload; give the hook the range the
+          # merge brought in so it finds the Refs: trailers.
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        with:
+          token: ${{ secrets.WORKMAN_TOKEN }}
+          mode: close
+          gates: ${{ steps.gates.outputs.gates }}
+          commit: ${{ github.sha }}
+          app-root: captain-yard-web
+
+      - name: Fail the job when a gate failed
+        if: steps.gates.outcome == 'failure'
+        run: exit 1

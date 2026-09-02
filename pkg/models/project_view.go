@@ -177,6 +177,11 @@ type ProjectView struct {
 	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id" doc:"The id of the bucket new tasks without a bucket are added to. Defaults to the leftmost bucket."`
 	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
 	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id" doc:"The id of the done bucket. Tasks moved here are marked done, and tasks marked done are moved here."`
+	// Entering this bucket is the ownership lock: the move is refused while a
+	// blocker is open or an owned path is leased elsewhere, and on success the
+	// task's paths_owned are leased to its assignee. Without it only the claim
+	// endpoint enforces that, and a drag on the board bypasses it.
+	ClaimBucketID int64 `xorm:"bigint INDEX null" json:"claim_bucket_id" doc:"The id of the in-progress bucket. Moving a task here runs the same checks as claiming it: refused while a blocker is open or an owned path is leased by another task; on success the task's paths_owned are leased. 0 leaves drags unguarded."`
 
 	// A timestamp when this view was updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this view was last updated. You cannot change this value."`
@@ -376,6 +381,11 @@ func resolveBucketIDs(s *xorm.Session, p, oldView *ProjectView) (err error) {
 	}
 
 	p.DoneBucketID, err = resolveBucketID(s, p.ID, p.DoneBucketID, oldView.DoneBucketID)
+	if err != nil {
+		return err
+	}
+
+	p.ClaimBucketID, err = resolveBucketID(s, p.ID, p.ClaimBucketID, oldView.ClaimBucketID)
 	return err
 }
 
@@ -674,7 +684,7 @@ func (pv *ProjectView) Update(s *xorm.Session, a web.Auth) (err error) {
 	// A view without buckets has no business writing bucket ids - keeping the
 	// stored ones is what lets healBucketIDs restore them on the way back.
 	if pv.ViewKind == ProjectViewKindKanban {
-		cols = append(cols, "default_bucket_id", "done_bucket_id")
+		cols = append(cols, "default_bucket_id", "done_bucket_id", "claim_bucket_id")
 	}
 
 	_, err = s.

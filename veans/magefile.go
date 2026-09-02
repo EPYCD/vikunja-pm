@@ -39,7 +39,19 @@ func Build() error {
 	if runtime.GOOS == "windows" {
 		out = "./veans.exe"
 	}
-	return sh.RunV("go", "build", "-o", out, "./cmd/veans")
+	if err := sh.RunV("go", "build", "-o", out, "./cmd/veans"); err != nil {
+		return err
+	}
+	return BuildMarshal()
+}
+
+// BuildMarshal compiles the marshal service/CLI to ./marshal.
+func BuildMarshal() error {
+	out := "./marshal"
+	if runtime.GOOS == "windows" {
+		out = "./marshal.exe"
+	}
+	return sh.RunV("go", "build", "-o", out, "./cmd/marshal")
 }
 
 // Clean removes built artifacts.
