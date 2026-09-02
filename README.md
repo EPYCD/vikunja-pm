@@ -11,7 +11,7 @@ day. It runs as a single Go binary with a Vue 3 web client, a desktop app,
 CalDAV sync and a full REST API.
 
 > [!NOTE]
-> Workman powers [KAOXHQ](https://kaoxhq.com).
+> Workman powers [KAOXHQ](https://kaoxhq.tech).
 >
 > Workman is a derivative work of Vikunja, free software licensed under
 > AGPL-3.0-or-later, and is distributed under that same licence. Upstream
