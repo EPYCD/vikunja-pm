@@ -5,6 +5,7 @@ Run from frontend/:  python3 scripts/generate-icons.py
 
 Source of truth is src/assets/workman-mark.svg. The maskable icon gets extra
 padding because Android crops up to 20% off each edge of a maskable icon.
+The tab favicon swapped in while a timer runs comes from the -tracking mark.
 """
 
 import pathlib
@@ -18,6 +19,7 @@ except ImportError:
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MARK = ROOT / 'src/assets/workman-mark.svg'
+TRACKING_MARK = ROOT / 'src/assets/workman-mark-tracking.svg'
 ICONS = ROOT / 'public/images/icons'
 
 # Icons drawn edge to edge.
@@ -61,18 +63,26 @@ def render(svg: pathlib.Path, out: pathlib.Path, size: int, pad_ratio: float = 0
 
 
 def main() -> None:
-    if not MARK.exists():
-        sys.exit(f'missing {MARK}')
+    for required in (MARK, TRACKING_MARK):
+        if not required.exists():
+            sys.exit(f'missing {required}')
 
     print('Rendering app icons')
     for name, size in PLAIN.items():
         render(MARK, ICONS / name, size)
 
+    # useTimeTrackingFavicon swaps this in while the clock is running.
+    render(TRACKING_MARK, ICONS / 'favicon-tracking-32x32.png', 32)
+
     render(MARK, ICONS / 'icon-maskable.png', 1024, pad_ratio=0.18)
     render(MARK, ICONS / 'badge-monochrome.png', 96)
 
-    # The SVG favicon modern browsers prefer.
-    (ICONS / 'workman-mark.svg').write_text(MARK.read_text())
+    # The SVG favicon modern browsers prefer. Drop the fixed width/height so it
+    # scales purely from the viewBox at whatever size the tab asks for.
+    import re
+
+    favicon_svg = re.sub(r'\s+width="64"\s+height="64"', '', MARK.read_text(), count=1)
+    (ICONS / 'workman-mark.svg').write_text(favicon_svg)
     print(f'  {(ICONS / "workman-mark.svg").relative_to(ROOT)}')
 
     # Multi-resolution .ico for legacy browsers.
