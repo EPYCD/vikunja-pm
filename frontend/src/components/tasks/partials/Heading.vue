@@ -252,6 +252,10 @@ async function cancel(element: HTMLInputElement) {
 	position: absolute;
 	inset-inline-end: 1.25rem;
 	inset-block-start: 1.1rem;
+	// The editable title follows this button in the DOM and overlaps it, so
+	// without a stacking order the title swallows the click and the view
+	// cannot be closed on mobile.
+	z-index: 1;
 
 	@media screen and (max-width: $tablet) {
 		display: block;
